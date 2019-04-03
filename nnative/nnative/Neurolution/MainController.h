@@ -156,6 +156,9 @@ namespace Neurolution
                     //}
                 }
 
+				while (uiNeedsUpdate)
+					::Sleep(1); // BAD BAD BAD - use cond variable
+
                 //if (DateTime.Now > end)
                 //    break;
             }
