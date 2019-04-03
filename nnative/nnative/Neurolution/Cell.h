@@ -1,14 +1,16 @@
 ﻿#pragma once 
 
-#include "AppProperties.h"
+#define _USE_MATH_DEFINES
 
+#include "AppProperties.h"
+#include "../Random.h"
+#include "NeuronNetwork.h"
+#include <math.h>
 
 namespace Neurolution
 {
     struct Cell
     {
-	public:
-
         std::shared_ptr<NeuronNetwork> Network;
 
         static constexpr float TailLength = AppProperties::CellTailLength;
@@ -34,109 +36,102 @@ namespace Neurolution
         float CurrentEnergy = 0.0f;
 
         //[NonSerialized]
-        //public Random Random;
+        Random random;
 
-        [XmlIgnore]
-        public LightSensor[] Eye => Network.Eye;
+		std::vector<LightSensor>& GetEye() { return Network->Eye; }
 
-        public Cell()
+        Cell(Random& r, int maxX, int maxY)
+			: random(r.Next())
+			, LocationX(r.Next(maxX))
+			, LocationY(r.Next(maxY))
+			, Rotation((float)(r.NextDouble() * 2.0 * M_PI))
+			, Network(std::make_shared<NeuronNetwork>(AppProperties::NetworkSize, r))
         {
-            Random = new Random();
         }
 
-        public Cell(Random r, int maxX, int maxY)
+        void PrepareIteration()
         {
-            LocationX = r.Next(maxX);
-            LocationY = r.Next(maxY);
-            Rotation = (float) (r.NextDouble() * 2.0 * Math.PI);
-            Network = new NeuronNetwork(AppProperties.NetworkSize, r);
-
-            Random = new Random(r.Next());
-        }
-
-        public void PrepareIteration()
-        {
-            Network.PrepareIteration();
+            Network->PrepareIteration();
         }
 
         // set sensors 
         // call Iterate
         // digest Motor* params 
-        public void IterateNetwork(long step)
+        void IterateNetwork(long step)
         {
-            Network.IterateNetwork(Random);
+            Network->IterateNetwork(random);
 
-            MoveForceLeft = Network.OutputVector[AppProperties.NetworkMoveForceLeft];
-            MoveForceRight = Network.OutputVector[AppProperties.NetworkMoveForceRight];
+            MoveForceLeft = Network->OutputVector[AppProperties::NetworkMoveForceLeft];
+            MoveForceRight = Network->OutputVector[AppProperties::NetworkMoveForceRight];
 
             Age++;
         }
 
-        public void CloneFrom(Cell other, Random rnd, int maxX, int maxY, bool severeMutations, float severity)
+        void CloneFrom(const Cell& other, Random& rnd, int maxX, int maxY, bool severeMutations, float severity)
         {
             RandomizeLocation(rnd, maxX, maxY);
 
             //Alive = true;
 
-            Network.CloneFrom(other.Network, rnd, severeMutations, severity);
+            Network->CloneFrom(*other.Network, rnd, severeMutations, severity);
 
             Age = 0;
         }
 
-        public void RandomizeLocation(Random rnd, int maxX, int maxY)
+        void RandomizeLocation(Random& rnd, int maxX, int maxY)
         {
             LocationX = rnd.Next(maxX);
             LocationY = rnd.Next(maxY);
-            Rotation = (float) (rnd.NextDouble() * 2.0 * Math.PI);        
+            Rotation = (float) (rnd.NextDouble() * 2.0 * M_PI);        
         }
-    }
+	};
 
-    public sealed class CellUtils
-    {
-        public static Cell ReadCell(string filename)
-        {
-            Cell ret = null;
+    //public sealed class CellUtils
+    //{
+    //    public static Cell ReadCell(string filename)
+    //    {
+    //        Cell ret = null;
 
-            XmlSerializer serializer = new XmlSerializer(typeof(Cell));
+    //        XmlSerializer serializer = new XmlSerializer(typeof(Cell));
 
-            using (FileStream fs = new FileStream(filename, FileMode.Open))
-            {
-                ret = (Cell) serializer.Deserialize(fs);
-            }
+    //        using (FileStream fs = new FileStream(filename, FileMode.Open))
+    //        {
+    //            ret = (Cell) serializer.Deserialize(fs);
+    //        }
 
-            return ret;
-        }
+    //        return ret;
+    //    }
 
-        public static List<Cell> ReadCells(string filename)
-        {
-            List<Cell> ret = null;
+    //    public static List<Cell> ReadCells(string filename)
+    //    {
+    //        List<Cell> ret = null;
 
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Cell>));
+    //        XmlSerializer serializer = new XmlSerializer(typeof(List<Cell>));
 
-            using (FileStream fs = new FileStream(filename, FileMode.Open))
-            {
-                ret = (List<Cell>)serializer.Deserialize(fs);
-            }
+    //        using (FileStream fs = new FileStream(filename, FileMode.Open))
+    //        {
+    //            ret = (List<Cell>)serializer.Deserialize(fs);
+    //        }
 
-            return ret;
-        }
+    //        return ret;
+    //    }
 
-        public static void SaveCell(string filename, Cell cell)
-        {
-            XmlSerializer serializer =new XmlSerializer(typeof(Cell));
-            using (TextWriter writer = new StreamWriter(filename))
-            {
-                serializer.Serialize(writer, cell);
-            } 
-        }
+    //    public static void SaveCell(string filename, Cell cell)
+    //    {
+    //        XmlSerializer serializer =new XmlSerializer(typeof(Cell));
+    //        using (TextWriter writer = new StreamWriter(filename))
+    //        {
+    //            serializer.Serialize(writer, cell);
+    //        } 
+    //    }
 
-        public static void SaveCells(string filename, List<Cell> cells)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Cell>));
-            using (TextWriter writer = new StreamWriter(filename))
-            {
-                serializer.Serialize(writer, cells);
-            }
-        }
-    }
+    //    public static void SaveCells(string filename, List<Cell> cells)
+    //    {
+    //        XmlSerializer serializer = new XmlSerializer(typeof(List<Cell>));
+    //        using (TextWriter writer = new StreamWriter(filename))
+    //        {
+    //            serializer.Serialize(writer, cells);
+    //        }
+    //    }
+    //}
 }

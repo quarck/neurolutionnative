@@ -27,6 +27,30 @@
     <ClInclude Include="nnative.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Neurolution\AppProperties.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neurolution\Cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neurolution\CellView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neurolution\MainWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neurolution\NeuronNetwork.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neurolution\World.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neurolution\WorldView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Random.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
