@@ -61,8 +61,8 @@ namespace Neurolution
         {
 			glPushMatrix();
 			glScalef(
-				static_cast<GLfloat>(1.0 / AppProperties::WorldWidth),
-				static_cast<GLfloat>(1.0 / AppProperties::WorldHeight),
+				static_cast<GLfloat>(2.0 / AppProperties::WorldWidth),
+				static_cast<GLfloat>(2.0 / AppProperties::WorldHeight),
 				1.0f);
 
 			glTranslatef(-AppProperties::WorldWidth/2.0f, -AppProperties::WorldHeight/2.0f, 0.0);

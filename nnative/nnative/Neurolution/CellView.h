@@ -49,9 +49,9 @@ namespace Neurolution
 				glBegin(GL_TRIANGLES);
 
 				glColor3f(cellColorRed, cellColorGreen, cellColorBlue);
-				glIndexi(1); glVertex3f(0.0f, 15.0f, 0.0f);
-				glIndexi(2); glVertex3f(-5.0f, -15.0f, 0.0f);
-				glIndexi(3); glVertex3f(5.0f, -15.0f, 0.0f);
+				glIndexi(1); glVertex3f(0.0f, 7.0f, 0.0f);
+				glIndexi(2); glVertex3f(-3.0f, -7.0f, 0.0f);
+				glIndexi(3); glVertex3f(3.0f, -7.0f, 0.0f);
 				glEnd();
 
 				glPopMatrix();

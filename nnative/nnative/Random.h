@@ -20,9 +20,10 @@ public:
 		int r = rand();
 		int r2 = rand();
 		int r3 = rand();
+		int val = (r | (r2 << 14) | (r3 << 17)) & 0x7fffffff;
 		if (maxI)
-			return (r | (r2 << 14) | (r3 << 17)) % maxI; // very bad code -- re-write when have a time
-		return (r | (r2 << 14) | (r3 << 17));
+			return val % maxI; // very bad code -- re-write when have a time
+		return val;
 	}
 
 };
