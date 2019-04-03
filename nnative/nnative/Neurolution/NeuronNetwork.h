@@ -124,25 +124,20 @@ namespace Neurolution
 			, InputVector(GetVectorSize())
 			, OutputVector(GetVectorSize())
         {
-			auto eyeIter = std::cbegin(Eye);
             for (int i = 0; i < AppProperties::EyeSize; ++i)
             {
 				double iPrime = ((i >> 1) - AppProperties::EyeSize / 2) + 0.5;
 
-				Eye.emplace(eyeIter,
+				Eye[i] = LightSensor(
 					(float)(AppProperties::EyeCellDirectionStep * iPrime), 
 					AppProperties::EyeCellWidth,
 					(i & 1) == 0
 					);
-
-				++eyeIter;
             }
 
-			auto neuroIter = std::cbegin(Neurons);
             for (int i = 0; i < networkSize; ++i)
             {
-				Neurons.emplace(neuroIter, AppProperties::EyeSize + networkSize, rnd);
-				++neuroIter;
+				Neurons[i] = Neuron(AppProperties::EyeSize + networkSize, rnd);
             }
         }
 

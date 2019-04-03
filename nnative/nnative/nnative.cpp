@@ -14,7 +14,8 @@
 #include "Neurolution/Cell.h"
 #include "Neurolution/World.h"
 #include "Neurolution/CellView.h"
-
+#include "Neurolution/WorldView.h"
+#include "Neurolution/MainController.h"
 
 #define MAX_LOADSTRING 100
 
@@ -26,7 +27,8 @@ HPALETTE hPalette = 0;			/* custom palette (if needed) */
 std::atomic_bool pauseApp = false;
 std::atomic_bool quitApp = false;
 
-float angle = 0.0;
+Neurolution::MainController controller;
+
 
 void Init()
 {
@@ -45,38 +47,15 @@ void Reshape(int width, int height)
 	//glTranslatef(0.0f, 0.0f, -3.0f);
 }
 
-void Display()
+void Display(bool force)
 {
-	/* rotate a triangle around */
+	if (!force && !controller.uiNeedsUpdate)
+		return;
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glPushMatrix();
-	glTranslatef(0.5f, 0.5f, 0.0);
-	glRotatef(angle, 0.0f, 0.0f, 1.0f);
-	angle += 0.1f;
-	glScalef(0.3f, 0.3f, 0.3f);
-	glBegin(GL_TRIANGLES);
-	//glRotatef(angle, 0.0f, 0.0f, 1.0f);	
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glIndexi(1); glVertex3f(0.0f, 1.0f, 1.0f);
-	glIndexi(2); glVertex3f(-0.5f, -1.0f, 0.0f);
-	glIndexi(3); glVertex3f(0.5f, -1.0f, 0.0f);
-	glEnd();
-	glPopMatrix();
-
-	//glPushMatrix();
-	////glRotatef(-angle, 0.0f, 0.0f, 1.0f);
-	//glScalef(0.3f, 0.3f, 0.3f);
-	//glBegin(GL_TRIANGLES);
-	////glRotatef(angle, 0.0f, 0.0f, 1.0f);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//glIndexi(1); glVertex3f(0.0f, 1.0f, 1.0f);
-	//glIndexi(2); glVertex3f(-1.0f, -1.0f, 0.0f);
-	//glIndexi(3); glVertex3f(1.0f, -1.0f, 0.0f);
-	//glEnd();
-	//glPopMatrix();
-
-
+	controller.DrawWorld();
+	controller.uiNeedsUpdate = false;
 	glFlush();
 
 	SwapBuffers(hDC);			/* nop if singlebuffered */
@@ -104,7 +83,7 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_PAINT:
-		Display();
+		Display(true);
 		BeginPaint(hWnd, &ps);
 		EndPaint(hWnd, &ps);
 		return 0;
@@ -348,6 +327,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 
 	Init();
 
+	controller.Start();
+
 	while (!quitApp)
 	{
 		if (!pauseApp)
@@ -360,7 +341,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 					DispatchMessage(&msg);
 				}
 			}
-			Display();
+			Display(false);
 		}
 		else
 		{
@@ -371,6 +352,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 			}
 		}
 	}
+
+	controller.Stop();
 
 	wglMakeCurrent(NULL, NULL);
 	ReleaseDC(hWnd, hDC);

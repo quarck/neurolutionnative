@@ -41,23 +41,10 @@ namespace Neurolution
             if (cell->LocationX >= 0.0 && cell->LocationX < AppProperties::WorldWidth
                 && cell->LocationY >= 0.0 && cell->LocationY < AppProperties::WorldHeight)
             {
-                //double adjRotation = cell->Rotation - M_PI/2.0;
-
-                //double dxBody = cell->EyeBase * std::cos(adjRotation) / 2.0;
-                //double dyBody = cell->EyeBase * std::sin(adjRotation) / 2.0;
-
-                //double dxTail = cell->TailLength * std::cos(cell->Rotation);
-                //double dyTail = cell->TailLength * std::sin(cell->Rotation);
-
 				glPushMatrix();
 
-				glScalef(
-					static_cast<GLfloat>(1.0 / AppProperties::WorldWidth), 
-					static_cast<GLfloat>(1.0 / AppProperties::WorldHeight),
-					1.0f);
-
 				glTranslatef(cell->LocationX, cell->LocationY, 0.0);
-				glRotatef(cell->Rotation, 0.0f, 0.0f, 1.0f);
+				glRotatef(cell->Rotation / M_PI * 180.0, 0.0f, 0.0f, 1.0f);
 				
 				glBegin(GL_TRIANGLES);
 
@@ -66,6 +53,7 @@ namespace Neurolution
 				glIndexi(2); glVertex3f(-5.0f, -15.0f, 0.0f);
 				glIndexi(3); glVertex3f(5.0f, -15.0f, 0.0f);
 				glEnd();
+
 				glPopMatrix();
             }
         }

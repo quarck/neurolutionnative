@@ -1,115 +1,132 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
+﻿#pragma once 
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
+//using System.Windows;
+//using System.Windows.Controls;
+//using System.Windows.Media;
+//using System.Windows.Shapes;
+
+#include <memory>
+
+#include <GL/gl.h>			/* OpenGL header file */
+#include <GL/glu.h>			/* OpenGL utilities header file */
+
+#include "World.h"
+#include "CellView.h"
 
 namespace Neurolution
 {
+	struct Color
+	{
+		unsigned short R, G, B;
+		Color(int r, int g, int b) : R(r), G(g), B(b) {}
+		Color(): Color(255, 255, 255) {}
+
+		void GlApply() 
+		{
+			glColor3f(R / 255.0f, G / 255.0f, B / 255.0f);
+		}
+	};
+
     class WorldView
     {
-        private World _world;
+		std::shared_ptr<World> _world;
+		std::vector<std::shared_ptr<CellView>> CellViews;
 
-        public CellView[] CellViews;
+	public:
 
-        public Line[] FoodLocations;
+        //public Line[] FoodLocations;
 
-        public Line[] PredatorLocations;
+        //public Line[] PredatorLocations;
 
-        public WorldView(Grid grid, World world)
+		Color foodColor{ 192, 64, 64};
+		Color predatorColor{64, 64, 255};
+
+        WorldView(std::shared_ptr<World>& world)
+			: _world(world)
+			, CellViews(world->Cells.size())
         {
-            _world = world;
+            Random rnd = Random();
 
-            Random rnd = new Random();
-
-            var brush = new SolidColorBrush(new Color { R = 192, G = 64, B = 64, A = 200 });
-            var predatorBrush = new SolidColorBrush(new Color { R = 64, G = 64, B = 255, A = 220 });
-
-            FoodLocations = new Line[_world.Foods.Length];
-
-            for (int i = 0; i < FoodLocations.Length; ++i)
+            for (int i = 0; i < _world->Cells.size(); ++i)
             {
-                FoodLocations[i] =
-                    new Line
-                    {
-                        Stroke = brush,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Top,
-                        StrokeThickness =  2.0,
-                        X1 = 0,
-                        X2 = 0,
-                        Y1 = 0,
-                        Y2 = 0
-                    };
-
-                grid.Children.Add(FoodLocations[i]);
-            }
-
-            PredatorLocations = new Line[_world.Predators.Length];
-
-            for (int i = 0; i < PredatorLocations.Length; ++i)
-            {
-                PredatorLocations[i] =
-                    new Line
-                    {
-                        Stroke = predatorBrush,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Top,
-                        StrokeThickness = 2.0,
-                        X1 = 0,
-                        X2 = 0,
-                        Y1 = 0,
-                        Y2 = 0
-                    };
-
-                grid.Children.Add(PredatorLocations[i]);
-            }
-
-            CellViews = new CellView[_world.Cells.Length];
-
-            for (int i = 0; i < _world.Cells.Length; ++i)
-            {
-                CellViews[i] = new CellView(grid, _world.Cells[i], rnd);
+                CellViews[i] = std::make_shared<CellView>(_world->Cells[i], rnd);
             }
         }
 
-        public void UpdateFrom(World world)
+        void UpdateFrom(std::shared_ptr<World>& world)
         {
-            foreach (var cellView in CellViews)
+			glPushMatrix();
+			glScalef(
+				static_cast<GLfloat>(1.0 / AppProperties::WorldWidth),
+				static_cast<GLfloat>(1.0 / AppProperties::WorldHeight),
+				1.0f);
+
+			glTranslatef(-AppProperties::WorldWidth/2.0f, -AppProperties::WorldHeight/2.0f, 0.0);
+			
+			for (auto& cellView: CellViews)
             {
-                cellView.Update();
+				cellView->Draw();
             }
 
-            for (int i = 0; i < FoodLocations.Length; ++i)
+
+            for (auto& food: _world->Foods)
             {
-                var food = world.Foods[i];
+				if (food.Value < 0.01)
+					continue;
 
-                var diameter = Math.Sqrt(food.Value) * 5;
+				glPushMatrix();
+				glTranslatef(food.LocationX, food.LocationY, 0.0);
+				//glRotatef(cell->Rotation, 0.0f, 0.0f, 1.0f);
 
-                FoodLocations[i].X1 = food.LocationX;
-                FoodLocations[i].Y1 = food.LocationY - diameter / 2.0;
-                FoodLocations[i].X2 = food.LocationX;
-                FoodLocations[i].Y2 = food.LocationY + diameter / 2.0;
-                FoodLocations[i].StrokeThickness = diameter;
+				glBegin(GL_TRIANGLES);
+
+				foodColor.GlApply();
+
+				float halfdiameter = static_cast<float>(std::sqrt(food.Value) * 5.0 / 2.0);
+
+				glIndexi(1); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
+				glIndexi(2); glVertex3f(halfdiameter, halfdiameter, 0.0f);
+				glIndexi(3); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
+
+				glIndexi(4); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
+				glIndexi(5); glVertex3f(-halfdiameter, -halfdiameter, 0.0f);
+				glIndexi(6); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
+
+				glEnd();
+
+				glPopMatrix();
+			}
+
+            for (auto& predator: _world->Predators)
+            {
+				glPushMatrix();
+				glTranslatef(predator.LocationX, predator.LocationY, 0.0);
+				glRotatef(45.0f, 0.0f, 0.0f, 1.0f);
+
+				predatorColor.GlApply();
+
+				float halfdiameter = static_cast<float>(std::sqrt(predator.Value) * 5.0 / 2.0);
+
+				glBegin(GL_TRIANGLES);
+
+				glIndexi(1); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
+				glIndexi(2); glVertex3f(halfdiameter, halfdiameter, 0.0f);
+				glIndexi(3); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
+
+				glIndexi(4); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
+				glIndexi(5); glVertex3f(-halfdiameter, -halfdiameter, 0.0f);
+				glIndexi(6); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
+
+				glEnd();
+
+				glPopMatrix();
             }
 
-            for (int i = 0; i < PredatorLocations.Length; ++i)
-            {
-                var predator = world.Predators[i];
-
-                var diameter = Math.Sqrt(predator.Value) * 5;
-
-                PredatorLocations[i].X1 = predator.LocationX;
-                PredatorLocations[i].Y1 = predator.LocationY - diameter / 2.0;
-                PredatorLocations[i].X2 = predator.LocationX;
-                PredatorLocations[i].Y2 = predator.LocationY + diameter / 2.0;
-                PredatorLocations[i].StrokeThickness = diameter;
-            }
-
+			glPopMatrix();
         }
-    }
+	};
 }

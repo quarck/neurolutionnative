@@ -7,17 +7,22 @@ class Random
 public:
 	Random(int seed = 0)
 	{
-		throw std::exception("Not implemented");
+		::srand(seed); // BAD BA DBAD 
 	}
 
 	double NextDouble() 
 	{
-		throw std::exception("Not implemented");
+		return ((double)(rand() % 0x7fff)) / 0x7fff; // also bAD bad
 	}
 
 	int Next(int maxI = 0) 
 	{
-		throw std::exception("Not implemented");
+		int r = rand();
+		int r2 = rand();
+		int r3 = rand();
+		if (maxI)
+			return (r | (r2 << 14) | (r3 << 17)) % maxI; // very bad code -- re-write when have a time
+		return (r | (r2 << 14) | (r3 << 17));
 	}
 
 };

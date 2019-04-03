@@ -36,9 +36,6 @@
     <ClInclude Include="Neurolution\CellView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Neurolution\MainWindow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Neurolution\NeuronNetwork.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -49,6 +46,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Random.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Neurolution\MainController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -430,11 +430,10 @@ namespace Neurolution
             float forceLeft = cell->MoveForceLeft;
             float forceRight = cell->MoveForceRight;
 
-            float forwardForce = ((forceLeft + forceRight) / Sqrt2); 
+			float forwardForce = ((forceLeft + forceRight) / Sqrt2);
             float rotationForce = (forceLeft - forceRight) / Sqrt2;
 
-            float moveEnergyRequired = 
-                (std::abs(forceLeft) + std::abs(forceRight)) * AppProperties::MoveEnergyFactor;
+			float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * AppProperties::MoveEnergyFactor;
 
             if (moveEnergyRequired <= cell->CurrentEnergy)
             {

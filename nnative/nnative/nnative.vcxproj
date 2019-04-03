@@ -154,7 +154,7 @@
     <ClInclude Include="Neurolution\AppProperties.h" />
     <ClInclude Include="Neurolution\Cell.h" />
     <ClInclude Include="Neurolution\CellView.h" />
-    <ClInclude Include="Neurolution\MainWindow.h" />
+    <ClInclude Include="Neurolution\MainController.h" />
     <ClInclude Include="Neurolution\NeuronNetwork.h" />
     <ClInclude Include="Neurolution\World.h" />
     <ClInclude Include="Neurolution\WorldView.h" />
