@@ -9,6 +9,13 @@
 
 #include <atomic>
 
+#include "Neurolution/AppProperties.h"
+#include "Neurolution/NeuronNetwork.h"
+#include "Neurolution/Cell.h"
+#include "Neurolution/World.h"
+#include "Neurolution/CellView.h"
+
+
 #define MAX_LOADSTRING 100
 
 
@@ -18,6 +25,8 @@ HPALETTE hPalette = 0;			/* custom palette (if needed) */
 
 std::atomic_bool pauseApp = false;
 std::atomic_bool quitApp = false;
+
+float angle = 0.0;
 
 void Init()
 {
@@ -42,29 +51,30 @@ void Display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glPushMatrix();
-	glTranslatef(0.2f, 0.2f, 0.0);
-	//glRotatef(angle, 0.0f, 0.0f, 1.0f);
+	glTranslatef(0.5f, 0.5f, 0.0);
+	glRotatef(angle, 0.0f, 0.0f, 1.0f);
+	angle += 0.1f;
 	glScalef(0.3f, 0.3f, 0.3f);
 	glBegin(GL_TRIANGLES);
 	//glRotatef(angle, 0.0f, 0.0f, 1.0f);	
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glIndexi(1); glVertex3f(0.0f, 1.0f, 1.0f);
-	glIndexi(2); glVertex3f(-1.0f, -1.0f, 0.0f);
-	glIndexi(3); glVertex3f(1.0f, -1.0f, 0.0f);
+	glIndexi(2); glVertex3f(-0.5f, -1.0f, 0.0f);
+	glIndexi(3); glVertex3f(0.5f, -1.0f, 0.0f);
 	glEnd();
 	glPopMatrix();
 
-	glPushMatrix();
-	//glRotatef(-angle, 0.0f, 0.0f, 1.0f);
-	glScalef(0.3f, 0.3f, 0.3f);
-	glBegin(GL_TRIANGLES);
-	//glRotatef(angle, 0.0f, 0.0f, 1.0f);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glIndexi(1); glVertex3f(0.0f, 1.0f, 1.0f);
-	glIndexi(2); glVertex3f(-1.0f, -1.0f, 0.0f);
-	glIndexi(3); glVertex3f(1.0f, -1.0f, 0.0f);
-	glEnd();
-	glPopMatrix();
+	//glPushMatrix();
+	////glRotatef(-angle, 0.0f, 0.0f, 1.0f);
+	//glScalef(0.3f, 0.3f, 0.3f);
+	//glBegin(GL_TRIANGLES);
+	////glRotatef(angle, 0.0f, 0.0f, 1.0f);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//glIndexi(1); glVertex3f(0.0f, 1.0f, 1.0f);
+	//glIndexi(2); glVertex3f(-1.0f, -1.0f, 0.0f);
+	//glIndexi(3); glVertex3f(1.0f, -1.0f, 0.0f);
+	//glEnd();
+	//glPopMatrix();
 
 
 	glFlush();
@@ -323,7 +333,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 	HWND  hWnd;				/* window */
 	MSG   msg;				/* message */
 
-	hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0, 1024, 768, PFD_TYPE_RGBA, PFD_DOUBLEBUFFER);
+	hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0, 
+		Neurolution::AppProperties::WorldWidth, Neurolution::AppProperties::WorldHeight,
+		PFD_TYPE_RGBA, PFD_DOUBLEBUFFER);
 	if (hWnd == NULL)
 		exit(1);
 

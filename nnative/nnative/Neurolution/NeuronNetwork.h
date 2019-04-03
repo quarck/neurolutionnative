@@ -27,6 +27,17 @@ namespace Neurolution
 		float Direction{ 0.0f } ; // radians 
 		float Width{ 0.0f };
 		bool SensetiveToRed{ false };
+
+		LightSensor()
+		{
+
+		}
+
+		LightSensor(float dir, float width, bool sensRed)
+			: Direction(dir), Width(width), SensetiveToRed(sensRed)
+		{
+
+		}
 	};
 
 	enum class NeuronState : int
@@ -45,6 +56,10 @@ namespace Neurolution
         float Charge;
 
         NeuronState State;
+
+		Neuron() 
+		{
+		}
 
         Neuron(int size, Random& rnd)
 			: Charge(0.0f)
@@ -65,7 +80,7 @@ namespace Neurolution
 			Charge = 0.0f;
 			State = NeuronState::Idle;
 			
-			int size = other.Weights.size();
+			size_t size = other.Weights.size();
 
 			if (Weights.size() != size)
 			{
@@ -99,9 +114,9 @@ namespace Neurolution
 
         std::vector<float> OutputVector;
 
-		int GetNetworkSize() const { return Neurons.size(); }
+		size_t GetNetworkSize() const { return Neurons.size(); }
 
-		int GetVectorSize() const { return GetNetworkSize() + AppProperties::EyeSize; }
+		size_t GetVectorSize() const { return GetNetworkSize() + AppProperties::EyeSize; }
 
         NeuronNetwork(int networkSize, Random& rnd)
 			: Eye(AppProperties::EyeSize)
@@ -133,7 +148,7 @@ namespace Neurolution
 
         void IterateNetwork(Random& rnd, std::vector<float>& inputVector, std::vector<float>& outputVector)
         {
-            for (int j = 0; j < Neurons.size(); ++j)
+            for (unsigned int j = 0; j < Neurons.size(); ++j)
             {
                 int neuronPositionInInputVector = j + AppProperties::EyeSize;
 
@@ -142,7 +157,7 @@ namespace Neurolution
 
                 float weightedInput = -neuron.Weights[neuronPositionInInputVector] * inputVector[neuronPositionInInputVector];
 
-                for (int i = 0; i < neuron.Weights.size() / 8; i += 8)
+                for (unsigned int i = 0; i < neuron.Weights.size() / 8; i += 8)
                 {
                     weightedInput += 
                         neuron.Weights[i+0] * inputVector[i+0] +
@@ -154,7 +169,7 @@ namespace Neurolution
                         neuron.Weights[i+6] * inputVector[i+6] +
                         neuron.Weights[i+7] * inputVector[i+7] ;
                 }
-                for (int i = 0; i < (neuron.Weights.size() & 7); ++i)
+                for (unsigned int i = 0; i < (neuron.Weights.size() & 7); ++i)
                 {
                     weightedInput += 
                         neuron.Weights[i+0] * inputVector[i+0];
@@ -226,13 +241,13 @@ namespace Neurolution
 
         void CleanOutputs()
         {
-			std::fill(std::cbegin(InputVector), std::cend(InputVector), 0.0f);
-			std::fill(std::cbegin(OutputVector), std::cend(OutputVector), 0.0f);
+			std::fill(std::begin(InputVector), std::end(InputVector), 0.0f);
+			std::fill(std::begin(OutputVector), std::end(OutputVector), 0.0f);
         }
 
         void CloneFrom(const NeuronNetwork& other, Random& rnd, bool severeMutations = false, float severity = 0.0f)
         {
-			int newSize = other.Neurons.size();
+			size_t newSize = other.Neurons.size();
 
 			if (Neurons.size() != newSize)
 			{
@@ -248,12 +263,12 @@ namespace Neurolution
 			std::copy(
 				std::cbegin(other.InputVector),
 				std::cend(other.InputVector),
-				std::cbegin(InputVector));
+				std::begin(InputVector));
 
 			std::copy(
 				std::cbegin(other.OutputVector),
 				std::cend(other.OutputVector),
-				std::cbegin(OutputVector));
+				std::begin(OutputVector));
 		}
 	};
 }

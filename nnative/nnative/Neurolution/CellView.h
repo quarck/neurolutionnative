@@ -1,101 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
+﻿#pragma once 
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
+//using System.Windows;
+//using System.Windows.Controls;
+//using System.Windows.Media;
+//using System.Windows.Shapes;
+
+#include <memory>
+#include "Cell.h"
+
+#include <GL/gl.h>			/* OpenGL header file */
+#include <GL/glu.h>			/* OpenGL utilities header file */
+
 
 namespace Neurolution
 {
-    public class CellView
+    class CellView
     {
-        public Line TailLine;
-        public Line BodyLine;
+	public:
+        std::shared_ptr<Cell> cell;
 
-        public Cell Cell;
+		float cellColorRed;
+		float cellColorGreen;
+		float cellColorBlue;
 
-        public CellView(Grid grid, Cell cell, Random rnd)
+        CellView(std::shared_ptr<Cell>& c, Random& rnd)
+			: cell(c)
         {
-            Cell = cell;
-
-            var brush = 
-                new SolidColorBrush(new Color
-                {
-                    R = (byte) rnd.Next(128),
-                    G = (byte) rnd.Next(128),
-                    B = (byte) rnd.Next(128),
-                    A = 255
-                });
-
-            // Add a Line Element
-            TailLine = new Line
-            {
-                Stroke = brush,
-                X1 = 0.0,
-                X2 = 0.0,
-                Y1 = 0.0,
-                Y2 = 0.0,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
-                StrokeThickness = 1
-            };
-            grid.Children.Add(TailLine);
-
-            BodyLine = new Line
-            {
-                Stroke = brush,
-                X1 = 0.0,
-                X2 = 0.0,
-                Y1 = 0.0,
-                Y2 = 0.0,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
-                StrokeThickness = 1
-            };
-            grid.Children.Add(BodyLine);
-
-            Update();
+			cellColorRed = static_cast<float>(rnd.NextDouble() / 2.0 + 0.5);
+			cellColorGreen = static_cast<float>(rnd.NextDouble() / 2.0 + 0.5);
+			cellColorBlue = static_cast<float>(rnd.NextDouble() / 2.0 + 0.5);
         }
 
-        public void Update()
+        void Draw()
         {
             //if (Cell.Alive)
-            if (Cell.LocationX >= 0.0 && Cell.LocationX < AppProperties.WorldWidth
-                && Cell.LocationY >= 0.0 && Cell.LocationY < AppProperties.WorldHeight)
+            if (cell->LocationX >= 0.0 && cell->LocationX < AppProperties::WorldWidth
+                && cell->LocationY >= 0.0 && cell->LocationY < AppProperties::WorldHeight)
             {
-                double adjRotation = Cell.Rotation - Math.PI/2.0;
+                //double adjRotation = cell->Rotation - M_PI/2.0;
 
-                double dxBody = Cell.EyeBase*Math.Cos(adjRotation)/2.0;
-                double dyBody = Cell.EyeBase*Math.Sin(adjRotation)/2.0;
+                //double dxBody = cell->EyeBase * std::cos(adjRotation) / 2.0;
+                //double dyBody = cell->EyeBase * std::sin(adjRotation) / 2.0;
 
-                double dxTail = Cell.TailLength*Math.Cos(Cell.Rotation);
-                double dyTail = Cell.TailLength*Math.Sin(Cell.Rotation);
+                //double dxTail = cell->TailLength * std::cos(cell->Rotation);
+                //double dyTail = cell->TailLength * std::sin(cell->Rotation);
 
-                TailLine.X1 = Cell.LocationX;
-                TailLine.X2 = Cell.LocationX - dxTail;
-                TailLine.Y1 = Cell.LocationY;
-                TailLine.Y2 = Cell.LocationY - dyTail;
+				glPushMatrix();
 
-                BodyLine.X1 = Cell.LocationX - dxBody;
-                BodyLine.X2 = Cell.LocationX + dxBody;
-                BodyLine.Y1 = Cell.LocationY - dyBody;
-                BodyLine.Y2 = Cell.LocationY + dyBody;
-            }
-            else
-            {
-                TailLine.X1 = 0.0; // ;
-                TailLine.X2 = 0.0; //  - dxTail;
-                TailLine.Y1 = 0.0; // ;
-                TailLine.Y2 = 0.0; //  - dyTail;
-                              
-                BodyLine.X1 = 0.0; //  - dxBody;
-                BodyLine.X2 = 0.0; //  + dxBody;
-                BodyLine.Y1 = 0.0; //  - dyBody;
-                BodyLine.Y2 = 0.0; //  + dyBody;
+				glScalef(
+					static_cast<GLfloat>(1.0 / AppProperties::WorldWidth), 
+					static_cast<GLfloat>(1.0 / AppProperties::WorldHeight),
+					1.0f);
+
+				glTranslatef(cell->LocationX, cell->LocationY, 0.0);
+				glRotatef(cell->Rotation, 0.0f, 0.0f, 1.0f);
+				
+				glBegin(GL_TRIANGLES);
+
+				glColor3f(cellColorRed, cellColorGreen, cellColorBlue);
+				glIndexi(1); glVertex3f(0.0f, 15.0f, 0.0f);
+				glIndexi(2); glVertex3f(-5.0f, -15.0f, 0.0f);
+				glIndexi(3); glVertex3f(5.0f, -15.0f, 0.0f);
+				glEnd();
+				glPopMatrix();
             }
         }
-    }
+	};
 }

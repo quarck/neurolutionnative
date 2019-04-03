@@ -73,5 +73,5 @@ namespace Neurolution
         static constexpr float NeuronChargeThreshold = 1.0f;
 
         static constexpr long OldSince = 1024;
-    }
+	};
 }

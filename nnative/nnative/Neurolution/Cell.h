@@ -42,8 +42,8 @@ namespace Neurolution
 
         Cell(Random& r, int maxX, int maxY)
 			: random(r.Next())
-			, LocationX(r.Next(maxX))
-			, LocationY(r.Next(maxY))
+			, LocationX(static_cast<float>(r.NextDouble()*maxX))
+			, LocationY(static_cast<float>(r.NextDouble()*maxY))
 			, Rotation((float)(r.NextDouble() * 2.0 * M_PI))
 			, Network(std::make_shared<NeuronNetwork>(AppProperties::NetworkSize, r))
         {
@@ -80,8 +80,8 @@ namespace Neurolution
 
         void RandomizeLocation(Random& rnd, int maxX, int maxY)
         {
-            LocationX = rnd.Next(maxX);
-            LocationY = rnd.Next(maxY);
+            LocationX = static_cast<float>(rnd.NextDouble()*maxX);
+            LocationY = static_cast<float>(rnd.NextDouble()*maxY);
             Rotation = (float) (rnd.NextDouble() * 2.0 * M_PI);        
         }
 	};

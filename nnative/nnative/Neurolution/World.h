@@ -1,4 +1,5 @@
-﻿//using System;
+﻿#pragma once 
+//using System;
 //using System.Collections.Generic;
 //using System.IO;
 //using System.Linq;
@@ -43,6 +44,10 @@ namespace Neurolution
 
 	struct Predator: public LocationWithvalue
     {
+		Predator()
+		{
+		}
+
         Predator(Random& rnd, int maxX, int maxY)
         {
 	        Reset(rnd, maxX, maxY);
@@ -77,6 +82,10 @@ namespace Neurolution
     struct Food : public LocationWithvalue
     {
 		float Value;
+
+		Food()
+		{
+		}
 
         Food(Random& rnd, int maxX, int maxY)
         {
@@ -253,8 +262,8 @@ namespace Neurolution
 
 			if (step != 0 && (step % AppProperties::StepsPerBirthCheck == 0)
 				&& (std::any_of(
-						std::cbegin(Cells), 
-						std::cend(Cells),
+						std::begin(Cells), 
+						std::end(Cells),
 						[](std::shared_ptr<Cell>& x){ return x->CurrentEnergy > AppProperties::BirthEnergyConsumption; }
 					)
 					|| (step % AppProperties::SerializeTopEveryNStep == 0)
@@ -262,7 +271,7 @@ namespace Neurolution
             {
                 int quant = AppProperties::WorldSize / 16; // == 32 basically
 
-				std::sort(std::cbegin(Cells), std::cend(Cells), 
+				std::sort(std::begin(Cells), std::end(Cells), 
 					[](std::shared_ptr<Cell>& x, std::shared_ptr<Cell>& y) {
 					return x->CurrentEnergy > y->CurrentEnergy;
 				});
@@ -276,7 +285,7 @@ namespace Neurolution
                 }
 
                 int srcIdx = 0;
-                int dstIdx = Cells.size() - 1; //quant * 4;
+                int dstIdx = static_cast<int>(Cells.size() - 1); //quant * 4;
 
                 for (auto multiplier: multipliers)
                 {
@@ -317,8 +326,8 @@ namespace Neurolution
             // Calculate light sensor values 
 
 			std::transform(
-				std::cbegin(Foods),
-				std::cend(Foods),
+				std::begin(Foods),
+				std::end(Foods),
 				std::begin(FoodDirections), 
 				[&cell](Food& item) {
 				return DirectionWithDistance{ 
@@ -333,8 +342,8 @@ namespace Neurolution
 			);
 
 			std::transform(
-					std::cbegin(Predators),
-					std::cend(Predators),
+					std::begin(Predators),
+					std::end(Predators),
 					std::begin(PredatorDirections),
 					[&cell](Predator& item) {
 						return DirectionWithDistance{
@@ -350,7 +359,7 @@ namespace Neurolution
 
 			auto& eye = cell->GetEye();
 
-            for (int eyeIdx = 0; eyeIdx < eye.size(); ++ eyeIdx)
+            for (unsigned int eyeIdx = 0; eyeIdx < eye.size(); ++ eyeIdx)
             {
                 auto& eyeCell = eye[eyeIdx];
                 // 
@@ -364,7 +373,7 @@ namespace Neurolution
                 if (eyeCell.SensetiveToRed)
                 {
                     // This cell can see foods only
-					for (int idx = 0; idx < FoodDirections.size(); ++ idx)
+					for (unsigned int idx = 0; idx < FoodDirections.size(); ++ idx)
                     {
 						auto& food = FoodDirections[idx];
 						auto& foodItem = Foods[idx];
@@ -388,7 +397,7 @@ namespace Neurolution
                 else
                 {
                     // this cell can see predators only
-					for (int idx = 0; idx < PredatorDirections.size(); ++ idx)
+					for (unsigned int idx = 0; idx < PredatorDirections.size(); ++ idx)
                     {
 						auto& predator = PredatorDirections[idx];
 						auto& predatorItem = Predators[idx];
@@ -463,7 +472,7 @@ namespace Neurolution
                 // Analyze the outcome - did it get any food? 
                 for (auto& food: Foods)
                 {
-                    if (food.IsEmpty)
+                    if (food.IsEmpty())
                         continue;
 
                     float dx = std::abs(cell->LocationX - food.LocationX);
