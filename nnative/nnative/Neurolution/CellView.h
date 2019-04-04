@@ -30,9 +30,9 @@ namespace Neurolution
         CellView(std::shared_ptr<Cell>& c, Random& rnd)
 			: cell(c)
         {
-			cellColorRed = static_cast<float>(rnd.NextDouble() / 2.0 + 0.5);
-			cellColorGreen = static_cast<float>(rnd.NextDouble() / 2.0 + 0.5);
-			cellColorBlue = static_cast<float>(rnd.NextDouble() / 2.0 + 0.5);
+			cellColorRed = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
+			cellColorGreen = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
+			cellColorBlue = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
         }
 
         void Draw()
@@ -51,9 +51,75 @@ namespace Neurolution
 				glBegin(GL_TRIANGLES);
 
 				glColor3f(cellColorRed, cellColorGreen, cellColorBlue);
-				glIndexi(1); glVertex3f(0.0f, 7.0f, 0.0f);
-				glIndexi(2); glVertex3f(-3.0f, -7.0f, 0.0f);
-				glIndexi(3); glVertex3f(3.0f, -7.0f, 0.0f);
+
+				//glIndexi(1); glVertex3f(0.0f, 7.0f, 0.0f);
+				//glIndexi(2); glVertex3f(-3.0f, -7.0f, 0.0f);
+				//glIndexi(3); glVertex3f(3.0f, -7.0f, 0.0f);
+
+				int idx = 0;
+
+				glIndexi(++idx); glVertex2f(0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(0.0f, 10.0f);
+				glIndexi(++idx); glVertex2f(1.0f, 4.0f);
+
+				glIndexi(++idx); glVertex2f(0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(1.0f, 4.0f);
+				glIndexi(++idx); glVertex2f(3.0f, 2.0f);
+
+				glIndexi(++idx); glVertex2f(0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(3.0f, 2.0f);
+				glIndexi(++idx); glVertex2f(2.0f, 0.0f);
+
+				glIndexi(++idx); glVertex2f(3.0f, 2.0f);
+				glIndexi(++idx); glVertex2f(4.0f, -4.0f);
+				glIndexi(++idx); glVertex2f(2.0f, 0.0f);
+
+				glIndexi(++idx); glVertex2f(0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(1.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(0.0f, -2.0f);
+
+				glIndexi(++idx); glVertex2f(1.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(1.0f, -6.0f);
+				glIndexi(++idx); glVertex2f(0.0f, -2.0f);
+
+				glIndexi(++idx); glVertex2f(1.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(2.0f, -4.0f);
+				glIndexi(++idx); glVertex2f(1.0f, -6.0f);
+
+
+
+				glIndexi(++idx); glVertex2f(-0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(-0.0f, 10.0f);
+				glIndexi(++idx); glVertex2f(-1.0f, 4.0f);
+											
+				glIndexi(++idx); glVertex2f(-0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(-1.0f, 4.0f);
+				glIndexi(++idx); glVertex2f(-3.0f, 2.0f);
+											
+				glIndexi(++idx); glVertex2f(-0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(-3.0f, 2.0f);
+				glIndexi(++idx); glVertex2f(-2.0f, 0.0f);
+											
+				glIndexi(++idx); glVertex2f(-3.0f, 2.0f);
+				glIndexi(++idx); glVertex2f(-4.0f, -4.0f);
+				glIndexi(++idx); glVertex2f(-2.0f, 0.0f);
+											
+				glIndexi(++idx); glVertex2f(-0.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(-1.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(-0.0f, -2.0f);
+											
+				glIndexi(++idx); glVertex2f(-1.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(-1.0f, -6.0f);
+				glIndexi(++idx); glVertex2f(-0.0f, -2.0f);
+											
+				glIndexi(++idx); glVertex2f(-1.0f, 0.0f);
+				glIndexi(++idx); glVertex2f(-2.0f, -4.0f);
+				glIndexi(++idx); glVertex2f(-1.0f, -6.0f);
+
+
+
+
+
 				glEnd();
 
 				glPopMatrix();

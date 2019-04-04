@@ -483,7 +483,7 @@ namespace Neurolution
                     float dy = std::abs(cell->LocationY - food.LocationY);
 
                     float dv = (float) (std::sqrt(food.Value) / 2.0 * 5);
-					if (dv < 1.0f) dv = 1.0f;
+					if (dv < 3.0f) dv = 3.0f;
 
                     if (dx <= dv && dy <= dv)
                     {
@@ -501,7 +501,7 @@ namespace Neurolution
                     float dy = std::abs(cell->LocationY - predator.LocationY);
 
                     float dv = (float)(std::sqrt(predator.Value) / 2.0 * 5);
-					if (dv < 1.0f) dv = 1.0f;
+					if (dv < 3.0f) dv = 3.0f;
 
                     if (dx <= dv && dy <= dv)
                     {

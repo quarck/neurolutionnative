@@ -4,6 +4,7 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <chrono>
 
 #include "World.h"
 #include "WorldView.h"
@@ -132,22 +133,29 @@ namespace Neurolution
             //var start = DateTime.Now;
             //var end = start + TimeSpan.FromSeconds(20);
 
+			
+			auto lastUIUpdate = std::chrono::high_resolution_clock::now();
+
             for (long step = 0; !terminate ; ++step)
             {	
 				while (appPaused && !terminate)
 					::Sleep(100);
 
-				//if (uiNeedsUpdate)
-				//{
-				//	// Keep yeild-ing the thread while UI thread is doing the painting job, 
-				//	// this is to avoid the white lock situation
-				//	::Sleep(1); 
-				//}
+				auto now = std::chrono::high_resolution_clock::now();
+				std::chrono::duration<double> sinceLastUpdate = std::chrono::duration_cast<std::chrono::duration<double>>(now - lastUIUpdate);
 
-				if (step % 4 == 0)
+				if (step % 4 == 0 && sinceLastUpdate.count() > 1.0/30.0)
 				{
+					lastUIUpdate = now;
+
 					uiNeedsUpdate = true;
 					::SendMessage(hWND, WM_USER, 0, 0);
+					while (uiNeedsUpdate)
+					{
+						// Keep yeild-ing the thread while UI thread is doing the painting job, 
+						// this is to avoid the white lock situation
+						std::this_thread::yield(); 
+					}
 				}
 
 				std::lock_guard<std::mutex> l(worldLock);
