@@ -44,7 +44,9 @@ namespace Neurolution
 				glPushMatrix();
 
 				glTranslatef(cell->LocationX, cell->LocationY, 0.0);
-				glRotatef(cell->Rotation / M_PI * 180.0, 0.0f, 0.0f, 1.0f);
+				glRotatef(
+					static_cast<float>(cell->Rotation / M_PI * 180.0 - 90.0),
+					0.0f, 0.0f, 1.0f);
 				
 				glBegin(GL_TRIANGLES);
 

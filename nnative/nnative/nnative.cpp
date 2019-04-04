@@ -19,21 +19,12 @@
 
 #define MAX_LOADSTRING 100
 
-
-
-HDC hDC;				/* device context */
-HPALETTE hPalette = 0;			/* custom palette (if needed) */
-
-std::atomic_bool pauseApp = false;
-std::atomic_bool quitApp = false;
-
 Neurolution::MainController controller;
-
 
 void Init()
 {
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_LEQUAL);
 }
 
 void Reshape(int width, int height)
@@ -49,16 +40,16 @@ void Reshape(int width, int height)
 
 void Display(bool force)
 {
-	if (!force && !controller.uiNeedsUpdate)
+	if (!force && !controller.IsUINeedsUpdate())
 		return;
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	controller.DrawWorld();
-	controller.uiNeedsUpdate = false;
 	glFlush();
 
-	SwapBuffers(hDC);			/* nop if singlebuffered */
+	SwapBuffers(controller.GetHDC());
 }
 
 void HandleKeyboard(WPARAM wParam)
@@ -66,12 +57,11 @@ void HandleKeyboard(WPARAM wParam)
 	switch (wParam)
 	{
 	case 27:			/* ESC key */
-		quitApp = true;
+		controller.Stop();
 		PostQuitMessage(0);
 		break;
 	case ' ':
-		//animate = !animate;
-		pauseApp = !pauseApp;
+		controller.SetAppIsPaused(!controller.IsAppPaused());
 		break;
 	}
 }
@@ -138,7 +128,7 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_ACTIVATE:
-		pauseApp = IsIconic(hWnd);
+		//pauseApp = IsIconic(hWnd);
 		return 0;
 
 	case WM_PALETTECHANGED:
@@ -147,6 +137,9 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		/* fall through to WM_QUERYNEWPALETTE */
 
 	case WM_QUERYNEWPALETTE:
+	{
+		auto& hPalette = controller.GetHPalette();
+		auto &hDC = controller.GetHDC();
 		if (hPalette)
 		{
 			UnrealizeObject(hPalette);
@@ -155,11 +148,15 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return TRUE;
 		}
 		return FALSE;
-
+	}
 	case WM_CLOSE:
-		quitApp = true;
+		controller.Stop();
 		PostQuitMessage(0);
 		return 0;
+
+	case WM_USER: 
+		Display(false); 
+		break; 
 	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -168,11 +165,12 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height, BYTE type, DWORD flags)
 {
 	int         n, pf;
-	HWND        hWnd;
 	WNDCLASS    wc;
 	LOGPALETTE* lpPal;
 	PIXELFORMATDESCRIPTOR pfd;
 	static HINSTANCE hInstance = 0;
+
+	HWND        hWnd;
 
 	/* only register the window class once - use hInstance as a flag. */
 	if (!hInstance)
@@ -207,6 +205,8 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 			_T("Error"), MB_OK);
 		return NULL;
 	}
+
+	auto& hDC = controller.GetHDC();
 
 	hDC = GetDC(hWnd);
 
@@ -290,6 +290,8 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 			lpPal->palPalEntry[3].peFlags = PC_NOCOLLAPSE;
 		}
 
+		auto& hPalette = controller.GetHPalette();
+
 		hPalette = CreatePalette(lpPal);
 		if (hPalette)
 		{
@@ -309,7 +311,7 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousInst, _In_ LPWSTR lpszCmdLine, _In_ int nCmdShow)
 {
 	HGLRC hRC;				/* opengl context */
-	HWND  hWnd;				/* window */
+	HWND&  hWnd = controller.GetHWND();
 	MSG   msg;				/* message */
 
 	hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0, 
@@ -317,6 +319,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 		PFD_TYPE_RGBA, PFD_DOUBLEBUFFER);
 	if (hWnd == NULL)
 		exit(1);
+
+	auto& hDC = controller.GetHDC();
+	auto& hPalette = controller.GetHPalette();
 
 	hDC = GetDC(hWnd);
 	hRC = wglCreateContext(hDC);
@@ -329,29 +334,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 
 	controller.Start();
 
-	while (!quitApp)
+	while (!controller.IsTerminating() && GetMessage(&msg, hWnd, 0, 0))
 	{
-		if (!pauseApp)
-		{
-			while (!quitApp && PeekMessage(&msg, hWnd, 0, 0, PM_NOREMOVE))
-			{
-				if (GetMessage(&msg, hWnd, 0, 0))
-				{
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
-				}
-			}
-			Display(false);
-		}
-		else
-		{
-			while (!quitApp && pauseApp && GetMessage(&msg, hWnd, 0, 0))
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
+
+	//while (!quitApp)
+	//{
+	//	if (!controller.IsAppPaused())
+	//	{
+	//		while (!quitApp && PeekMessage(&msg, hWnd, 0, 0, PM_NOREMOVE))
+	//		{
+	//			if (GetMessage(&msg, hWnd, 0, 0))
+	//			{
+	//				TranslateMessage(&msg);
+	//				DispatchMessage(&msg);
+	//			}
+	//		}
+	//		Display(false);
+	//	}
+	//	else
+	//	{
+	//		while (!quitApp && controller.IsAppPaused() && GetMessage(&msg, hWnd, 0, 0))
+	//		{
+	//			TranslateMessage(&msg);
+	//			DispatchMessage(&msg);
+	//		}
+	//	}
+	//}
 
 	controller.Stop();
 

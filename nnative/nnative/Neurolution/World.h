@@ -422,13 +422,18 @@ namespace Neurolution
                 cell->Network->InputVector[eyeIdx] = 1000 * value;
             }
 
+			float forceLeft = 0.0f;
+			float forceRight = 0.0f;
 
-            // Iterate network finally
-            cell->IterateNetwork(step);
+			for (int nIter = 0; nIter < 4; ++nIter)
+			{
+				// Iterate network finally
+				cell->IterateNetwork(step * 4 + nIter);
 
-            // Execute action - what is ordered by the neuron network
-            float forceLeft = cell->MoveForceLeft;
-            float forceRight = cell->MoveForceRight;
+				// Execute action - what is ordered by the neuron network
+				forceLeft += cell->MoveForceLeft / 4.0f;
+				forceRight += cell->MoveForceRight / 4.0f;
+			}
 
 			float forwardForce = ((forceLeft + forceRight) / Sqrt2);
             float rotationForce = (forceLeft - forceRight) / Sqrt2;
@@ -478,6 +483,7 @@ namespace Neurolution
                     float dy = std::abs(cell->LocationY - food.LocationY);
 
                     float dv = (float) (std::sqrt(food.Value) / 2.0 * 5);
+					if (dv < 1.0f) dv = 1.0f;
 
                     if (dx <= dv && dy <= dv)
                     {
@@ -495,6 +501,7 @@ namespace Neurolution
                     float dy = std::abs(cell->LocationY - predator.LocationY);
 
                     float dv = (float)(std::sqrt(predator.Value) / 2.0 * 5);
+					if (dv < 1.0f) dv = 1.0f;
 
                     if (dx <= dv && dy <= dv)
                     {

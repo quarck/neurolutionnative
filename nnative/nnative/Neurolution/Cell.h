@@ -61,8 +61,14 @@ namespace Neurolution
         {
             Network->IterateNetwork(random);
 
-            MoveForceLeft = Network->OutputVector[AppProperties::NetworkMoveForceLeft];
-            MoveForceRight = Network->OutputVector[AppProperties::NetworkMoveForceRight];
+            MoveForceLeft = 
+				0.3 * Network->OutputVector[AppProperties::NetworkMoveForceGentleLeft] + 
+				1.0 * Network->OutputVector[AppProperties::NetworkMoveForceNormalLeft] + 
+				1.7 * Network->OutputVector[AppProperties::NetworkMoveForceStrongLeft];
+            MoveForceRight = 
+				0.3 * Network->OutputVector[AppProperties::NetworkMoveForceGentleRight] +
+				1.0 * Network->OutputVector[AppProperties::NetworkMoveForceNormalRight] +
+				1.7 * Network->OutputVector[AppProperties::NetworkMoveForceStrongRight];
 
             Age++;
         }

@@ -72,7 +72,6 @@ namespace Neurolution
 				cellView->Draw();
             }
 
-
             for (auto& food: _world->Foods)
             {
 				if (food.Value < 0.01)

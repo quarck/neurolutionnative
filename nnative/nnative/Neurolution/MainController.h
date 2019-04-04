@@ -21,9 +21,14 @@ namespace Neurolution
 
 		std::atomic_bool terminate{ false };
 
-	public:
-
 		std::atomic_bool uiNeedsUpdate{ false };
+		std::atomic_bool appPaused{ false };
+
+		HDC hDC;				/* device context */
+		HPALETTE hPalette{ 0 };			/* custom palette (if needed) */
+
+		HWND hWND;
+	public:
 
 
         MainController()
@@ -49,14 +54,6 @@ namespace Neurolution
 				calcThread.join();
 		}
 
-        //private void HideAllControls()
-        //{
-        //    ButtonStartNew.Visibility = Visibility.Collapsed;
-        //    ButtonLoadSavedWorld.Visibility = Visibility.Collapsed;
-        //    ButtonLoadSavedTop.Visibility = Visibility.Collapsed;
-        //    MultiThreaded.Visibility = Visibility.Collapsed;
-        //}
-
 		void Start()
 		{
 			calcThread = std::thread(&MainController::CalcThread, this);
@@ -67,7 +64,8 @@ namespace Neurolution
 			terminate = true;
 		}
 
-        //private void buttonStartNew_Click(object sender, RoutedEventArgs e)
+		
+		//private void buttonStartNew_Click(object sender, RoutedEventArgs e)
         //{
         //    HideAllControls();
         //    _worldView = new WorldView(grid, world);
@@ -135,32 +133,25 @@ namespace Neurolution
             //var end = start + TimeSpan.FromSeconds(20);
 
             for (long step = 0; !terminate ; ++step)
-            {			
-                {
-					std::lock_guard<std::mutex> l(worldLock);
-                    world->Iterate(step);
-                }
+            {	
+				while (appPaused && !terminate)
+					::Sleep(100);
 
-                if (step % 4 == 0)
-                {
+				//if (uiNeedsUpdate)
+				//{
+				//	// Keep yeild-ing the thread while UI thread is doing the painting job, 
+				//	// this is to avoid the white lock situation
+				//	::Sleep(1); 
+				//}
+
+				if (step % 4 == 0)
+				{
 					uiNeedsUpdate = true;
-                    //try
-                    //{
-                    //    var s = step;
-                    //    Dispatcher.Invoke(() => UpdateUI(s));
-                    //}
-                    //catch (TaskCanceledException)
-                    //{
-                    //    world.Save();
-                    //    break;
-                    //}
-                }
+					::SendMessage(hWND, WM_USER, 0, 0);
+				}
 
-				while (uiNeedsUpdate)
-					::Sleep(1); // BAD BAD BAD - use cond variable
-
-                //if (DateTime.Now > end)
-                //    break;
+				std::lock_guard<std::mutex> l(worldLock);
+                world->Iterate(step);
             }
         }
 
@@ -168,6 +159,7 @@ namespace Neurolution
 		{
 			std::lock_guard<std::mutex> l(worldLock);
 			_worldView->UpdateFrom(world);
+			uiNeedsUpdate = false;
 		}
 
         //private void UpdateUI(long step)
@@ -178,5 +170,21 @@ namespace Neurolution
         //        GenerationLabel.Content = $"{step:D8}";
         //    }
         //}
+
+
+		bool IsUINeedsUpdate() const { return uiNeedsUpdate; }
+		void ClearUINeedsUpdate() { uiNeedsUpdate = false; }
+
+		bool IsAppPaused() const { return appPaused; }
+		void SetAppIsPaused(bool val) { appPaused = val; }
+
+		bool IsTerminating() const { return terminate; }
+
+
+		HWND& GetHWND() { return hWND; }
+
+		HDC& GetHDC() { return hDC; }
+
+		HPALETTE& GetHPalette() { return hPalette; }
 	};
 }
