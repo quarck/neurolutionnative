@@ -30,7 +30,7 @@ namespace Neurolution
 
 		static constexpr int WorldSize = 128;
         static constexpr int FoodCountPerIteration = 32;
-        static constexpr int PredatorCountPerIteration = 4;
+        static constexpr int PredatorCountPerIteration = 16;
 
         static constexpr int NetworkMoveForceGentleLeft = RedEyeSize + BlueEyeSize + 0;
         static constexpr int NetworkMoveForceGentleRight = RedEyeSize + BlueEyeSize + 1;
@@ -44,9 +44,9 @@ namespace Neurolution
         static constexpr float NetworkSevereMutationAlpha = 0.4f;
         static constexpr float NetworkNoiseLevel = 0.00001f;
 
-        static constexpr float FoodInitialValue = 10;
+        static constexpr float FoodInitialValue = 7;
 
-        static constexpr float PredatorInitialValue = 10;
+        static constexpr float PredatorInitialValue = 7;
 
         static constexpr float CellTailLength = 4.0f;
         static constexpr float CellEyeBase = 3.0f;
@@ -57,7 +57,7 @@ namespace Neurolution
         static constexpr float SevereMutationFactor = 0.15f;
         static constexpr float SevereMutationSlope = 0.33f;
 
-        static constexpr float FoodMinDistanceToBorder = 100;
+        static constexpr float FoodMinDistanceToBorder = 5;
 
         static constexpr float MoveEnergyFactor = 0.0000001f;
         static constexpr float InitialCellEnergy = 1.0f;
