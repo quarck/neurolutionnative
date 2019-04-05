@@ -114,6 +114,8 @@ namespace Neurolution
 
 				if (InterlockedCompareExchange(&Value, newValue, valueCopy) == valueCopy)
                 {
+					DirectionX *= 1.2f;
+					DirectionY *= 1.2f;
                     break;
                 }
             }

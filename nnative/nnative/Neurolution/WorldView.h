@@ -115,7 +115,7 @@ namespace Neurolution
 				glPushMatrix();
 				glTranslatef(predator.LocationX, predator.LocationY, 0.0);
 				glRotatef(predator.ViewRotation, 0.0f, 0.0f, 1.0f);
-				predator.ViewRotation += 14.0f;
+				predator.ViewRotation += 10.0f + predator.Value;
 
 				predatorColor.GlApply();
 
