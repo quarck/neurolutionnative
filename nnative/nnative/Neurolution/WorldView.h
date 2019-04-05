@@ -104,7 +104,8 @@ namespace Neurolution
             {
 				glPushMatrix();
 				glTranslatef(predator.LocationX, predator.LocationY, 0.0);
-				glRotatef(45.0f, 0.0f, 0.0f, 1.0f);
+				glRotatef(predator.ViewRotation, 0.0f, 0.0f, 1.0f);
+				predator.ViewRotation += 14.0f;
 
 				predatorColor.GlApply();
 
@@ -112,13 +113,24 @@ namespace Neurolution
 
 				glBegin(GL_TRIANGLES);
 
-				glIndexi(1); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
-				glIndexi(2); glVertex3f(halfdiameter, halfdiameter, 0.0f);
-				glIndexi(3); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
+				int idx = 0;
+				glIndexi(++idx); glVertex3f(0.0f, halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
 
-				glIndexi(4); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
-				glIndexi(5); glVertex3f(-halfdiameter, -halfdiameter, 0.0f);
-				glIndexi(6); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, -halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
+
+
+				glIndexi(++idx); glVertex3f(halfdiameter, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
+
+				glIndexi(++idx); glVertex3f(-halfdiameter, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
+
 
 				glEnd();
 

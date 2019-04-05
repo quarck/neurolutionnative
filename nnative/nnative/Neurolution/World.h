@@ -79,6 +79,8 @@ namespace Neurolution
 
 	struct Predator: public LocationAndDirectionWithvalue
     {
+		float ViewRotation{ 0.0f };
+
 		Predator()
 		{
 		}
@@ -91,6 +93,8 @@ namespace Neurolution
         void Reset(Random& rnd, int maxX, int maxY, bool valueOnly = false)
         {
             Value = AppProperties::PredatorInitialValue;// * (0.5 + rnd.NextDouble());
+
+			ViewRotation = (float)(rnd.NextDouble() * 90.0);
 		
 			if (!valueOnly)
 			{
