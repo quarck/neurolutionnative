@@ -87,13 +87,23 @@ namespace Neurolution
 
 				float halfdiameter = static_cast<float>(std::sqrt(food.Value) * 5.0 / 2.0);
 
-				glIndexi(1); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
-				glIndexi(2); glVertex3f(halfdiameter, halfdiameter, 0.0f);
-				glIndexi(3); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
+				int idx = 0;
+				glIndexi(++idx); glVertex3f(0.0f, halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(halfdiameter / 1.5f, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(-halfdiameter / 1.5f, 0.0f, 0.0f);
 
-				glIndexi(4); glVertex3f(halfdiameter, -halfdiameter, 0.0f);
-				glIndexi(5); glVertex3f(-halfdiameter, -halfdiameter, 0.0f);
-				glIndexi(6); glVertex3f(-halfdiameter, halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, -halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(halfdiameter / 1.5f, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(-halfdiameter / 1.5f, 0.0f, 0.0f);
+
+
+				glIndexi(++idx); glVertex3f(halfdiameter, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 1.5f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 1.5f, 0.0f);
+
+				glIndexi(++idx); glVertex3f(-halfdiameter, 0.0f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 1.5f, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 1.5f, 0.0f);
 
 				glEnd();
 
@@ -130,7 +140,6 @@ namespace Neurolution
 				glIndexi(++idx); glVertex3f(-halfdiameter, 0.0f, 0.0f);
 				glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
 				glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
-
 
 				glEnd();
 
