@@ -59,7 +59,7 @@ namespace Neurolution
 
         static constexpr float FoodMinDistanceToBorder = 5;
 
-        static constexpr float MoveEnergyFactor = 0.0000001f;
+        static constexpr float MoveEnergyFactor = 0.001f;
         static constexpr float InitialCellEnergy = 1.0f;
 
         static constexpr float MaxEnergyCapacity = 14.0f;

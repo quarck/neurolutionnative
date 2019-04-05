@@ -14,18 +14,53 @@
 
 namespace Neurolution
 {
-	struct LocationWithvalue
+	template <typename T> 
+	T LoopValue(const T& val, const T& minValue, const T& maxValue)
 	{
-		float Value;
+		if (val >= minValue) // "likely()" == first branch of the if
+		{
+			if (val < maxValue)  // "likely()" == first branch of the if
+				return val;
+			return val - (maxValue - minValue);
+		}
+		return val + (maxValue - minValue);
+	}
+
+	struct Location
+	{
 		float LocationX;
 		float LocationY;
 	};
 
-	struct DirectionWithDistance
+	struct Direction
 	{
 		float DirectionX;
 		float DirectionY;
-		float Distance;
+	};
+
+	struct LocationAndDirectionWithvalue : public Direction, public Location
+	{
+		float Value;
+
+		void Step(Random& rnd, int maxX, int maxY)
+		{
+			LocationX = LoopValue(
+				LocationX + DirectionX + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxX));
+			LocationY = LoopValue(
+				LocationY + DirectionY + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxY));
+		}
+	};
+
+	struct DirectionWithDistanceSquare : public Direction
+	{
+		float DistanceSquare;
+
+		void Set(float dx, float dy)
+		{
+			DirectionX = dx;
+			DirectionY = dy;
+			DistanceSquare = dx * dx + dy * dy;
+		}
 	};
 
 	float InterlockedCompareExchange(float volatile * _Destination, float _Exchange, float _Comparand)
@@ -42,7 +77,7 @@ namespace Neurolution
 		return *reinterpret_cast<float*>(&res);
 	}
 
-	struct Predator: public LocationWithvalue
+	struct Predator: public LocationAndDirectionWithvalue
     {
 		Predator()
 		{
@@ -53,21 +88,23 @@ namespace Neurolution
 	        Reset(rnd, maxX, maxY);
         }
 
-        void Reset(Random& rnd, int maxX, int maxY)
+        void Reset(Random& rnd, int maxX, int maxY, bool valueOnly = false)
         {
             Value = AppProperties::PredatorInitialValue;// * (0.5 + rnd.NextDouble());
-            float radius = AppProperties::FoodMinDistanceToBorder;
-
-            LocationX = radius + rnd.Next(maxX - 2 * (int)radius);
-            LocationY = radius + rnd.Next(maxY - 2 * (int)radius);
-        }
+		
+			if (!valueOnly)
+			{
+				LocationX = rnd.Next(maxX);
+				LocationY = rnd.Next(maxY);
+				DirectionX = (float)(rnd.NextDouble() - 0.5);
+				DirectionY = (float)(rnd.NextDouble() - 0.5);
+			}
+		}
 
         void Eat(float addValue)
         {
             for(;;)
             {
-				static_assert(sizeof(float) == sizeof(long), "expect float to be same size as long");
-
                 float valueCopy = Value;
                 float newValue = valueCopy + addValue;
 
@@ -79,10 +116,8 @@ namespace Neurolution
         }
 	};
 
-    struct Food : public LocationWithvalue
+    struct Food : public LocationAndDirectionWithvalue
     {
-		float Value;
-
 		Food()
 		{
 		}
@@ -99,8 +134,8 @@ namespace Neurolution
             while (Value > 0.001)
             {
                 float valueCopy = Value;
-                float newDelta = (float) (valueCopy > AppProperties::InitialCellEnergy * 0.9 ? 0.1 : 0.01);
-                float newValue = valueCopy * (1 - newDelta);
+                float newDelta = valueCopy < 0.5f ? valueCopy : 0.5f;
+				float newValue = valueCopy - newDelta;
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (InterlockedCompareExchange(&Value, newValue, valueCopy) == valueCopy)
@@ -115,14 +150,19 @@ namespace Neurolution
 
 		bool IsEmpty() const { return Value < 0.00001; }
 
-        void Reset(Random& rnd, int maxX, int maxY)
+        void Reset(Random& rnd, int maxX, int maxY, bool valueOnly = false)
         {
-            Value = AppProperties::FoodInitialValue;// * (0.5 + rnd.NextDouble());
-            float radius = AppProperties::FoodMinDistanceToBorder;
+			Value = AppProperties::FoodInitialValue;// * (0.5 + rnd.NextDouble());
 
-            LocationX = radius + rnd.Next(maxX - 2 * (int)radius);
-            LocationY = radius + rnd.Next(maxY - 2 * (int)radius);
-        }
+			if (!valueOnly)
+			{
+				LocationX = rnd.Next(maxX);
+				LocationY = rnd.Next(maxY);
+
+				DirectionX = (float)(rnd.NextDouble() * 0.5 - 0.25);
+				DirectionY = (float)(rnd.NextDouble() * 0.5 - 0.25);
+			}
+		}
 	};
 
     struct World
@@ -136,8 +176,8 @@ namespace Neurolution
         std::vector<Food> Foods;
         std::vector<Predator> Predators;
 
-		std::vector<DirectionWithDistance> FoodDirections;
-		std::vector<DirectionWithDistance> PredatorDirections;
+		std::vector<DirectionWithDistanceSquare> FoodDirections;
+		std::vector<DirectionWithDistanceSquare> PredatorDirections;
 
         int _maxX;
         int _maxY;
@@ -242,10 +282,18 @@ namespace Neurolution
         void Iterate(long step)
         {
             if (step == 0)
-                WorldReset();
+				WorldInitialize();
 
-            if ((step % AppProperties::StepsPerGeneration) == 0)
-                FoodAndPredatorReset();
+			for (auto& food: Foods)
+				food.Step(_random, _maxX, _maxY);
+
+			for (auto& predator: Predators)
+				predator.Step(_random, _maxX, _maxY);
+
+			if ((step % AppProperties::StepsPerGeneration) == 0)
+			{
+				FoodAndPredatorReset(true);
+			}
 
             if (MultiThreaded)
             {
@@ -325,37 +373,33 @@ namespace Neurolution
 
             // Calculate light sensor values 
 
-			std::transform(
-				std::begin(Foods),
-				std::end(Foods),
-				std::begin(FoodDirections), 
-				[&cell](Food& item) {
-				return DirectionWithDistance{ 
-					item.LocationX - cell->LocationX, 
-					item.LocationY - cell->LocationY, 
-					(float)(std::sqrt(
-								std::pow(item.LocationX - cell->LocationX, 2.0) +
-								std::pow(item.LocationY - cell->LocationY, 2.0)
-								))
-				};
-				}
-			);
+			float offsX = _maxX * 1.5f - cell->LocationX;
+			float offsY = _maxY * 1.5f - cell->LocationY;
+			float halfMaxX = _maxX / 2.0f;
+			float halfMaxY = _maxY / 2.0f;
 
-			std::transform(
-					std::begin(Predators),
-					std::end(Predators),
-					std::begin(PredatorDirections),
-					[&cell](Predator& item) {
-						return DirectionWithDistance{
-							item.LocationX - cell->LocationX,
-							item.LocationY - cell->LocationY,
-							(float)(std::sqrt(
-								std::pow(item.LocationX - cell->LocationX, 2.0) +
-								std::pow(item.LocationY - cell->LocationY, 2.0)
-								))
-						};
-					}
-				);
+
+			// Calculate light sensor values 
+			for (int idx = 0; idx < Foods.size(); ++idx)
+			{
+				auto& item = Foods[idx];
+
+				float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+
+				FoodDirections[idx].Set(dx, dy);
+			}
+
+			for (int idx = 0; idx < Predators.size(); ++idx)
+			{
+				auto& item = Predators[idx];
+
+				float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+
+				PredatorDirections[idx].Set(dx, dy);
+			}
+
 
 			auto& eye = cell->GetEye();
 
@@ -383,13 +427,15 @@ namespace Neurolution
                         if (modulo <= 0.0)
                             continue;
 
-                        float cosine = modulo/food.Distance;
+						float invSqrRoot = Q_rsqrt(food.DistanceSquare);
 
-                        float distnaceSquare = (float) std::pow(food.Distance, 2.0);
+                        float cosine = modulo * invSqrRoot;
+
+                        //float distnaceSquare = (float) std::pow(food.Distance, 2.0);
 
                         float signalLevel =
                             (float) (foodItem.Value * std::pow(cosine, eyeCell.Width)
-                                     / distnaceSquare);
+								* invSqrRoot * invSqrRoot);
 
                         value += signalLevel;
                     }
@@ -407,13 +453,15 @@ namespace Neurolution
                         if (modulo <= 0.0)
                             continue;
 
-                        float cosine = modulo / predator.Distance;
+						float invSqrRoot = Q_rsqrt(predator.DistanceSquare);
 
-                        float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
+                        float cosine = modulo * invSqrRoot;
+
+                        // float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
 
                         float signalLevel =
                             (float)(predatorItem.Value * std::pow(cosine, eyeCell.Width)
-                                     / distnaceSquare);
+								* invSqrRoot * invSqrRoot);
 
                         value += signalLevel;
                     }
@@ -444,32 +492,18 @@ namespace Neurolution
             {
                 cell->CurrentEnergy -= moveEnergyRequired;
 
-                cell->Rotation += rotationForce;
-                if (cell->Rotation > M_PI*2.0)
-                    cell->Rotation -= (float)(M_PI*2.0);
-                else if (cell->Rotation < 0.0)
-                    cell->Rotation += (float)(M_PI*2.0);
+				cell->Rotation = LoopValue(cell->Rotation + rotationForce, 0.0f, (float)(M_PI * 2.0f));
 
                 float dX = (float) (forwardForce*std::cos(cell->Rotation));
                 float dY = (float) (forwardForce*std::sin(cell->Rotation));
 
-                cell->LocationX += dX;
-                cell->LocationY += dY;
+                cell->LocationX = LoopValue(cell->LocationX + dX, 0.0f, (float)_maxX);
+                cell->LocationY = LoopValue(cell->LocationY + dY, 0.0f, (float)_maxY);
             }
             else
             {
                 cell->CurrentEnergy = 0.0f; // so it has tried and failed
             }
-
-            if (cell->LocationX < 0.0)
-                cell->LocationX += _maxX;
-            else if (cell->LocationX >= _maxX)
-                cell->LocationX -= _maxX;
-
-            if (cell->LocationY < 0.0)
-                cell->LocationY += _maxY;
-            else if (cell->LocationY >= _maxY)
-                cell->LocationY -= _maxY;
 
             if (cell->CurrentEnergy < AppProperties::MaxEnergyCapacity)
             {
@@ -512,17 +546,17 @@ namespace Neurolution
             }
         }
 
-        void FoodAndPredatorReset()
+		void FoodAndPredatorReset(bool predatorOnlyValues = false)
         {
             // restore any foods
             for (auto& food: Foods)
-                food.Reset(_random, _maxX, _maxY);
+                food.Reset(_random, _maxX, _maxY, predatorOnlyValues);
 
             for (auto& predator: Predators)
                 predator.Reset(_random, _maxX, _maxY);
         }
 
-        void WorldReset()
+        void WorldInitialize()
         {
             // cleanput outputs & foods 
             for (auto& cell: Cells)
@@ -551,5 +585,22 @@ namespace Neurolution
 
             destination->RandomizeLocation(_random, _maxX, _maxY);
         }
+
+		// Quick reverse square root from Quake 3 source code 
+		inline float Q_rsqrt(float number)
+		{
+			int i;
+			float x2, y;
+			const float threehalfs = 1.5F;
+
+			x2 = number * 0.5F;
+			y = number;
+			i = *reinterpret_cast<int*>(&y);        // evil floating point bit level hacking
+			i = 0x5f3759df - (i >> 1);              // what the hug?
+			y = *reinterpret_cast<float*>(&i);
+			y = y * (threehalfs - (x2 * y * y));    // 1st iteration
+
+			return y;
+		}
 	};
 }
