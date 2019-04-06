@@ -24,7 +24,7 @@ namespace Neurolution
         static constexpr int SerializeTopEveryNStep = 8192 * 8;
         static constexpr int SerializeWorldEveryNStep = 8192 * 64;
 
-        static constexpr int NetworkSize = 256;
+        static constexpr int NetworkSize = 768;
 
 		static constexpr int WorldSize = 128;
         static constexpr int FoodCountPerIteration = 24;
