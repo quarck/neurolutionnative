@@ -553,13 +553,10 @@ namespace Neurolution
 						if (food.IsEmpty())
 							continue;
 
-						float dx = std::abs(cell->LocationX - food.LocationX);
-						float dy = std::abs(cell->LocationY - food.LocationY);
+						float pdx = std::powf(cell->LocationX - food.LocationX, 2.0f);
+						float pdy = std::powf(cell->LocationY - food.LocationY, 2.0f);
 
-						float dv = (float)(std::sqrt(food.Value) / 2.0 * 5);
-						if (dv < 3.0f) dv = 3.0f;
-
-						if (dx <= dv && dy <= dv)
+						if (pdx + pdy <= 100.0f)
 						{
 							cell->CurrentEnergy += food.Consume();
 						}
@@ -571,13 +568,10 @@ namespace Neurolution
 					// Analyze the outcome - did it hit any predators? 
 					for (auto& predator : Predators)
 					{
-						float dx = std::abs(cell->LocationX - predator->LocationX);
-						float dy = std::abs(cell->LocationY - predator->LocationY);
+						float pdx = std::powf(cell->LocationX - predator->LocationX, 2.0f);
+						float pdy = std::powf(cell->LocationY - predator->LocationY, 2.0f);
 
-						float dv = (float)(std::sqrt(predator->CurrentEnergy) / 2.0 * 5);
-						if (dv < 3.0f) dv = 3.0f;
-
-						if (dx <= dv && dy <= dv)
+						if (pdx + pdy <= 100.0f)
 						{
 							predator->PredatoryEat(
 								InterlockedCompareExchange(&(cell->CurrentEnergy), 0.0f, cell->CurrentEnergy)
