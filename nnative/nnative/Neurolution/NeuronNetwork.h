@@ -1,40 +1,34 @@
 ﻿#pragma once
 #include <vector>
 #include "../Random.h"
+#include "Utils.h"
 #include "AppProperties.h"
 
 namespace Neurolution
 {
 
-	template <typename T>
-	const T& ValueCap(const T& val, const  T& min, const T& max)
+
+	enum class LightSensorColor 
 	{
-		if (val < min)
-			return min;
-		if (val > max)
-			return max;
-		return val;
-	}
-
-
-    // specialization types: 
-    // Light
-    // Current Energy 
-    // Smell 
-
+		Unset = 0,
+		Red = 1,	// Plants 
+		Green = 2,	// Plant eaters
+		Blue = 3	// Meat eaters 
+	};
+    
     struct LightSensor
     {
 		float Direction{ 0.0f } ; // radians 
 		float Width{ 0.0f };
-		bool SensetiveToRed{ false };
+		LightSensorColor Color{ LightSensorColor::Unset };
 
 		LightSensor()
 		{
 
 		}
 
-		LightSensor(float dir, float width, bool sensRed)
-			: Direction(dir), Width(width), SensetiveToRed(sensRed)
+		LightSensor(float dir, float width, LightSensorColor& color)
+			: Direction(dir), Width(width), Color(color)
 		{
 
 		}
@@ -126,12 +120,15 @@ namespace Neurolution
         {
             for (int i = 0; i < AppProperties::EyeSize; ++i)
             {
-				double iPrime = ((i >> 1) - AppProperties::EyeSize / 2) + 0.5;
+				//double iPrime = ((i >> 1) - AppProperties::EyeSize / 2) + 0.5;
+
+				int tripodIdx = i / 3;
+				LightSensorColor color = (LightSensorColor)((i % 3) + 1);
 
 				Eye[i] = LightSensor(
-					(float)(AppProperties::EyeCellDirectionStep * iPrime), 
+					(float)(AppProperties::EyeCellDirectionStep * tripodIdx),
 					AppProperties::EyeCellWidth,
-					(i & 1) == 0
+					color
 					);
             }
 

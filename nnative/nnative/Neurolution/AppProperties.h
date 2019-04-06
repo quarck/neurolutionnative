@@ -12,13 +12,11 @@ namespace Neurolution
 
 		static constexpr double MATH_PI = 3.1415926;
 
-        static constexpr int RedEyeSize = 24;
-        static constexpr int BlueEyeSize = 24;
-
-        static constexpr int EyeSize = RedEyeSize + BlueEyeSize;
+		static constexpr int EyeSizeNumTripods = 36; // each covering ~10 deg
+        static constexpr int EyeSize = EyeSizeNumTripods * 3; // total number of light-sensing cells 
 
         static constexpr float EyeCellWidth = 0.1f;
-        static constexpr float EyeCellDirectionStep = (float) (MATH_PI / 48.0);
+        static constexpr float EyeCellDirectionStep = (float) (MATH_PI / EyeSize);
 
         static constexpr int StepsPerGeneration = 512;
         static constexpr int StepsPerBirthCheck = 512;
@@ -29,15 +27,15 @@ namespace Neurolution
         static constexpr int NetworkSize = 256;
 
 		static constexpr int WorldSize = 128;
-        static constexpr int FoodCountPerIteration = 32;
-        static constexpr int PredatorCountPerIteration = 16;
+        static constexpr int FoodCountPerIteration = 24;
+        static constexpr int PredatorCountPerIteration = 48;
 
-        static constexpr int NetworkMoveForceGentleLeft = RedEyeSize + BlueEyeSize + 0;
-        static constexpr int NetworkMoveForceGentleRight = RedEyeSize + BlueEyeSize + 1;
-		static constexpr int NetworkMoveForceNormalLeft = RedEyeSize + BlueEyeSize + 2;
-		static constexpr int NetworkMoveForceNormalRight = RedEyeSize + BlueEyeSize + 3;
-		static constexpr int NetworkMoveForceStrongLeft = RedEyeSize + BlueEyeSize + 4;
-		static constexpr int NetworkMoveForceStrongRight = RedEyeSize + BlueEyeSize + 5;
+        static constexpr int NetworkMoveForceGentleLeft = EyeSize + 0;
+        static constexpr int NetworkMoveForceGentleRight = EyeSize + 1;
+		static constexpr int NetworkMoveForceNormalLeft = EyeSize + 2;
+		static constexpr int NetworkMoveForceNormalRight = EyeSize + 3;
+		static constexpr int NetworkMoveForceStrongLeft = EyeSize + 4;
+		static constexpr int NetworkMoveForceStrongRight = EyeSize + 5;
 
 
         static constexpr float NetworkMaxRegularMutation = 0.03f;

@@ -60,6 +60,24 @@ namespace Neurolution
         void UpdateFrom(std::shared_ptr<World>& world)
         {
 			glPushMatrix();
+
+			// BG BEGIN
+			glBegin(GL_TRIANGLES);
+
+			glColor3f(0.1f, 0.1f, 0.1f);
+
+			glIndexi(1); glVertex2f(1.0f, 1.0f);
+			glIndexi(2); glVertex2f(-1.0f, 1.0f);
+			glIndexi(3); glVertex2f(-1.0f, -1.0f);
+
+			glIndexi(4); glVertex2f(1.0f, 1.0f);
+			glIndexi(5); glVertex2f(1.0f, -1.0f);
+			glIndexi(6); glVertex2f(-1.0f, -1.0f);
+
+			glEnd();
+			// BG END
+
+
 			glScalef(
 				static_cast<GLfloat>(2.0 / AppProperties::WorldWidth),
 				static_cast<GLfloat>(2.0 / AppProperties::WorldHeight),
@@ -113,18 +131,20 @@ namespace Neurolution
             for (auto& predator: _world->Predators)
             {
 				glPushMatrix();
-				glTranslatef(predator.LocationX, predator.LocationY, 0.0);
-				glRotatef(predator.ViewRotation, 0.0f, 0.0f, 1.0f);
-				predator.ViewRotation += 10.0f + predator.Value;
+
+				glTranslatef(predator->LocationX, predator->LocationY, 0.0);
+				glRotatef(
+					static_cast<float>(predator->Rotation / M_PI * 180.0 - 90.0),
+					0.0f, 0.0f, 1.0f);
 
 				predatorColor.GlApply();
 
-				float halfdiameter = static_cast<float>(std::sqrt(predator.Value) * 5.0 / 2.0);
+				float halfdiameter = 5.0f;
 
 				glBegin(GL_TRIANGLES);
 
 				int idx = 0;
-				glIndexi(++idx); glVertex3f(0.0f, halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, 2.5*halfdiameter, 0.0f);
 				glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
 				glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
 

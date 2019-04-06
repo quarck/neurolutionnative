@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="Neurolution\AppProperties.h" />
     <ClInclude Include="Neurolution\Cell.h" />
     <ClInclude Include="Neurolution\CellView.h" />

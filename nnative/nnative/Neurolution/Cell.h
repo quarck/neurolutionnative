@@ -5,6 +5,8 @@
 #include "AppProperties.h"
 #include "../Random.h"
 #include "NeuronNetwork.h"
+#include "Utils.h"
+
 #include <math.h>
 
 namespace Neurolution
@@ -40,12 +42,15 @@ namespace Neurolution
 
 		std::vector<LightSensor>& GetEye() { return Network->Eye; }
 
-        Cell(Random& r, int maxX, int maxY)
+		bool IsPredator{ false };
+
+        Cell(Random& r, int maxX, int maxY, bool isPredator = false)
 			: random(r.Next())
 			, LocationX(static_cast<float>(r.NextDouble()*maxX))
 			, LocationY(static_cast<float>(r.NextDouble()*maxY))
 			, Rotation((float)(r.NextDouble() * 2.0 * M_PI))
 			, Network(std::make_shared<NeuronNetwork>(AppProperties::NetworkSize, r))
+			, IsPredator(isPredator)
         {
         }
 
@@ -90,6 +95,22 @@ namespace Neurolution
             LocationY = static_cast<float>(rnd.NextDouble()*maxY);
             Rotation = (float) (rnd.NextDouble() * 2.0 * M_PI);        
         }
+
+		void PredatoryEat(float addValue)
+		{
+			for (;;)
+			{
+				float valueCopy = CurrentEnergy;
+				float newValue = valueCopy + addValue;
+
+				if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
+				{
+					/*DirectionX *= 1.2f;
+					DirectionY *= 1.2f;*/
+					break;
+				}
+			}
+		}
 	};
 
     //public sealed class CellUtils
@@ -140,4 +161,5 @@ namespace Neurolution
     //        }
     //    }
     //}
+
 }
