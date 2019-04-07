@@ -1,4 +1,6 @@
-﻿#pragma once 
+﻿/*
+*/
+#pragma once 
 
 #define _USE_MATH_DEFINES
 
@@ -24,20 +26,13 @@ namespace Neurolution
 
 		long Age{ 0 };
 
-        //[NonSerialized]
 		float MoveForceLeft{ 0.0f };
-        //[NonSerialized]
 		float MoveForceRight{ 0.0f };
 
-        //public bool Alive = true;
-
-        //[NonSerialized]
         int ClonedFrom = -1;
 
-        //[NonSerialized]
         float CurrentEnergy = 0.0f;
 
-        //[NonSerialized]
         Random random;
 
 		std::vector<LightSensor>& GetEye() { return Network->Eye; }
@@ -45,7 +40,7 @@ namespace Neurolution
 		bool IsPredator{ false };
 
         Cell(Random& r, int maxX, int maxY, bool isPredator = false)
-			: random(r.Next())
+			: random(r)
 			, LocationX(static_cast<float>(r.NextDouble()*maxX))
 			, LocationY(static_cast<float>(r.NextDouble()*maxY))
 			, Rotation((float)(r.NextDouble() * 2.0 * M_PI))
@@ -67,20 +62,20 @@ namespace Neurolution
             Network->IterateNetwork(random);
 
             MoveForceLeft = 
-				0.3 * Network->OutputVector[AppProperties::NetworkMoveForceGentleLeft] + 
-				1.0 * Network->OutputVector[AppProperties::NetworkMoveForceNormalLeft] + 
-				1.7 * Network->OutputVector[AppProperties::NetworkMoveForceStrongLeft];
+				0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleLeft] + 
+				1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalLeft] + 
+				1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongLeft];
             MoveForceRight = 
-				0.3 * Network->OutputVector[AppProperties::NetworkMoveForceGentleRight] +
-				1.0 * Network->OutputVector[AppProperties::NetworkMoveForceNormalRight] +
-				1.7 * Network->OutputVector[AppProperties::NetworkMoveForceStrongRight];
+				0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleRight] +
+				1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalRight] +
+				1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongRight];
 
             Age++;
         }
 
         void CloneFrom(const Cell& other, Random& rnd, int maxX, int maxY, bool severeMutations, float severity)
         {
-            RandomizeLocation(rnd, maxX, maxY);
+            //RandomizeLocation(rnd, maxX, maxY);
 
             //Alive = true;
 
@@ -96,20 +91,28 @@ namespace Neurolution
             Rotation = (float) (rnd.NextDouble() * 2.0 * M_PI);        
         }
 
-		void PredatoryEat(float addValue)
+		bool PredatoryEat(float& preyEnergy)
 		{
 			for (;;)
 			{
-				float valueCopy = CurrentEnergy;
-				float newValue = valueCopy + addValue;
-
-				if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
+				float valueCopy = InterlockedCompareExchange(&CurrentEnergy, 0.0f, 0.0f); // means just read
+				if (valueCopy > preyEnergy && valueCopy > 0.001f)
 				{
-					/*DirectionX *= 1.2f;
-					DirectionY *= 1.2f;*/
-					break;
+					float newValue = valueCopy + preyEnergy;
+
+					if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
+					{
+						break;
+					}
+				}
+				else
+				{
+					preyEnergy -= valueCopy;
+					return false;
 				}
 			}
+
+			return true;
 		}
 	};
 

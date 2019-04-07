@@ -139,12 +139,12 @@ namespace Neurolution
 
 				predatorColor.GlApply();
 
-				float halfdiameter = 5.0f;
+				float halfdiameter = 7.0f;
 
 				glBegin(GL_TRIANGLES);
 
 				int idx = 0;
-				glIndexi(++idx); glVertex3f(0.0f, 2.5*halfdiameter, 0.0f);
+				glIndexi(++idx); glVertex3f(0.0f, 2.5f*halfdiameter, 0.0f);
 				glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
 				glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
 

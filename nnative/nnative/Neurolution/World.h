@@ -114,7 +114,7 @@ namespace Neurolution
 
 			while (Value > 0.001)
 			{
-				float valueCopy = Value;
+				float valueCopy = InterlockedCompareExchange(&Value, 0.0f, 0.0f);
 				float newDelta = valueCopy < 0.5f ? valueCopy : 0.5f;
 				float newValue = valueCopy - newDelta;
 
@@ -137,8 +137,8 @@ namespace Neurolution
 
 			if (!valueOnly)
 			{
-				LocationX = rnd.Next(maxX);
-				LocationY = rnd.Next(maxY);
+				LocationX = (float)rnd.Next(maxX);
+				LocationY = (float)rnd.Next(maxY);
 
 				DirectionX = (float)(rnd.NextDouble() * 0.5 - 0.25);
 				DirectionY = (float)(rnd.NextDouble() * 0.5 - 0.25);
@@ -274,7 +274,7 @@ namespace Neurolution
 					|| (step % AppProperties::SerializeTopEveryNStep == 0)
 					))
 				{
-				int quant = AppProperties::WorldSize / 16; // == 32 basically
+				int quant = static_cast<int>(elements.size() / 16); 
 
 				std::sort(std::begin(elements), std::end(elements),
 					[](std::shared_ptr<Cell>& x, std::shared_ptr<Cell>& y) {
@@ -305,7 +305,7 @@ namespace Neurolution
 
 							auto& dst = elements[dstIdx--];
 
-							float energy = AppProperties::InitialCellEnergy;
+							float energy = src->IsPredator ? AppProperties::PredatorInitialValue : AppProperties::InitialCellEnergy;
 							src->CurrentEnergy -= AppProperties::BirthEnergyConsumption;
 
 							MakeBaby(src, dst, energy);
@@ -335,7 +335,7 @@ namespace Neurolution
 
 			if ((step % AppProperties::StepsPerGeneration) == 0)
 			{
-				FoodAndPredatorReset(true);
+				ResetFoods();
 			}
 
 			if (MultiThreaded)
@@ -360,6 +360,9 @@ namespace Neurolution
 
 		void IterateCell(long step, std::shared_ptr<Cell>& cell)
 		{
+			if (cell->CurrentEnergy < 0.00001f)
+				return;
+
 			cell->PrepareIteration();
 
 			// Calculate light sensor values 
@@ -403,24 +406,32 @@ namespace Neurolution
 
 			auto& eye = cell->GetEye();
 
-			for (unsigned int eyeIdx = 0; eyeIdx < eye.size(); ++eyeIdx)
+			for (unsigned int tripodIdx = 0; 
+				tripodIdx < AppProperties::EyeSizeNumTripods; 
+				++tripodIdx)
 			{
-				auto& eyeCell = eye[eyeIdx];
+
+				auto& redCell = eye[3 * tripodIdx];
+				auto& greenCell = eye[3 * tripodIdx+1];
+				auto& blueCell = eye[3 * tripodIdx+2];
 				// 
-				float viewDirection = cell->Rotation + eyeCell.Direction;
+				float viewDirection = cell->Rotation + redCell.Direction;
 
 				float viewDirectionX = (float)std::cos(viewDirection);
 				float viewDirectionY = (float)std::sin(viewDirection);
 
-				float value = 0.0f;
-
-				if (eyeCell.Color == LightSensorColor::Red) // plants 
+				// RED 
 				{
+					float value = 0.0f;
+
 					// This cell can see foods only
 					for (unsigned int idx = 0; idx < FoodDirections.size(); ++idx)
 					{
-						auto& food = FoodDirections[idx];
 						auto& foodItem = Foods[idx];
+						if (foodItem.Value < 0.01f)
+							continue;
+
+						auto& food = FoodDirections[idx];
 
 						float modulo = viewDirectionX * food.DirectionX + viewDirectionY * food.DirectionY;
 
@@ -434,19 +445,26 @@ namespace Neurolution
 						//float distnaceSquare = (float) std::pow(food.Distance, 2.0);
 
 						float signalLevel =
-							(float)(foodItem.Value * std::pow(cosine, eyeCell.Width)
+							(float)(foodItem.Value * std::pow(cosine, redCell.Width)
 								* invSqrRoot * invSqrRoot);
 
 						value += signalLevel;
 					}
+					cell->Network->InputVector[3 * tripodIdx] = 1000 * value;
 				}
-				else if (eyeCell.Color == LightSensorColor::Green) // plant eaters 
+				
+				// GREEN 
 				{
+					float value = 0.0f;
+
 					// this cell can see predators only
 					for (unsigned int idx = 0; idx < CellDirections.size(); ++idx)
 					{
 						auto& cellDirection = CellDirections[idx];
 						auto& cellItem = Cells[idx];
+
+						if (cellItem->CurrentEnergy < 0.01f)
+							continue;
 
 						if (cellItem == cell)
 							continue;
@@ -463,19 +481,27 @@ namespace Neurolution
 						// float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
 
 						float signalLevel =
-							(float)(cellItem->CurrentEnergy * std::pow(cosine, eyeCell.Width)
+							(float)(cellItem->CurrentEnergy * std::pow(cosine, greenCell.Width)
 								* invSqrRoot * invSqrRoot);
 
 						value += signalLevel;
 					}
+
+					cell->Network->InputVector[3 * tripodIdx + 1] = 1000 * value;
 				}
-				else if (eyeCell.Color == LightSensorColor::Blue) // meat eaters 
+				
+				// BLUE
 				{
+					float value = 0.0f;
+
 					// this cell can see predators only
 					for (unsigned int idx = 0; idx < PredatorDirections.size(); ++idx)
 					{
 						auto& predator = PredatorDirections[idx];
 						auto& predatorItem = Predators[idx];
+
+						if (predatorItem->CurrentEnergy < 0.01f)
+							continue;
 
 						if (predatorItem == cell)
 							continue;
@@ -492,14 +518,13 @@ namespace Neurolution
 						// float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
 
 						float signalLevel =
-							(float)(predatorItem->CurrentEnergy * std::pow(cosine, eyeCell.Width)
+							(float)(predatorItem->CurrentEnergy * std::pow(cosine, blueCell.Width)
 								* invSqrRoot * invSqrRoot);
 
 						value += signalLevel;
 					}
+					cell->Network->InputVector[3 * tripodIdx + 2] = 1000 * value;
 				}
-
-				cell->Network->InputVector[eyeIdx] = 1000 * value;
 			}
 
 			float forceLeft = 0.0f;
@@ -522,7 +547,7 @@ namespace Neurolution
 
 			if (cell->IsPredator)
 			{
-				moveEnergyRequired *= 2.5f;
+				moveEnergyRequired *= 2.25f;
 				forwardForce *= 1.5;
 			}
 
@@ -568,14 +593,21 @@ namespace Neurolution
 					// Analyze the outcome - did it hit any predators? 
 					for (auto& predator : Predators)
 					{
+						if (predator->CurrentEnergy < 0.0001f)
+							continue; // skip deads 
+
 						float pdx = std::powf(cell->LocationX - predator->LocationX, 2.0f);
 						float pdy = std::powf(cell->LocationY - predator->LocationY, 2.0f);
 
 						if (pdx + pdy <= 100.0f)
 						{
-							predator->PredatoryEat(
-								InterlockedCompareExchange(&(cell->CurrentEnergy), 0.0f, cell->CurrentEnergy)
-							);
+							float energy = InterlockedCompareExchange(&(cell->CurrentEnergy), 0.0f, cell->CurrentEnergy);
+
+							if (!predator->PredatoryEat(energy))
+							{
+								// predator has failed 
+								InterlockedCompareExchange(&(cell->CurrentEnergy), energy, 0.0f);
+							}
 						}
 					}
 				}
@@ -606,14 +638,11 @@ namespace Neurolution
 
 		}
 
-		void FoodAndPredatorReset(bool predatorOnlyValues = false)
+		void ResetFoods()
 		{
 			// restore any foods
 			for (auto& food : Foods)
-				food.Reset(_random, _maxX, _maxY, predatorOnlyValues);
-
-			//for (auto& predator : Predators)
-			//	predator.Reset(_random, _maxX, _maxY);
+				food.Reset(_random, _maxX, _maxY);
 		}
 
 		void WorldInitialize()
@@ -626,7 +655,13 @@ namespace Neurolution
 				//cell.RandomizeLocation(_random, _maxX, _maxY);
 			}
 
-			FoodAndPredatorReset();
+			for (auto& predator : Predators)
+			{
+				predator->CurrentEnergy = AppProperties::PredatorInitialValue;
+				predator->Network->CleanOutputs();
+			}
+
+			ResetFoods();
 		}
 
 		void MakeBaby(std::shared_ptr<Cell>& source, std::shared_ptr<Cell>& destination, float initialEnergy)

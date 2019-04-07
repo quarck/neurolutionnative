@@ -315,7 +315,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 	MSG   msg;				/* message */
 
 	hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0, 
-		Neurolution::AppProperties::WorldWidth, Neurolution::AppProperties::WorldHeight,
+		Neurolution::AppProperties::WorldWidth / 2, Neurolution::AppProperties::WorldHeight / 2,
 		PFD_TYPE_RGBA, PFD_DOUBLEBUFFER);
 	if (hWnd == NULL)
 		exit(1);

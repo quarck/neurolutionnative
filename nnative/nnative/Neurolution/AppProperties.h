@@ -12,7 +12,7 @@ namespace Neurolution
 
 		static constexpr double MATH_PI = 3.1415926;
 
-		static constexpr int EyeSizeNumTripods = 36; // each covering ~10 deg
+		static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg
         static constexpr int EyeSize = EyeSizeNumTripods * 3; // total number of light-sensing cells 
 
         static constexpr float EyeCellWidth = 0.1f;
@@ -24,11 +24,11 @@ namespace Neurolution
         static constexpr int SerializeTopEveryNStep = 8192 * 8;
         static constexpr int SerializeWorldEveryNStep = 8192 * 64;
 
-        static constexpr int NetworkSize = 768;
+        static constexpr int NetworkSize = 512;
 
 		static constexpr int WorldSize = 128;
         static constexpr int FoodCountPerIteration = 24;
-        static constexpr int PredatorCountPerIteration = 48;
+        static constexpr int PredatorCountPerIteration = 16;
 
         static constexpr int NetworkMoveForceGentleLeft = EyeSize + 0;
         static constexpr int NetworkMoveForceGentleRight = EyeSize + 1;
@@ -42,15 +42,15 @@ namespace Neurolution
         static constexpr float NetworkSevereMutationAlpha = 0.4f;
         static constexpr float NetworkNoiseLevel = 0.00001f;
 
-        static constexpr float FoodInitialValue = 7;
+        static constexpr float FoodInitialValue = 14;
 
-        static constexpr float PredatorInitialValue = 7;
+        static constexpr float PredatorInitialValue = 1.5f;
 
         static constexpr float CellTailLength = 4.0f;
         static constexpr float CellEyeBase = 3.0f;
 
-        static constexpr int WorldWidth = 800;
-        static constexpr int WorldHeight = 600;
+        static constexpr int WorldWidth = 1000;
+        static constexpr int WorldHeight = 1000;
 
         static constexpr float SevereMutationFactor = 0.15f;
         static constexpr float SevereMutationSlope = 0.33f;
