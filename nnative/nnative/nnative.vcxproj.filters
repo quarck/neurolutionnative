@@ -60,9 +60,6 @@
     <ClInclude Include="ThreadGrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Barrier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -373,33 +373,61 @@ namespace Neurolution
 						{
 							IterateCellEye(idx, step, Cells[cellIdx]);
 						}
-					});
+						for (int pIdx = 0; pIdx < Predators.size(); pIdx += n)
+						{
+							IterateCellEye(idx, step, Predators[pIdx]);
+						}
+				});
 
 				//for (auto& cell : Cells)
 				//{
 				//	IterateCellEye(0, step, cell);
 				//}
+			
+				//for (auto& cell : Predators)
+				//{
+				//	IterateCellEye(0, step, cell);
+				//}
 
-				for (auto& cell : Predators)
+				_grid.GridRun(
+					[&](int idx, int n)
 				{
-					IterateCellEye(0, step, cell);
-				}
+					for (int cellIdx = 0; cellIdx < Cells.size(); cellIdx += n)
+					{
+						IterateCellThinkingAndMoving(idx, step, Cells[cellIdx]);
+					}
+					for (int pIdx = 0; pIdx < Predators.size(); pIdx += n)
+					{
+						IterateCellThinkingAndMoving(idx, step, Predators[pIdx]);
+					}
+				});
 
-				for (auto& cell : Cells)
-				{
-					IterateCellThinkingAndMoving(0, step, cell);
-				}
-				for (auto& cell : Predators)
-				{
-					IterateCellThinkingAndMoving(0, step, cell);
-				}
+
+				//for (auto& cell : Cells)
+				//{
+				//	IterateCellThinkingAndMoving(0, step, cell);
+				//}
+
+				//for (auto& cell : Predators)
+				//{
+				//	IterateCellThinkingAndMoving(0, step, cell);
+				//}
 
 				// only iterate preys as predators are checked when prey is checking for 
 				// collisions with predators 
-				for (auto& cell : Cells)
+				//for (auto& cell : Cells)
+				//{
+				//	IterateCellCollisions(0, step, cell);
+				//}
+
+				_grid.GridRun(
+					[&](int idx, int n)
 				{
-					IterateCellCollisions(0, step, cell);
-				}
+					for (int cellIdx = 0; cellIdx < Cells.size(); cellIdx += n)
+					{
+						IterateCellCollisions(idx, step, Cells[cellIdx]);
+					}
+				});
 			}
 
 			IterateBabyMaking(step, Cells);
