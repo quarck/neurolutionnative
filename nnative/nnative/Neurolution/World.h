@@ -1,4 +1,9 @@
-﻿#pragma once 
+﻿// TODO: ideas to try: 
+// * caves 
+// * R-G-B games
+// * gravity 
+
+#pragma once 
 //using System;
 //using System.Collections.Generic;
 //using System.IO;
@@ -9,8 +14,10 @@
 #include "../Random.h"
 
 #include "Cell.h"
+#include "../ThreadGrid.h"
 
 #include <algorithm>
+#include <functional>
 
 namespace Neurolution
 {
@@ -148,18 +155,17 @@ namespace Neurolution
 
 	struct World
 	{
-		static constexpr float Sqrt2 = 1.4142135623730950488016887242097f;
+		static constexpr float Sqrt2 = 1.4142135623730950488016887242097f; // unfortunately std::sqrt is not a constexpr function
 
-		//        public const float FoodRadiusSquare = AppProperties.FoodRadius * AppProperties.FoodRadius;
-		  //      public const float PredatorRadiusSquare = AppProperties.PredatorRadius * AppProperties.PredatorRadius;
+		int numWorkerThreads;
 
 		std::vector<std::shared_ptr<Cell>> Cells;
 		std::vector<std::shared_ptr<Cell>> Predators;
 		std::vector<Food> Foods;
 
-		std::vector<DirectionWithDistanceSquare> CellDirections;
-		std::vector<DirectionWithDistanceSquare> PredatorDirections;
-		std::vector<DirectionWithDistanceSquare> FoodDirections;
+		std::vector<std::vector<DirectionWithDistanceSquare>> CellDirections;
+		std::vector<std::vector<DirectionWithDistanceSquare>> PredatorDirections;
+		std::vector<std::vector<DirectionWithDistanceSquare>> FoodDirections;
 
 		int _maxX;
 		int _maxY;
@@ -169,28 +175,41 @@ namespace Neurolution
 		std::string _workingFolder;
 		bool _workingFolderCreated{ false };
 
-		bool MultiThreaded{ false };
+		ThreadGrid _grid;
 
-		World(const std::string& workingFolder, int size, int foodItems, int predatorItems, int maxX, int maxY)
-			: _maxX(maxX)
+//		bool MultiThreaded{ false };
+
+		World(const std::string& workingFolder, 
+			int nWorkerThreads,
+			int numPreys, int numFoods, int numPredators, int maxX, int maxY)
+			: _grid(nWorkerThreads)
+			, _maxX(maxX)
 			, _maxY(maxY)
 			, _workingFolder(workingFolder)
-			, Cells(size)
-			, CellDirections(size)
-			, Foods(foodItems)
-			, FoodDirections(foodItems)
-			, Predators(predatorItems)
-			, PredatorDirections(predatorItems)
+			, numWorkerThreads(nWorkerThreads)
+			, Cells(numPreys)
+			, Foods(numFoods)
+			, Predators(numPredators)
+			, CellDirections(nWorkerThreads)
+			, FoodDirections(nWorkerThreads)
+			, PredatorDirections(nWorkerThreads)
 		{
-			for (int i = 0; i < size; ++i)
+			for (int i = 0; i < numPreys; ++i)
 				Cells[i] = std::make_shared<Cell>(_random, maxX, maxY, false);
 
-			for (int i = 0; i < predatorItems; ++i)
+			for (int i = 0; i < numPredators; ++i)
 				Predators[i] = std::make_shared<Cell>(_random, maxX, maxY, true);
 
-			for (int i = 0; i < foodItems; ++i)
+			for (int i = 0; i < numFoods; ++i)
 				Foods[i] = Food(_random, maxX, maxY);
 
+			for (int i = 0; i < numWorkerThreads; ++i)
+			{
+				// Some in-efficiency here, yes
+				CellDirections[i] = std::vector<DirectionWithDistanceSquare>(numPreys);
+				FoodDirections[i] = std::vector<DirectionWithDistanceSquare>(numFoods);
+				PredatorDirections[i] = std::vector<DirectionWithDistanceSquare>(numPredators);
+			}
 		}
 
 		void InitializeFromTopFile(const std::string& filename)
@@ -338,30 +357,63 @@ namespace Neurolution
 				ResetFoods();
 			}
 
-			if (MultiThreaded)
+			//if (numWorkerThreads > 1)
+			//{
+			//	//Parallel.ForEach(
+			//	//    Cells,
+			//	//    cell => IterateCell(step, cell)
+			//	//);
+			//}
+			//else
 			{
-				//Parallel.ForEach(
-				//    Cells,
-				//    cell => IterateCell(step, cell)
-				//);
-			}
-			else
-			{
-				for (auto& cell : Cells)
-					IterateCell(step, cell);
+				_grid.GridRun(
+					[&](int idx, int n) 
+					{
+						for (int cellIdx = 0; cellIdx < Cells.size(); cellIdx += n)
+						{
+							IterateCellEye(idx, step, Cells[cellIdx]);
+						}
+					});
+
+				//for (auto& cell : Cells)
+				//{
+				//	IterateCellEye(0, step, cell);
+				//}
 
 				for (auto& cell : Predators)
-					IterateCell(step, cell);
+				{
+					IterateCellEye(0, step, cell);
+				}
+
+				for (auto& cell : Cells)
+				{
+					IterateCellThinkingAndMoving(0, step, cell);
+				}
+				for (auto& cell : Predators)
+				{
+					IterateCellThinkingAndMoving(0, step, cell);
+				}
+
+				// only iterate preys as predators are checked when prey is checking for 
+				// collisions with predators 
+				for (auto& cell : Cells)
+				{
+					IterateCellCollisions(0, step, cell);
+				}
 			}
 
 			IterateBabyMaking(step, Cells);
 			IterateBabyMaking(step, Predators);
 		}
 
-		void IterateCell(long step, std::shared_ptr<Cell>& cell)
+		void IterateCellEye(int threadIdx, long step, std::shared_ptr<Cell>& cell)
 		{
 			if (cell->CurrentEnergy < 0.00001f)
 				return;
+
+			auto& cellDirections = CellDirections[threadIdx];
+			auto& foodDirections = FoodDirections[threadIdx];
+			auto& predatorDirections = PredatorDirections[threadIdx];
 
 			cell->PrepareIteration();
 
@@ -381,7 +433,7 @@ namespace Neurolution
 				float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
 				float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
 
-				FoodDirections[idx].Set(dx, dy);
+				foodDirections[idx].Set(dx, dy);
 			}
 
 			for (int idx = 0; idx < Predators.size(); ++idx)
@@ -391,7 +443,7 @@ namespace Neurolution
 				float dx = LoopValue(item->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
 				float dy = LoopValue(item->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
 
-				PredatorDirections[idx].Set(dx, dy);
+				predatorDirections[idx].Set(dx, dy);
 			}
 
 			for (int idx = 0; idx < Cells.size(); ++idx)
@@ -401,19 +453,19 @@ namespace Neurolution
 				float dx = LoopValue(item->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
 				float dy = LoopValue(item->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
 
-				CellDirections[idx].Set(dx, dy);
+				cellDirections[idx].Set(dx, dy);
 			}
 
 			auto& eye = cell->GetEye();
 
-			for (unsigned int tripodIdx = 0; 
-				tripodIdx < AppProperties::EyeSizeNumTripods; 
+			for (unsigned int tripodIdx = 0;
+				tripodIdx < AppProperties::EyeSizeNumTripods;
 				++tripodIdx)
 			{
 
 				auto& redCell = eye[3 * tripodIdx];
-				auto& greenCell = eye[3 * tripodIdx+1];
-				auto& blueCell = eye[3 * tripodIdx+2];
+				auto& greenCell = eye[3 * tripodIdx + 1];
+				auto& blueCell = eye[3 * tripodIdx + 2];
 				// 
 				float viewDirection = cell->Rotation + redCell.Direction;
 
@@ -425,13 +477,13 @@ namespace Neurolution
 					float value = 0.0f;
 
 					// This cell can see foods only
-					for (unsigned int idx = 0; idx < FoodDirections.size(); ++idx)
+					for (unsigned int idx = 0; idx < foodDirections.size(); ++idx)
 					{
 						auto& foodItem = Foods[idx];
 						if (foodItem.Value < 0.01f)
 							continue;
 
-						auto& food = FoodDirections[idx];
+						auto& food = foodDirections[idx];
 
 						float modulo = viewDirectionX * food.DirectionX + viewDirectionY * food.DirectionY;
 
@@ -452,15 +504,15 @@ namespace Neurolution
 					}
 					cell->Network->InputVector[3 * tripodIdx] = 1000 * value;
 				}
-				
+
 				// GREEN 
 				{
 					float value = 0.0f;
 
 					// this cell can see predators only
-					for (unsigned int idx = 0; idx < CellDirections.size(); ++idx)
+					for (unsigned int idx = 0; idx < cellDirections.size(); ++idx)
 					{
-						auto& cellDirection = CellDirections[idx];
+						auto& cellDirection = cellDirections[idx];
 						auto& cellItem = Cells[idx];
 
 						if (cellItem->CurrentEnergy < 0.01f)
@@ -481,7 +533,7 @@ namespace Neurolution
 						// float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
 
 						float signalLevel =
-							(float)(cellItem->CurrentEnergy * std::pow(cosine, greenCell.Width)
+							(float)(/*cellItem->CurrentEnergy*/AppProperties::InitialCellEnergy * std::pow(cosine, greenCell.Width)
 								* invSqrRoot * invSqrRoot);
 
 						value += signalLevel;
@@ -489,15 +541,15 @@ namespace Neurolution
 
 					cell->Network->InputVector[3 * tripodIdx + 1] = 1000 * value;
 				}
-				
+
 				// BLUE
 				{
 					float value = 0.0f;
 
 					// this cell can see predators only
-					for (unsigned int idx = 0; idx < PredatorDirections.size(); ++idx)
+					for (unsigned int idx = 0; idx < predatorDirections.size(); ++idx)
 					{
-						auto& predator = PredatorDirections[idx];
+						auto& predator = predatorDirections[idx];
 						auto& predatorItem = Predators[idx];
 
 						if (predatorItem->CurrentEnergy < 0.01f)
@@ -518,7 +570,7 @@ namespace Neurolution
 						// float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
 
 						float signalLevel =
-							(float)(predatorItem->CurrentEnergy * std::pow(cosine, blueCell.Width)
+							(float)(/*predatorItem->CurrentEnergy*/AppProperties::PredatorInitialValue * std::pow(cosine, blueCell.Width)
 								* invSqrRoot * invSqrRoot);
 
 						value += signalLevel;
@@ -526,7 +578,10 @@ namespace Neurolution
 					cell->Network->InputVector[3 * tripodIdx + 2] = 1000 * value;
 				}
 			}
-
+		}
+		
+		void IterateCellThinkingAndMoving(int threadIdx, long step, std::shared_ptr<Cell>& cell)
+		{
 			float forceLeft = 0.0f;
 			float forceRight = 0.0f;
 
@@ -563,11 +618,15 @@ namespace Neurolution
 				cell->LocationX = LoopValue(cell->LocationX + dX, 0.0f, (float)_maxX);
 				cell->LocationY = LoopValue(cell->LocationY + dY, 0.0f, (float)_maxY);
 			}
-			else
+			else if (!cell->IsPredator)
 			{
 				cell->CurrentEnergy = 0.0f; // so it has tried and failed
 			}
 
+		}
+
+		void IterateCellCollisions(int threadIdx, long step, std::shared_ptr<Cell>& cell)
+		{
 			if (!cell->IsPredator)
 			{
 				if (cell->CurrentEnergy < AppProperties::MaxEnergyCapacity)
@@ -612,30 +671,6 @@ namespace Neurolution
 					}
 				}
 			}
-			//else
-			//{
-			//	if (cell->CurrentEnergy < AppProperties::MaxEnergyCapacity)
-			//	{
-			//		// Analyze the outcome - did it get any prey? 
-			//		for (auto& food : Cells)
-			//		{
-			//			if (food->CurrentEnergy < 0.001f)
-			//				continue;
-
-			//			float dx = std::abs(cell->LocationX - food->LocationX);
-			//			float dy = std::abs(cell->LocationY - food->LocationY);
-
-			//			float dv = (float)(std::sqrt(food->CurrentEnergy) / 2.0 * 5);
-			//			if (dv < 3.0f) dv = 3.0f;
-
-			//			if (dx <= dv && dy <= dv)
-			//			{
-			//				cell->CurrentEnergy += food.Consume();
-			//			}
-			//		}
-			//	}				
-			//}
-
 		}
 
 		void ResetFoods()

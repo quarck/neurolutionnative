@@ -10,6 +10,7 @@
 #include <atomic>
 
 #include "Neurolution/AppProperties.h"
+#include "Neurolution/RuntimeConfig.h"
 #include "Neurolution/NeuronNetwork.h"
 #include "Neurolution/Cell.h"
 #include "Neurolution/World.h"
@@ -19,7 +20,7 @@
 
 #define MAX_LOADSTRING 100
 
-Neurolution::MainController controller;
+std::unique_ptr<Neurolution::MainController> controller;
 
 void Init()
 {
@@ -40,34 +41,43 @@ void Reshape(int width, int height)
 
 void Display(bool force)
 {
-	if (!force && !controller.IsUINeedsUpdate())
+	if (!controller)
+		return;
+
+	if (!force && !controller->IsUINeedsUpdate())
 		return;
 
 //	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	controller.DrawWorld();
+	controller->DrawWorld();
 	glFlush();
 
-	SwapBuffers(controller.GetHDC());
+	SwapBuffers(controller->GetHDC());
 }
 
 void HandleKeyboard(WPARAM wParam)
 {
+	if (!controller)
+		return;
+
 	switch (wParam)
 	{
 	case 27:			/* ESC key */
-		controller.Stop();
+		controller->Stop();
 		PostQuitMessage(0);
 		break;
 	case ' ':
-		controller.SetAppIsPaused(!controller.IsAppPaused());
+		controller->SetAppIsPaused(!controller->IsAppPaused());
 		break;
 	}
 }
 
 LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (!controller)
+		return LRESULT();
+
 	static PAINTSTRUCT ps;
 
 	switch (uMsg)
@@ -138,8 +148,8 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_QUERYNEWPALETTE:
 	{
-		auto& hPalette = controller.GetHPalette();
-		auto &hDC = controller.GetHDC();
+		auto& hPalette = controller->GetHPalette();
+		auto &hDC = controller->GetHDC();
 		if (hPalette)
 		{
 			UnrealizeObject(hPalette);
@@ -150,7 +160,7 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return FALSE;
 	}
 	case WM_CLOSE:
-		controller.Stop();
+		controller->Stop();
 		PostQuitMessage(0);
 		return 0;
 
@@ -164,6 +174,9 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height, BYTE type, DWORD flags)
 {
+	if (!controller)
+		return HWND();
+
 	int         n, pf;
 	WNDCLASS    wc;
 	LOGPALETTE* lpPal;
@@ -206,7 +219,7 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 		return NULL;
 	}
 
-	auto& hDC = controller.GetHDC();
+	auto& hDC = controller->GetHDC();
 
 	hDC = GetDC(hWnd);
 
@@ -290,7 +303,7 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 			lpPal->palPalEntry[3].peFlags = PC_NOCOLLAPSE;
 		}
 
-		auto& hPalette = controller.GetHPalette();
+		auto& hPalette = controller->GetHPalette();
 
 		hPalette = CreatePalette(lpPal);
 		if (hPalette)
@@ -310,8 +323,12 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 
 int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousInst, _In_ LPWSTR lpszCmdLine, _In_ int nCmdShow)
 {
+	Neurolution::RuntimeConfig config;
+
+	controller = std::make_unique<Neurolution::MainController>(config);
+
 	HGLRC hRC;				/* opengl context */
-	HWND&  hWnd = controller.GetHWND();
+	HWND&  hWnd = controller->GetHWND();
 	MSG   msg;				/* message */
 
 	hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0, 
@@ -320,8 +337,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 	if (hWnd == NULL)
 		exit(1);
 
-	auto& hDC = controller.GetHDC();
-	auto& hPalette = controller.GetHPalette();
+	auto& hDC = controller->GetHDC();
+	auto& hPalette = controller->GetHPalette();
 
 	hDC = GetDC(hWnd);
 	hRC = wglCreateContext(hDC);
@@ -332,9 +349,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 
 	Init();
 
-	controller.Start();
+	controller->Start();
 
-	while (!controller.IsTerminating() && GetMessage(&msg, hWnd, 0, 0))
+	while (!controller->IsTerminating() && GetMessage(&msg, hWnd, 0, 0))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -364,7 +381,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 	//	}
 	//}
 
-	controller.Stop();
+	controller->Stop();
 
 	wglMakeCurrent(NULL, NULL);
 	ReleaseDC(hWnd, hDC);

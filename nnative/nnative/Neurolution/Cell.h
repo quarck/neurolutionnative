@@ -96,19 +96,11 @@ namespace Neurolution
 			for (;;)
 			{
 				float valueCopy = InterlockedCompareExchange(&CurrentEnergy, 0.0f, 0.0f); // means just read
-				if (valueCopy > preyEnergy && valueCopy > 0.001f)
-				{
-					float newValue = valueCopy + preyEnergy;
+				float newValue = valueCopy + preyEnergy;
 
-					if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
-					{
-						break;
-					}
-				}
-				else
+				if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
 				{
-					preyEnergy -= valueCopy;
-					return false;
+					break;
 				}
 			}
 

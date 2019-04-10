@@ -156,7 +156,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="Barrier.h" />
+    <ClInclude Include="Neurolution\RuntimeConfig.h" />
+    <ClInclude Include="ThreadGrid.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Neurolution\AppProperties.h" />
     <ClInclude Include="Neurolution\Cell.h" />

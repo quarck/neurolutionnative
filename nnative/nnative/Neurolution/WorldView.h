@@ -130,6 +130,9 @@ namespace Neurolution
 
             for (auto& predator: _world->Predators)
             {
+				if (predator->CurrentEnergy < 0.001f)
+					continue; // dead one
+
 				glPushMatrix();
 
 				glTranslatef(predator->LocationX, predator->LocationY, 0.0);

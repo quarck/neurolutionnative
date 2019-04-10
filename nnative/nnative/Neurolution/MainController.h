@@ -8,12 +8,14 @@
 
 #include "World.h"
 #include "WorldView.h"
-
+#include "RuntimeConfig.h"
 
 namespace Neurolution
 {
     class MainController
     {
+		RuntimeConfig& config;
+
         std::shared_ptr<World> world;
 		std::mutex worldLock;
 		std::shared_ptr<WorldView> _worldView;
@@ -31,14 +33,15 @@ namespace Neurolution
 		HWND hWND;
 	public:
 
-
-        MainController()
+        MainController(RuntimeConfig& cfg)
+			: config(cfg)
         {
             //string documents = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             //string workingFolder = $"{documents}\\Neurolution\\{DateTime.Now:yyyy-MM-dd-HH-mm}";
 
             world = std::make_shared<World>(
                 std::string(""),
+				config.GetNumWorkerThreads(),
                 AppProperties::WorldSize, 
                 AppProperties::FoodCountPerIteration,
                 AppProperties::PredatorCountPerIteration,
@@ -133,7 +136,6 @@ namespace Neurolution
             //var start = DateTime.Now;
             //var end = start + TimeSpan.FromSeconds(20);
 
-			
 			auto lastUIUpdate = std::chrono::high_resolution_clock::now();
 
             for (long step = 0; !terminate ; ++step)
