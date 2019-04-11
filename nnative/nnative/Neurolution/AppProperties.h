@@ -10,19 +10,11 @@ namespace Neurolution
     class AppProperties
     {
 	public: 
-		//static const std::string SerializeTo { "c:\\users\\spars\\Desktop\\cell.xml" };
-
-		static constexpr double MATH_PI = M_PI;
-
-#ifndef _DEBUG
 		static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg
-#else 
-		static constexpr int EyeSizeNumTripods = 8; // each covering a lot... 45deg
-#endif
         static constexpr int EyeSize = EyeSizeNumTripods * 3; // total number of light-sensing cells 
 
         static constexpr float EyeCellWidth = 0.1f;
-        static constexpr float EyeCellDirectionStep = (float) (MATH_PI / EyeSize);
+        static constexpr float EyeCellDirectionStep = (float) (M_PI / EyeSize);
 
         static constexpr int StepsPerGeneration = 1024;
         static constexpr int StepsPerBirthCheck = 1024;
@@ -30,11 +22,7 @@ namespace Neurolution
         static constexpr int SerializeTopEveryNStep = 8192 * 8;
         static constexpr int SerializeWorldEveryNStep = 8192 * 64;
 
-#ifndef _DEBUG
 		static constexpr int NetworkSize = 512;
-#else 
-		static constexpr int NetworkSize = 128;
-#endif
 
 		static constexpr int WorldSize = 128;
         static constexpr int FoodCountPerIteration = 24;
