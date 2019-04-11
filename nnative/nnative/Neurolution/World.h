@@ -554,9 +554,13 @@ namespace Neurolution
 
 			float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * AppProperties::MoveEnergyFactor;
 
-			if (!cell->IsPredator && cell->CurrentEnergy < AppProperties::MaxEnergyCapacity / 3.0)
+			if (cell->IsPredator)
 			{
-				float slowdownFactor = cell->CurrentEnergy / (AppProperties::MaxEnergyCapacity / 3.0);
+				forwardForce *= 0.94f; // a bit slow and heavy
+			}
+			else if (!cell->IsPredator && cell->CurrentEnergy < AppProperties::SedatedAtEnergyLevel)
+			{
+				float slowdownFactor = cell->CurrentEnergy / AppProperties::SedatedAtEnergyLevel;
 				forwardForce *= slowdownFactor;
 				rotationForce *= slowdownFactor;
 				moveEnergyRequired *= slowdownFactor;

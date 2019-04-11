@@ -52,7 +52,7 @@ namespace Neurolution
 				glBegin(GL_TRIANGLES);
 
 				float energy = cell->CurrentEnergy;
-				float factor = (energy > AppProperties::MaxEnergyCapacity / 3.0) ? 1.0f : energy / (AppProperties::MaxEnergyCapacity / 3.0);
+				float factor = (energy > AppProperties::SedatedAtEnergyLevel) ? 1.0f : energy / AppProperties::SedatedAtEnergyLevel;
 
 				glColor3f(1.0f - factor, factor, 0.0f);
 
