@@ -44,8 +44,8 @@ public:
 		{
 			std::lock_guard<std::mutex> m(taskLock);
 			taskAwailableCond.notify_all();
-
 		}
+
 		for (auto& thread : threads)
 		{
 			if (thread.joinable())
@@ -55,30 +55,13 @@ public:
 
 	void GridRun(std::function<void(int, int)>&& item)
 	{
-		{
-			std::lock_guard<std::mutex> m(numActiveThreadsLock);
-			numActiveThreads = numThreads;
-		}
+		SetAllThreadsActive();
 
-		{
-			std::lock_guard<std::mutex> m(taskLock);
-			task = std::move(item);
-			hasTask = true;
-			taskAwailableCond.notify_all();
-		}
+		SetTask(std::move(item));
 
-		{
-			std::unique_lock<std::mutex> m(numActiveThreadsLock);
-			while (numActiveThreads > 0)
-				hasActiveThreadsCond.wait(m);
-		}
+		WaitAllThreadsComplete();
 
-		// clear up the "has task" flag and the task closure 
-		{
-			std::lock_guard<std::mutex> m(taskLock);
-			task = std::function<void(int, int)>();
-			hasTask = false;
-		}
+		ClearTask();
 	}
 
 private:
@@ -86,23 +69,54 @@ private:
 	{
 		while (!terminate)
 		{
-			std::function<void(int, int)> *item = nullptr;
+			std::function<void(int, int)> item;
 
 			{
 				std::unique_lock<std::mutex> m(taskLock);
 				taskAwailableCond.wait(m, [&]{return hasTask || terminate; });
-				if (hasTask)
-					item = &task;
+				if (!hasTask)
+					continue;
+				item = task;
 			}
 
-			if (item != nullptr)
-			{
-				(*item)(threadIdx, numThreads);
-
-				std::unique_lock<std::mutex> m(numActiveThreadsLock);
-				if (--numActiveThreads == 0)
-					hasActiveThreadsCond.notify_all();
-			}
+			item(threadIdx, numThreads);
+			SetThreadComplete();
 		}
+	}
+
+	void SetTask(std::function<void(int, int)>&& item)
+	{
+		std::lock_guard<std::mutex> m(taskLock);
+		task = std::move(item);
+		hasTask = true;
+		taskAwailableCond.notify_all();
+	}
+
+	// main purpose is to de-activate the initial closure we capture 
+	void ClearTask()
+	{
+		std::lock_guard<std::mutex> m(taskLock);
+		task = std::function<void(int, int)>();
+		hasTask = false;
+	}
+
+	void SetAllThreadsActive()
+	{
+		std::lock_guard<std::mutex> m(numActiveThreadsLock);
+		numActiveThreads = numThreads;
+	}
+
+	void SetThreadComplete()
+	{
+		std::unique_lock<std::mutex> m(numActiveThreadsLock);
+		if (--numActiveThreads == 0)
+			hasActiveThreadsCond.notify_all();
+	}
+
+	void WaitAllThreadsComplete()
+	{
+		std::unique_lock<std::mutex> m(numActiveThreadsLock);
+		while (numActiveThreads > 0)
+			hasActiveThreadsCond.wait(m);
 	}
 };

@@ -369,11 +369,11 @@ namespace Neurolution
 				_grid.GridRun(
 					[&](int idx, int n) 
 					{
-						for (int cellIdx = 0; cellIdx < Cells.size(); cellIdx += n)
+						for (int cellIdx = idx; cellIdx < Cells.size(); cellIdx += n)
 						{
 							IterateCellEye(idx, step, Cells[cellIdx]);
 						}
-						for (int pIdx = 0; pIdx < Predators.size(); pIdx += n)
+						for (int pIdx = idx; pIdx < Predators.size(); pIdx += n)
 						{
 							IterateCellEye(idx, step, Predators[pIdx]);
 						}
@@ -392,11 +392,11 @@ namespace Neurolution
 				_grid.GridRun(
 					[&](int idx, int n)
 				{
-					for (int cellIdx = 0; cellIdx < Cells.size(); cellIdx += n)
+					for (int cellIdx = idx; cellIdx < Cells.size(); cellIdx += n)
 					{
 						IterateCellThinkingAndMoving(idx, step, Cells[cellIdx]);
 					}
-					for (int pIdx = 0; pIdx < Predators.size(); pIdx += n)
+					for (int pIdx = idx; pIdx < Predators.size(); pIdx += n)
 					{
 						IterateCellThinkingAndMoving(idx, step, Predators[pIdx]);
 					}
@@ -422,16 +422,26 @@ namespace Neurolution
 
 				_grid.GridRun(
 					[&](int idx, int n)
-				{
-					for (int cellIdx = 0; cellIdx < Cells.size(); cellIdx += n)
 					{
-						IterateCellCollisions(idx, step, Cells[cellIdx]);
-					}
-				});
+						for (int cellIdx = idx; cellIdx < Cells.size(); cellIdx += n)
+						{
+							IterateCellCollisions(idx, step, Cells[cellIdx]);
+						}
+					});
 			}
 
-			IterateBabyMaking(step, Cells);
-			IterateBabyMaking(step, Predators);
+			_grid.GridRun(
+				[&](int idx, int n) 
+				{
+					if (idx == 0)
+					{
+						IterateBabyMaking(step, Cells);
+					}
+					if (idx == 1 || n == 1)
+					{
+						IterateBabyMaking(step, Predators);
+					}
+				});
 		}
 
 		void IterateCellEye(int threadIdx, long step, std::shared_ptr<Cell>& cell)
