@@ -42,7 +42,7 @@ namespace Neurolution
 
         static constexpr float FoodInitialValue = 14;
 
-        static constexpr float PredatorInitialValue = 1.5f;
+        static constexpr float PredatorInitialValue = 5.5f;
 
         static constexpr float CellTailLength = 4.0f;
         static constexpr float CellEyeBase = 3.0f;
@@ -61,6 +61,7 @@ namespace Neurolution
         static constexpr float MaxEnergyCapacity = 14.0f;
 
         static constexpr float BirthEnergyConsumption = 2.0f;
+		static constexpr float PredatorBirthEnergyConsumption = 8.0f;
 
         static constexpr float SporeEnergyLevel = 0.01f;
 

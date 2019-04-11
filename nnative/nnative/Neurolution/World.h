@@ -235,13 +235,13 @@ namespace Neurolution
 
 		std::vector<int> multipliers{ 6, 3, 2, 1 };
 
-		void IterateBabyMaking(long step, std::vector<std::shared_ptr<Cell>>& elements)
+		void IterateBabyMaking(long step, std::vector<std::shared_ptr<Cell>>& elements, float birthEnergyConsumption, float initialEnergy)
 		{
 			if (step != 0 && (step % AppProperties::StepsPerBirthCheck == 0)
 				&& (std::any_of(
 					std::begin(elements),
 					std::end(elements),
-					[](std::shared_ptr<Cell>& x) { return x->CurrentEnergy > AppProperties::BirthEnergyConsumption; }
+					[=](std::shared_ptr<Cell>& x) { return x->CurrentEnergy > birthEnergyConsumption; }
 				)
 					|| (step % AppProperties::SerializeTopEveryNStep == 0)
 					))
@@ -272,15 +272,13 @@ namespace Neurolution
 
 						for (int j = 0; j < multiplier; ++j)
 						{
-							if (src->CurrentEnergy < AppProperties::BirthEnergyConsumption)
+							if (src->CurrentEnergy < birthEnergyConsumption)
 								break;
 
 							auto& dst = elements[dstIdx--];
 
-							float energy = src->IsPredator ? AppProperties::PredatorInitialValue : AppProperties::InitialCellEnergy;
-							src->CurrentEnergy -= AppProperties::BirthEnergyConsumption;
-
-							MakeBaby(src, dst, energy);
+							src->CurrentEnergy -= birthEnergyConsumption;
+							MakeBaby(src, dst, initialEnergy);
 						}
 					}
 				}
@@ -348,19 +346,16 @@ namespace Neurolution
 			// Kill any empty foods 
 			Foods.KillAll([](Food& f) { return f.Value < 0.001f; });
 
-			//IterateBabyMaking(step, Cells);
-			//IterateBabyMaking(step, Predators);
-
 			_grid.GridRun(
 				[&](int idx, int n) 
 				{
 					if (idx == 0)
 					{
-						IterateBabyMaking(step, Cells);
+						IterateBabyMaking(step, Cells, AppProperties::BirthEnergyConsumption, AppProperties::InitialCellEnergy);
 					}
 					if (idx == 1 || n == 1)
 					{
-						IterateBabyMaking(step, Predators);
+						IterateBabyMaking(step, Predators, AppProperties::PredatorBirthEnergyConsumption, AppProperties::PredatorInitialValue);
 					}
 				});
 		}
@@ -559,10 +554,12 @@ namespace Neurolution
 
 			float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * AppProperties::MoveEnergyFactor;
 
-			if (cell->IsPredator)
+			if (!cell->IsPredator && cell->CurrentEnergy < AppProperties::MaxEnergyCapacity / 3.0)
 			{
-				moveEnergyRequired *= 2.25f;
-				forwardForce *= 1.5;
+				float slowdownFactor = cell->CurrentEnergy / (AppProperties::MaxEnergyCapacity / 3.0);
+				forwardForce *= slowdownFactor;
+				rotationForce *= slowdownFactor;
+				moveEnergyRequired *= slowdownFactor;
 			}
 
 			if (moveEnergyRequired <= cell->CurrentEnergy)
