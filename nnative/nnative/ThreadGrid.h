@@ -19,18 +19,17 @@ class ThreadGrid
 
 	std::function<void(int, int)> task;
 	std::mutex taskLock;
-	bool hasTask{ false };
-	std::condition_variable taskAwailableCond;
-
-	std::mutex numActiveThreadsLock;
+	std::vector<bool> hasTask;
 	int numActiveThreads;
-	std::condition_variable hasActiveThreadsCond;
+	std::condition_variable taskAwailableCond;
+	std::condition_variable taskDoneCond;
 	
 public:
 	ThreadGrid(int n)
 		: numThreads(n)
 		, threads(n)
 		, threadIsActive(n)
+		, hasTask(n)
 	{
 		for (int i = 0; i < n; ++i)
 		{
@@ -55,13 +54,22 @@ public:
 
 	void GridRun(std::function<void(int, int)>&& item)
 	{
-		SetAllThreadsActive();
+		std::unique_lock<std::mutex> m(taskLock);
 
-		SetTask(std::move(item));
+		std::fill(std::begin(hasTask), std::end(hasTask), true);
+		numActiveThreads = numThreads;
 
-		WaitAllThreadsComplete();
+		task = std::move(item);
 
-		ClearTask();
+		// this will wake waiting threads, but only when we unlcok the taskLock -
+		// i.e. when we do wait ourselves below
+		taskAwailableCond.notify_all(); 
+
+		// Wait for the theads to finish
+		taskDoneCond.wait(m, [&] {return numActiveThreads == 0; });
+
+		// Finally - ensure we clean up the task closure
+		task = std::function<void(int, int)>();
 	}
 
 private:
@@ -73,50 +81,20 @@ private:
 
 			{
 				std::unique_lock<std::mutex> m(taskLock);
-				taskAwailableCond.wait(m, [&]{return hasTask || terminate; });
-				if (!hasTask)
+				taskAwailableCond.wait(m, [&]{return hasTask[threadIdx] || terminate; });
+				if (!hasTask[threadIdx])
 					continue;
 				item = task;
 			}
 
+			// we have the task - run it
 			item(threadIdx, numThreads);
-			SetThreadComplete();
+
+			// Mark ourselves as done, and if we are the last thread - notify the waitinig "GridRun"
+			std::unique_lock<std::mutex> m(taskLock);
+			hasTask[threadIdx] = false;
+			if (--numActiveThreads == 0)
+				taskDoneCond.notify_all();
 		}
-	}
-
-	void SetTask(std::function<void(int, int)>&& item)
-	{
-		std::lock_guard<std::mutex> m(taskLock);
-		task = std::move(item);
-		hasTask = true;
-		taskAwailableCond.notify_all();
-	}
-
-	// main purpose is to de-activate the initial closure we capture 
-	void ClearTask()
-	{
-		std::lock_guard<std::mutex> m(taskLock);
-		task = std::function<void(int, int)>();
-		hasTask = false;
-	}
-
-	void SetAllThreadsActive()
-	{
-		std::lock_guard<std::mutex> m(numActiveThreadsLock);
-		numActiveThreads = numThreads;
-	}
-
-	void SetThreadComplete()
-	{
-		std::unique_lock<std::mutex> m(numActiveThreadsLock);
-		if (--numActiveThreads == 0)
-			hasActiveThreadsCond.notify_all();
-	}
-
-	void WaitAllThreadsComplete()
-	{
-		std::unique_lock<std::mutex> m(numActiveThreadsLock);
-		while (numActiveThreads > 0)
-			hasActiveThreadsCond.wait(m);
 	}
 };

@@ -120,6 +120,7 @@ namespace Neurolution
 		int _maxY;
 
 		int _foodsPerCycle;
+		int _nextFoodIdx{ 0 };
 
 		Random _random{};
 
@@ -244,7 +245,7 @@ namespace Neurolution
 				)
 					|| (step % AppProperties::SerializeTopEveryNStep == 0)
 					))
-				{
+			{
 				int quant = static_cast<int>(elements.size() / 16); 
 
 				std::sort(std::begin(elements), std::end(elements),
@@ -346,6 +347,9 @@ namespace Neurolution
 
 			// Kill any empty foods 
 			Foods.KillAll([](Food& f) { return f.Value < 0.001f; });
+
+			//IterateBabyMaking(step, Cells);
+			//IterateBabyMaking(step, Predators);
 
 			_grid.GridRun(
 				[&](int idx, int n) 
@@ -632,7 +636,17 @@ namespace Neurolution
 		void GiveOneFood()
 		{
 			if (Foods.DeadSize() > 0)
+			{
 				Foods.Reanimate().Reset(_random, _maxX, _maxY);
+			}
+			else
+			{
+				if (Foods[_nextFoodIdx].Value < AppProperties::FoodInitialValue / 2.0f)
+				{
+					Foods[_nextFoodIdx].Reset(_random, _maxX, _maxY);
+					_nextFoodIdx = (_nextFoodIdx + 1) % Foods.size();
+				}
+			}
 		}
 
 		void WorldInitialize()

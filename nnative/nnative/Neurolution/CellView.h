@@ -69,8 +69,6 @@ namespace Neurolution
 				glIndexi(8); glVertex2f(-2.5f, 0.0f);
 				glIndexi(9); glVertex2f(-3.0f, -5.0f);
 
-
-
 				glEnd();
 
 				glPopMatrix();
