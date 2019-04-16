@@ -24,373 +24,373 @@ std::unique_ptr<Neurolution::MainController> controller;
 
 void Init()
 {
-	//glEnable(GL_DEPTH_TEST);
-	//glDepthFunc(GL_LEQUAL);
+    //glEnable(GL_DEPTH_TEST);
+    //glDepthFunc(GL_LEQUAL);
 }
 
 void Reshape(int width, int height)
 {
-	glViewport(0, 0, width, height);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//gluPerspective(60.0, (float)width / height, 0.001, 100.0);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	//glTranslatef(0.0f, 0.0f, -3.0f);
+    glViewport(0, 0, width, height);
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
+    //gluPerspective(60.0, (float)width / height, 0.001, 100.0);
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
+    //glTranslatef(0.0f, 0.0f, -3.0f);
 }
 
 void Display(bool force)
 {
-	if (!controller)
-		return;
+    if (!controller)
+        return;
 
-	if (!force && !controller->IsUINeedsUpdate())
-		return;
+    if (!force && !controller->IsUINeedsUpdate())
+        return;
 
-//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClear(GL_COLOR_BUFFER_BIT);
+    //	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-	controller->DrawWorld();
-	glFlush();
+    controller->DrawWorld();
+    glFlush();
 
-	SwapBuffers(controller->GetHDC());
+    SwapBuffers(controller->GetHDC());
 }
 
 void HandleKeyboard(WPARAM wParam)
 {
-	if (!controller)
-		return;
+    if (!controller)
+        return;
 
-	switch (wParam)
-	{
-	case 27:			/* ESC key */
-		controller->Stop();
-		PostQuitMessage(0);
-		break;
-	case ' ':
-		controller->SetAppIsPaused(!controller->IsAppPaused());
-		break;
-	}
+    switch (wParam)
+    {
+    case 27:			/* ESC key */
+        controller->Stop();
+        PostQuitMessage(0);
+        break;
+    case ' ':
+        controller->SetAppIsPaused(!controller->IsAppPaused());
+        break;
+    }
 }
 
 LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (!controller)
-		return LRESULT();
+    if (!controller)
+        return LRESULT();
 
-	static PAINTSTRUCT ps;
+    static PAINTSTRUCT ps;
 
-	switch (uMsg)
-	{
-	case WM_PAINT:
-		Display(true);
-		BeginPaint(hWnd, &ps);
-		EndPaint(hWnd, &ps);
-		return 0;
+    switch (uMsg)
+    {
+    case WM_PAINT:
+        Display(true);
+        BeginPaint(hWnd, &ps);
+        EndPaint(hWnd, &ps);
+        return 0;
 
-	case WM_SIZE:
-		//glViewport(0, 0, LOWORD(lParam), HIWORD(lParam));
-		//PostMessage(hWnd, WM_PAINT, 0, 0);
-		Reshape(LOWORD(lParam), HIWORD(lParam));
-		PostMessage(hWnd, WM_PAINT, 0, 0);
-		return 0;
+    case WM_SIZE:
+        //glViewport(0, 0, LOWORD(lParam), HIWORD(lParam));
+        //PostMessage(hWnd, WM_PAINT, 0, 0);
+        Reshape(LOWORD(lParam), HIWORD(lParam));
+        PostMessage(hWnd, WM_PAINT, 0, 0);
+        return 0;
 
-	case WM_CHAR:
-		HandleKeyboard(wParam);
-		return 0;
+    case WM_CHAR:
+        HandleKeyboard(wParam);
+        return 0;
 
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		/* if we don't set the capture we won't get mouse move
-			   messages when the mouse moves outside the window. */
-		SetCapture(hWnd);
-		//mx = LOWORD(lParam);
-		//my = HIWORD(lParam);
-		//if (uMsg == WM_LBUTTONDOWN)
-		//	state |= PAN;
-		//if (uMsg == WM_RBUTTONDOWN)
-		//	state |= ROTATE;
-		return 0;
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+        /* if we don't set the capture we won't get mouse move
+               messages when the mouse moves outside the window. */
+        SetCapture(hWnd);
+        //mx = LOWORD(lParam);
+        //my = HIWORD(lParam);
+        //if (uMsg == WM_LBUTTONDOWN)
+        //	state |= PAN;
+        //if (uMsg == WM_RBUTTONDOWN)
+        //	state |= ROTATE;
+        return 0;
 
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-		/* remember to release the capture when we are finished. */
-		ReleaseCapture();
-		//state = 0;
-		return 0;
+    case WM_LBUTTONUP:
+    case WM_RBUTTONUP:
+        /* remember to release the capture when we are finished. */
+        ReleaseCapture();
+        //state = 0;
+        return 0;
 
-	case WM_MOUSEMOVE:
-		//if (state) {
-		//	omx = mx;
-		//	omy = my;
-		//	mx = LOWORD(lParam);
-		//	my = HIWORD(lParam);
-		//	/* Win32 is pretty braindead about the x, y position that
-		//	   it returns when the mouse is off the left or top edge
-		//	   of the window (due to them being unsigned). therefore,
-		//	   roll the Win32's 0..2^16 pointer co-ord range to the
-		//	   more amenable (and useful) 0..+/-2^15. */
-		//	if (mx & 1 << 15) mx -= (1 << 16);
-		//	if (my & 1 << 15) my -= (1 << 16);
-		//	update(state, omx, mx, omy, my);
-		//	PostMessage(hWnd, WM_PAINT, 0, 0);
-		//}
-		return 0;
+    case WM_MOUSEMOVE:
+        //if (state) {
+        //	omx = mx;
+        //	omy = my;
+        //	mx = LOWORD(lParam);
+        //	my = HIWORD(lParam);
+        //	/* Win32 is pretty braindead about the x, y position that
+        //	   it returns when the mouse is off the left or top edge
+        //	   of the window (due to them being unsigned). therefore,
+        //	   roll the Win32's 0..2^16 pointer co-ord range to the
+        //	   more amenable (and useful) 0..+/-2^15. */
+        //	if (mx & 1 << 15) mx -= (1 << 16);
+        //	if (my & 1 << 15) my -= (1 << 16);
+        //	update(state, omx, mx, omy, my);
+        //	PostMessage(hWnd, WM_PAINT, 0, 0);
+        //}
+        return 0;
 
-	case WM_ACTIVATE:
-		//pauseApp = IsIconic(hWnd);
-		return 0;
+    case WM_ACTIVATE:
+        //pauseApp = IsIconic(hWnd);
+        return 0;
 
-	case WM_PALETTECHANGED:
-		if (hWnd == (HWND)wParam)
-			break;
-		/* fall through to WM_QUERYNEWPALETTE */
+    case WM_PALETTECHANGED:
+        if (hWnd == (HWND)wParam)
+            break;
+        /* fall through to WM_QUERYNEWPALETTE */
 
-	case WM_QUERYNEWPALETTE:
-	{
-		auto& hPalette = controller->GetHPalette();
-		auto &hDC = controller->GetHDC();
-		if (hPalette)
-		{
-			UnrealizeObject(hPalette);
-			SelectPalette(hDC, hPalette, FALSE);
-			RealizePalette(hDC);
-			return TRUE;
-		}
-		return FALSE;
-	}
-	case WM_CLOSE:
-		controller->Stop();
-		PostQuitMessage(0);
-		return 0;
+    case WM_QUERYNEWPALETTE:
+    {
+        auto& hPalette = controller->GetHPalette();
+        auto &hDC = controller->GetHDC();
+        if (hPalette)
+        {
+            UnrealizeObject(hPalette);
+            SelectPalette(hDC, hPalette, FALSE);
+            RealizePalette(hDC);
+            return TRUE;
+        }
+        return FALSE;
+    }
+    case WM_CLOSE:
+        controller->Stop();
+        PostQuitMessage(0);
+        return 0;
 
-	case WM_USER: 
-		Display(false); 
-		break; 
-	}
+    case WM_USER:
+        Display(false);
+        break;
+    }
 
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
 HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height, BYTE type, DWORD flags)
 {
-	if (!controller)
-		return HWND();
+    if (!controller)
+        return HWND();
 
-	int         n, pf;
-	WNDCLASS    wc;
-	LOGPALETTE* lpPal;
-	PIXELFORMATDESCRIPTOR pfd;
-	static HINSTANCE hInstance = 0;
+    int         n, pf;
+    WNDCLASS    wc;
+    LOGPALETTE* lpPal;
+    PIXELFORMATDESCRIPTOR pfd;
+    static HINSTANCE hInstance = 0;
 
-	HWND        hWnd;
+    HWND        hWnd;
 
-	/* only register the window class once - use hInstance as a flag. */
-	if (!hInstance)
-	{
-		hInstance = GetModuleHandle(NULL);
-		wc.style = CS_OWNDC;
-		wc.lpfnWndProc = (WNDPROC)WindowProcGL;
-		wc.cbClsExtra = 0;
-		wc.cbWndExtra = 0;
-		wc.hInstance = hInstance;
-		wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wc.hbrBackground = NULL;
-		wc.lpszMenuName = NULL;
-		wc.lpszClassName = _T("NNative");
+    /* only register the window class once - use hInstance as a flag. */
+    if (!hInstance)
+    {
+        hInstance = GetModuleHandle(NULL);
+        wc.style = CS_OWNDC;
+        wc.lpfnWndProc = (WNDPROC)WindowProcGL;
+        wc.cbClsExtra = 0;
+        wc.cbWndExtra = 0;
+        wc.hInstance = hInstance;
+        wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+        wc.hbrBackground = NULL;
+        wc.lpszMenuName = NULL;
+        wc.lpszClassName = _T("NNative");
 
-		if (!RegisterClass(&wc))
-		{
-			MessageBox(NULL, _T("RegisterClass() failed:  "
-				"Cannot register window class."), _T("Error"), MB_OK);
-			return NULL;
-		}
-	}
+        if (!RegisterClass(&wc))
+        {
+            MessageBox(NULL, _T("RegisterClass() failed:  "
+                "Cannot register window class."), _T("Error"), MB_OK);
+            return NULL;
+        }
+    }
 
-	hWnd = CreateWindow(_T("NNative"), title, WS_OVERLAPPEDWINDOW |
-		WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-		x, y, width, height, NULL, NULL, hInstance, NULL);
+    hWnd = CreateWindow(_T("NNative"), title, WS_OVERLAPPEDWINDOW |
+        WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+        x, y, width, height, NULL, NULL, hInstance, NULL);
 
-	if (hWnd == NULL)
-	{
-		MessageBox(NULL, _T("CreateWindow() failed:  Cannot create a window."),
-			_T("Error"), MB_OK);
-		return NULL;
-	}
+    if (hWnd == NULL)
+    {
+        MessageBox(NULL, _T("CreateWindow() failed:  Cannot create a window."),
+            _T("Error"), MB_OK);
+        return NULL;
+    }
 
-	auto& hDC = controller->GetHDC();
+    auto& hDC = controller->GetHDC();
 
-	hDC = GetDC(hWnd);
+    hDC = GetDC(hWnd);
 
-	/* there is no guarantee that the contents of the stack that become
-	   the pfd are zeroed, therefore _make sure_ to clear these bits. */
-	memset(&pfd, 0, sizeof(pfd));
-	pfd.nSize = sizeof(pfd);
-	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | flags;
-	pfd.iPixelType = type;
-	pfd.cColorBits = 32;
+    /* there is no guarantee that the contents of the stack that become
+       the pfd are zeroed, therefore _make sure_ to clear these bits. */
+    memset(&pfd, 0, sizeof(pfd));
+    pfd.nSize = sizeof(pfd);
+    pfd.nVersion = 1;
+    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | flags;
+    pfd.iPixelType = type;
+    pfd.cColorBits = 32;
 
-	pf = ChoosePixelFormat(hDC, &pfd);
-	if (pf == 0)
-	{
-		MessageBox(NULL, _T("ChoosePixelFormat() failed:  "
-			"Cannot find a suitable pixel format."), _T("Error"), MB_OK);
-		return 0;
-	}
+    pf = ChoosePixelFormat(hDC, &pfd);
+    if (pf == 0)
+    {
+        MessageBox(NULL, _T("ChoosePixelFormat() failed:  "
+            "Cannot find a suitable pixel format."), _T("Error"), MB_OK);
+        return 0;
+    }
 
-	if (SetPixelFormat(hDC, pf, &pfd) == FALSE)
-	{
-		MessageBox(NULL, _T("SetPixelFormat() failed:  "
-			"Cannot set format specified."), _T("Error"), MB_OK);
-		return 0;
-	}
+    if (SetPixelFormat(hDC, pf, &pfd) == FALSE)
+    {
+        MessageBox(NULL, _T("SetPixelFormat() failed:  "
+            "Cannot set format specified."), _T("Error"), MB_OK);
+        return 0;
+    }
 
-	DescribePixelFormat(hDC, pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+    DescribePixelFormat(hDC, pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 
-	if (pfd.dwFlags & PFD_NEED_PALETTE || pfd.iPixelType == PFD_TYPE_COLORINDEX)
-	{
-		n = 1 << pfd.cColorBits;
-		if (n > 256) n = 256;
+    if (pfd.dwFlags & PFD_NEED_PALETTE || pfd.iPixelType == PFD_TYPE_COLORINDEX)
+    {
+        n = 1 << pfd.cColorBits;
+        if (n > 256) n = 256;
 
-		lpPal = (LOGPALETTE*)malloc(sizeof(LOGPALETTE) +
-			sizeof(PALETTEENTRY) * n);
-		memset(lpPal, 0, sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * n);
-		lpPal->palVersion = 0x300;
-		lpPal->palNumEntries = n;
+        lpPal = (LOGPALETTE*)malloc(sizeof(LOGPALETTE) +
+            sizeof(PALETTEENTRY) * n);
+        memset(lpPal, 0, sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * n);
+        lpPal->palVersion = 0x300;
+        lpPal->palNumEntries = n;
 
-		GetSystemPaletteEntries(hDC, 0, n, &lpPal->palPalEntry[0]);
+        GetSystemPaletteEntries(hDC, 0, n, &lpPal->palPalEntry[0]);
 
-		/* if the pixel type is RGBA, then we want to make an RGB ramp,
-		   otherwise (color index) set individual colors. */
-		if (pfd.iPixelType == PFD_TYPE_RGBA)
-		{
-			int redMask = (1 << pfd.cRedBits) - 1;
-			int greenMask = (1 << pfd.cGreenBits) - 1;
-			int blueMask = (1 << pfd.cBlueBits) - 1;
-			int i;
+        /* if the pixel type is RGBA, then we want to make an RGB ramp,
+           otherwise (color index) set individual colors. */
+        if (pfd.iPixelType == PFD_TYPE_RGBA)
+        {
+            int redMask = (1 << pfd.cRedBits) - 1;
+            int greenMask = (1 << pfd.cGreenBits) - 1;
+            int blueMask = (1 << pfd.cBlueBits) - 1;
+            int i;
 
-			/* fill in the entries with an RGB color ramp. */
-			for (i = 0; i < n; ++i)
-			{
-				lpPal->palPalEntry[i].peRed =
-					(((i >> pfd.cRedShift)   & redMask) * 255) / redMask;
-				lpPal->palPalEntry[i].peGreen =
-					(((i >> pfd.cGreenShift) & greenMask) * 255) / greenMask;
-				lpPal->palPalEntry[i].peBlue =
-					(((i >> pfd.cBlueShift)  & blueMask) * 255) / blueMask;
-				lpPal->palPalEntry[i].peFlags = 0;
-			}
-		}
-		else
-		{
-			lpPal->palPalEntry[0].peRed = 0;
-			lpPal->palPalEntry[0].peGreen = 0;
-			lpPal->palPalEntry[0].peBlue = 0;
-			lpPal->palPalEntry[0].peFlags = PC_NOCOLLAPSE;
-			lpPal->palPalEntry[1].peRed = 255;
-			lpPal->palPalEntry[1].peGreen = 0;
-			lpPal->palPalEntry[1].peBlue = 0;
-			lpPal->palPalEntry[1].peFlags = PC_NOCOLLAPSE;
-			lpPal->palPalEntry[2].peRed = 0;
-			lpPal->palPalEntry[2].peGreen = 255;
-			lpPal->palPalEntry[2].peBlue = 0;
-			lpPal->palPalEntry[2].peFlags = PC_NOCOLLAPSE;
-			lpPal->palPalEntry[3].peRed = 0;
-			lpPal->palPalEntry[3].peGreen = 0;
-			lpPal->palPalEntry[3].peBlue = 255;
-			lpPal->palPalEntry[3].peFlags = PC_NOCOLLAPSE;
-		}
+            /* fill in the entries with an RGB color ramp. */
+            for (i = 0; i < n; ++i)
+            {
+                lpPal->palPalEntry[i].peRed =
+                    (((i >> pfd.cRedShift)   & redMask) * 255) / redMask;
+                lpPal->palPalEntry[i].peGreen =
+                    (((i >> pfd.cGreenShift) & greenMask) * 255) / greenMask;
+                lpPal->palPalEntry[i].peBlue =
+                    (((i >> pfd.cBlueShift)  & blueMask) * 255) / blueMask;
+                lpPal->palPalEntry[i].peFlags = 0;
+            }
+        }
+        else
+        {
+            lpPal->palPalEntry[0].peRed = 0;
+            lpPal->palPalEntry[0].peGreen = 0;
+            lpPal->palPalEntry[0].peBlue = 0;
+            lpPal->palPalEntry[0].peFlags = PC_NOCOLLAPSE;
+            lpPal->palPalEntry[1].peRed = 255;
+            lpPal->palPalEntry[1].peGreen = 0;
+            lpPal->palPalEntry[1].peBlue = 0;
+            lpPal->palPalEntry[1].peFlags = PC_NOCOLLAPSE;
+            lpPal->palPalEntry[2].peRed = 0;
+            lpPal->palPalEntry[2].peGreen = 255;
+            lpPal->palPalEntry[2].peBlue = 0;
+            lpPal->palPalEntry[2].peFlags = PC_NOCOLLAPSE;
+            lpPal->palPalEntry[3].peRed = 0;
+            lpPal->palPalEntry[3].peGreen = 0;
+            lpPal->palPalEntry[3].peBlue = 255;
+            lpPal->palPalEntry[3].peFlags = PC_NOCOLLAPSE;
+        }
 
-		auto& hPalette = controller->GetHPalette();
+        auto& hPalette = controller->GetHPalette();
 
-		hPalette = CreatePalette(lpPal);
-		if (hPalette)
-		{
-			SelectPalette(hDC, hPalette, FALSE);
-			RealizePalette(hDC);
-		}
+        hPalette = CreatePalette(lpPal);
+        if (hPalette)
+        {
+            SelectPalette(hDC, hPalette, FALSE);
+            RealizePalette(hDC);
+        }
 
-		free(lpPal);
-	}
+        free(lpPal);
+    }
 
-	ReleaseDC(hWnd, hDC);
+    ReleaseDC(hWnd, hDC);
 
-	return hWnd;
+    return hWnd;
 }
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousInst, _In_ LPWSTR lpszCmdLine, _In_ int nCmdShow)
 {
-	Neurolution::RuntimeConfig config;
+    Neurolution::RuntimeConfig config;
 
-	controller = std::make_unique<Neurolution::MainController>(config);
+    controller = std::make_unique<Neurolution::MainController>(config);
 
-	HGLRC hRC;				/* opengl context */
-	HWND&  hWnd = controller->GetHWND();
-	MSG   msg;				/* message */
+    HGLRC hRC;				/* opengl context */
+    HWND&  hWnd = controller->GetHWND();
+    MSG   msg;				/* message */
 
-	hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0, 
-		Neurolution::AppProperties::WorldWidth / 2, Neurolution::AppProperties::WorldHeight / 2,
-		PFD_TYPE_RGBA, PFD_DOUBLEBUFFER);
-	if (hWnd == NULL)
-		exit(1);
+    hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0,
+        Neurolution::AppProperties::WorldWidth / 2, Neurolution::AppProperties::WorldHeight / 2,
+        PFD_TYPE_RGBA, PFD_DOUBLEBUFFER);
+    if (hWnd == NULL)
+        exit(1);
 
-	auto& hDC = controller->GetHDC();
-	auto& hPalette = controller->GetHPalette();
+    auto& hDC = controller->GetHDC();
+    auto& hPalette = controller->GetHPalette();
 
-	hDC = GetDC(hWnd);
-	hRC = wglCreateContext(hDC);
-	wglMakeCurrent(hDC, hRC);
+    hDC = GetDC(hWnd);
+    hRC = wglCreateContext(hDC);
+    wglMakeCurrent(hDC, hRC);
 
-	ShowWindow(hWnd, SW_SHOW);
-	UpdateWindow(hWnd);
+    ShowWindow(hWnd, SW_SHOW);
+    UpdateWindow(hWnd);
 
-	Init();
+    Init();
 
-	controller->Start();
+    controller->Start();
 
-	while (!controller->IsTerminating() && GetMessage(&msg, hWnd, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+    while (!controller->IsTerminating() && GetMessage(&msg, hWnd, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 
-	//while (!quitApp)
-	//{
-	//	if (!controller.IsAppPaused())
-	//	{
-	//		while (!quitApp && PeekMessage(&msg, hWnd, 0, 0, PM_NOREMOVE))
-	//		{
-	//			if (GetMessage(&msg, hWnd, 0, 0))
-	//			{
-	//				TranslateMessage(&msg);
-	//				DispatchMessage(&msg);
-	//			}
-	//		}
-	//		Display(false);
-	//	}
-	//	else
-	//	{
-	//		while (!quitApp && controller.IsAppPaused() && GetMessage(&msg, hWnd, 0, 0))
-	//		{
-	//			TranslateMessage(&msg);
-	//			DispatchMessage(&msg);
-	//		}
-	//	}
-	//}
+    //while (!quitApp)
+    //{
+    //	if (!controller.IsAppPaused())
+    //	{
+    //		while (!quitApp && PeekMessage(&msg, hWnd, 0, 0, PM_NOREMOVE))
+    //		{
+    //			if (GetMessage(&msg, hWnd, 0, 0))
+    //			{
+    //				TranslateMessage(&msg);
+    //				DispatchMessage(&msg);
+    //			}
+    //		}
+    //		Display(false);
+    //	}
+    //	else
+    //	{
+    //		while (!quitApp && controller.IsAppPaused() && GetMessage(&msg, hWnd, 0, 0))
+    //		{
+    //			TranslateMessage(&msg);
+    //			DispatchMessage(&msg);
+    //		}
+    //	}
+    //}
 
-	controller->Stop();
+    controller->Stop();
 
-	wglMakeCurrent(NULL, NULL);
-	ReleaseDC(hWnd, hDC);
-	wglDeleteContext(hRC);
-	DestroyWindow(hWnd);
+    wglMakeCurrent(NULL, NULL);
+    ReleaseDC(hWnd, hDC);
+    wglDeleteContext(hRC);
+    DestroyWindow(hWnd);
 
-	if (hPalette)
-		DeleteObject(hPalette);
+    if (hPalette)
+        DeleteObject(hPalette);
 
-	return 0;
+    return 0;
 }
 

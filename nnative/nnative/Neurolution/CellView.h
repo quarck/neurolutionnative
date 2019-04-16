@@ -20,59 +20,59 @@ namespace Neurolution
 {
     class CellView
     {
-	public:
+    public:
         std::shared_ptr<Cell> cell;
 
-		float cellColorRed;
-		float cellColorGreen;
-		float cellColorBlue;
+        float cellColorRed;
+        float cellColorGreen;
+        float cellColorBlue;
 
         CellView(std::shared_ptr<Cell>& c, Random& rnd)
-			: cell(c)
+            : cell(c)
         {
-			cellColorRed = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
-			cellColorGreen = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
-			cellColorBlue = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
+            cellColorRed = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
+            cellColorGreen = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
+            cellColorBlue = static_cast<float>(rnd.NextDouble() * 0.666 + 0.333);
         }
 
         void Draw()
         {
             //if (Cell.Alive)
-            if (cell->CurrentEnergy >= 0.0001f && 
-				cell->LocationX >= 0.0 && cell->LocationX < AppProperties::WorldWidth
+            if (cell->CurrentEnergy >= 0.0001f &&
+                cell->LocationX >= 0.0 && cell->LocationX < AppProperties::WorldWidth
                 && cell->LocationY >= 0.0 && cell->LocationY < AppProperties::WorldHeight)
             {
-				glPushMatrix();
+                glPushMatrix();
 
-				glTranslatef(cell->LocationX, cell->LocationY, 0.0);
-				glRotatef(
-					static_cast<float>(cell->Rotation / M_PI * 180.0 - 90.0),
-					0.0f, 0.0f, 1.0f);
-				
-				glBegin(GL_TRIANGLES);
+                glTranslatef(cell->LocationX, cell->LocationY, 0.0);
+                glRotatef(
+                    static_cast<float>(cell->Rotation / M_PI * 180.0 - 90.0),
+                    0.0f, 0.0f, 1.0f);
 
-				float energy = cell->CurrentEnergy;
-				float factor = (energy > AppProperties::SedatedAtEnergyLevel) ? 1.0f : energy / AppProperties::SedatedAtEnergyLevel;
+                glBegin(GL_TRIANGLES);
 
-				glColor3f(1.0f - factor, factor, 0.0f);
+                float energy = cell->CurrentEnergy;
+                float factor = (energy > AppProperties::SedatedAtEnergyLevel) ? 1.0f : energy / AppProperties::SedatedAtEnergyLevel;
+
+                glColor3f(1.0f - factor, factor, 0.0f);
 
 
-				glIndexi(1); glVertex2f(0.0f, 10.0f);
-				glIndexi(2); glVertex2f(2.5f, 0.0f);
-				glIndexi(3); glVertex2f(-2.5f, 0.0f);
+                glIndexi(1); glVertex2f(0.0f, 10.0f);
+                glIndexi(2); glVertex2f(2.5f, 0.0f);
+                glIndexi(3); glVertex2f(-2.5f, 0.0f);
 
-				glIndexi(4); glVertex2f(0.0f, 0.0f);
-				glIndexi(5); glVertex2f(2.5f, 0.0f);
-				glIndexi(6); glVertex2f(3.0f, -5.0f);
+                glIndexi(4); glVertex2f(0.0f, 0.0f);
+                glIndexi(5); glVertex2f(2.5f, 0.0f);
+                glIndexi(6); glVertex2f(3.0f, -5.0f);
 
-				glIndexi(7); glVertex2f(0.0f, 0.0f);
-				glIndexi(8); glVertex2f(-2.5f, 0.0f);
-				glIndexi(9); glVertex2f(-3.0f, -5.0f);
+                glIndexi(7); glVertex2f(0.0f, 0.0f);
+                glIndexi(8); glVertex2f(-2.5f, 0.0f);
+                glIndexi(9); glVertex2f(-3.0f, -5.0f);
 
-				glEnd();
+                glEnd();
 
-				glPopMatrix();
+                glPopMatrix();
             }
         }
-	};
+    };
 }

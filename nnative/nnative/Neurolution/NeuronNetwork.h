@@ -8,133 +8,133 @@ namespace Neurolution
 {
 
 
-	enum class LightSensorColor 
-	{
-		Unset = 0,
-		Red = 1,	// Plants 
-		Green = 2,	// Plant eaters
-		Blue = 3	// Meat eaters 
-	};
-    
+    enum class LightSensorColor
+    {
+        Unset = 0,
+        Red = 1,	// Plants 
+        Green = 2,	// Plant eaters
+        Blue = 3	// Meat eaters 
+    };
+
     struct LightSensor
     {
-		float Direction{ 0.0f } ; // radians 
-		float Width{ 0.0f };
-		LightSensorColor Color{ LightSensorColor::Unset };
+        float Direction{ 0.0f }; // radians 
+        float Width{ 0.0f };
+        LightSensorColor Color{ LightSensorColor::Unset };
 
-		LightSensor()
-		{
+        LightSensor()
+        {
 
-		}
+        }
 
-		LightSensor(float dir, float width, LightSensorColor& color)
-			: Direction(dir), Width(width), Color(color)
-		{
+        LightSensor(float dir, float width, LightSensorColor& color)
+            : Direction(dir), Width(width), Color(color)
+        {
 
-		}
-	};
+        }
+    };
 
-	enum class NeuronState : int
-	{
-		Idle,
-		Excited0,
-		Excited1,
-		Recovering0,
-		Recovering1
-	};
-
-	struct Neuron
+    enum class NeuronState : int
     {
-		std::vector<float> Weights;
-        
+        Idle,
+        Excited0,
+        Excited1,
+        Recovering0,
+        Recovering1
+    };
+
+    struct Neuron
+    {
+        std::vector<float> Weights;
+
         float Charge;
 
         NeuronState State;
 
-		Neuron() 
-		{
-		}
+        Neuron()
+        {
+        }
 
         Neuron(int size, Random& rnd)
-			: Charge(0.0f)
-			, State(NeuronState::Idle)
-			, Weights(size)
+            : Charge(0.0f)
+            , State(NeuronState::Idle)
+            , Weights(size)
         {
             for (int i = 0; i < size; ++i)
                 Weights[i] = 0.0f;
         }
 
-		Neuron(const Neuron& other, Random& rnd, bool severe)
-		{
-			CloneFrom(other, rnd, severe);
-		}
+        Neuron(const Neuron& other, Random& rnd, bool severe)
+        {
+            CloneFrom(other, rnd, severe);
+        }
 
         void CloneFrom(const Neuron& other, Random& rnd, bool severe)
         {
-			Charge = 0.0f;
-			State = NeuronState::Idle;
-			
-			size_t size = other.Weights.size();
+            Charge = 0.0f;
+            State = NeuronState::Idle;
 
-			if (Weights.size() != size)
-			{
-				std::vector<float>(size).swap(Weights);
-			}
+            size_t size = other.Weights.size();
 
-			if (!severe)
-			{
-				float maxMutation = AppProperties::NetworkMaxRegularMutation;
+            if (Weights.size() != size)
+            {
+                std::vector<float>(size).swap(Weights);
+            }
 
-				for (int i = 0; i < size; ++i)
-					Weights[i] = (float)(other.Weights[i] + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
-			}
-			else
-			{
-				float alpha = AppProperties::NetworkSevereMutationAlpha;
+            if (!severe)
+            {
+                float maxMutation = AppProperties::NetworkMaxRegularMutation;
 
-				for (int i = 0; i < size; ++i)
-					Weights[i] = (float)(other.Weights[i] * alpha + (2.0 * rnd.NextDouble() - 1.0) * (1.0 - alpha));
-			}
+                for (int i = 0; i < size; ++i)
+                    Weights[i] = (float)(other.Weights[i] + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
+            }
+            else
+            {
+                float alpha = AppProperties::NetworkSevereMutationAlpha;
+
+                for (int i = 0; i < size; ++i)
+                    Weights[i] = (float)(other.Weights[i] * alpha + (2.0 * rnd.NextDouble() - 1.0) * (1.0 - alpha));
+            }
         }
-	};
+    };
 
     struct NeuronNetwork
     {
         std::vector<Neuron> Neurons;
 
-        std::vector<LightSensor> Eye; 
+        std::vector<LightSensor> Eye;
 
         std::vector<float> InputVector;
 
         std::vector<float> OutputVector;
 
-		size_t GetNetworkSize() const { return Neurons.size(); }
+        size_t GetNetworkSize() const { return Neurons.size(); }
 
-		size_t GetVectorSize() const { return GetNetworkSize() + AppProperties::EyeSize; }
+        size_t GetVectorSize() const { return GetNetworkSize() + AppProperties::EyeSize; }
 
         NeuronNetwork(int networkSize, Random& rnd)
-			: Eye(AppProperties::EyeSize)
-			, Neurons(networkSize)
-			, InputVector(GetVectorSize())
-			, OutputVector(GetVectorSize())
+            : Eye(AppProperties::EyeSize)
+            , Neurons(networkSize)
+            , InputVector(GetVectorSize())
+            , OutputVector(GetVectorSize())
         {
             for (int i = 0; i < AppProperties::EyeSize; ++i)
             {
-				//double iPrime = ((i >> 1) - AppProperties::EyeSize / 2) + 0.5;
+                //double iPrime = ((i >> 1) - AppProperties::EyeSize / 2) + 0.5;
 
-				int tripodIdx = i / 3;
-				LightSensorColor color = (LightSensorColor)((i % 3) + 1);
+                int tripodIdx = i / 3;
+                LightSensorColor color = (LightSensorColor)((i % 3) + 1);
 
-				Eye[i] = LightSensor(
-					(float)(AppProperties::EyeCellDirectionStep * tripodIdx),
-					AppProperties::EyeCellWidth,
-					color
-					);
+                Eye[i] = LightSensor(
+                    (float)(AppProperties::EyeCellDirectionStep * tripodIdx),
+                    AppProperties::EyeCellWidth,
+                    color
+                );
             }
 
             for (int i = 0; i < networkSize; ++i)
             {
-				Neurons[i] = Neuron(AppProperties::EyeSize + networkSize, rnd);
+                Neurons[i] = Neuron(AppProperties::EyeSize + networkSize, rnd);
             }
         }
 
@@ -151,28 +151,20 @@ namespace Neurolution
 
                 for (unsigned int i = 0; i < neuron.Weights.size() / 8; i += 8)
                 {
-                    weightedInput += 
-						neuron.Weights[i + 0] * inputVector[i + 0] +
-						neuron.Weights[i + 1] * inputVector[i + 1] +
-						neuron.Weights[i + 2] * inputVector[i + 2] +
-						neuron.Weights[i + 3] * inputVector[i + 3] +
-						neuron.Weights[i + 4] * inputVector[i + 4] +
-						neuron.Weights[i + 5] * inputVector[i + 5] +
-						neuron.Weights[i + 6] * inputVector[i + 6] +
-						neuron.Weights[i + 7] * inputVector[i + 7]/* +
-						neuron.Weights[i + 8] * inputVector[i + 8] +
-						neuron.Weights[i + 9] * inputVector[i + 9] +
-						neuron.Weights[i + 10] * inputVector[i + 10] +
-						neuron.Weights[i + 11] * inputVector[i + 11] +
-						neuron.Weights[i + 12] * inputVector[i + 12] +
-						neuron.Weights[i + 13] * inputVector[i + 13] +
-						neuron.Weights[i + 14] * inputVector[i + 14] +
-						neuron.Weights[i + 15] * inputVector[i + 15]*/;
+                    weightedInput +=
+                        neuron.Weights[i + 0] * inputVector[i + 0] +
+                        neuron.Weights[i + 1] * inputVector[i + 1] +
+                        neuron.Weights[i + 2] * inputVector[i + 2] +
+                        neuron.Weights[i + 3] * inputVector[i + 3] +
+                        neuron.Weights[i + 4] * inputVector[i + 4] +
+                        neuron.Weights[i + 5] * inputVector[i + 5] +
+                        neuron.Weights[i + 6] * inputVector[i + 6] +
+                        neuron.Weights[i + 7] * inputVector[i + 7];
                 }
                 for (unsigned int i = 0; i < (neuron.Weights.size() & 7); ++i)
                 {
-                    weightedInput += 
-                        neuron.Weights[i+0] * inputVector[i+0];
+                    weightedInput +=
+                        neuron.Weights[i + 0] * inputVector[i + 0];
                 }
 
                 // add some noise 
@@ -185,45 +177,45 @@ namespace Neurolution
 
                 switch (neuron.State)
                 {
-				case NeuronState::Idle:
+                case NeuronState::Idle:
 
-                        neuron.Charge = ValueCap(
-                            neuron.Charge * AppProperties::NeuronChargeDecay + weightedInput,
-                            AppProperties::NeuronMinCharge,
-                            AppProperties::NeuronMaxCharge
-						);
+                    neuron.Charge = ValueCap(
+                        neuron.Charge * AppProperties::NeuronChargeDecay + weightedInput,
+                        AppProperties::NeuronMinCharge,
+                        AppProperties::NeuronMaxCharge
+                    );
 
-                        if (neuron.Charge > AppProperties::NeuronChargeThreshold)
-                        {
-                            neuron.State = NeuronState::Excited0;
-                            outputVector[j] = 1.0f;
-                        }
-                        else
-                        {
-                            outputVector[j] = 0.0f;
-                        }
-                        break;
-
-				case NeuronState::Excited0:
-                        neuron.State = NeuronState::Excited1;
+                    if (neuron.Charge > AppProperties::NeuronChargeThreshold)
+                    {
+                        neuron.State = NeuronState::Excited0;
                         outputVector[j] = 1.0f;
-                        break;
-
-				case NeuronState::Excited1:
-                        neuron.State = NeuronState::Recovering0;
+                    }
+                    else
+                    {
                         outputVector[j] = 0.0f;
-                        break;
+                    }
+                    break;
 
-				case NeuronState::Recovering0:
-                        neuron.State = NeuronState::Recovering1;
-                        outputVector[j] = 0.0f;
-                        break;
+                case NeuronState::Excited0:
+                    neuron.State = NeuronState::Excited1;
+                    outputVector[j] = 1.0f;
+                    break;
 
-				case NeuronState::Recovering1:
-                        neuron.State = NeuronState::Idle;
-                        neuron.Charge = 0.0f;
-                        outputVector[j] = 0.0f;
-                        break;
+                case NeuronState::Excited1:
+                    neuron.State = NeuronState::Recovering0;
+                    outputVector[j] = 0.0f;
+                    break;
+
+                case NeuronState::Recovering0:
+                    neuron.State = NeuronState::Recovering1;
+                    outputVector[j] = 0.0f;
+                    break;
+
+                case NeuronState::Recovering1:
+                    neuron.State = NeuronState::Idle;
+                    neuron.Charge = 0.0f;
+                    outputVector[j] = 0.0f;
+                    break;
                 }
             }
         }
@@ -231,7 +223,7 @@ namespace Neurolution
 
         void PrepareIteration()
         {
-			InputVector.swap(OutputVector);
+            InputVector.swap(OutputVector);
         }
 
         void IterateNetwork(Random& rnd)
@@ -241,34 +233,34 @@ namespace Neurolution
 
         void CleanOutputs()
         {
-			std::fill(std::begin(InputVector), std::end(InputVector), 0.0f);
-			std::fill(std::begin(OutputVector), std::end(OutputVector), 0.0f);
+            std::fill(std::begin(InputVector), std::end(InputVector), 0.0f);
+            std::fill(std::begin(OutputVector), std::end(OutputVector), 0.0f);
         }
 
         void CloneFrom(const NeuronNetwork& other, Random& rnd, bool severeMutations = false, float severity = 0.0f)
         {
-			size_t newSize = other.Neurons.size();
+            size_t newSize = other.Neurons.size();
 
-			if (Neurons.size() != newSize)
-			{
-				Neurons.resize(newSize);
-			}
+            if (Neurons.size() != newSize)
+            {
+                Neurons.resize(newSize);
+            }
 
-			for (int i = 0; i < newSize; ++i)
-			{
-				bool severe = severeMutations && (rnd.NextDouble() < severity);
-				Neurons[i].CloneFrom(other.Neurons[i], rnd, severe);
-			}
+            for (int i = 0; i < newSize; ++i)
+            {
+                bool severe = severeMutations && (rnd.NextDouble() < severity);
+                Neurons[i].CloneFrom(other.Neurons[i], rnd, severe);
+            }
 
-			std::copy(
-				std::cbegin(other.InputVector),
-				std::cend(other.InputVector),
-				std::begin(InputVector));
+            std::copy(
+                std::cbegin(other.InputVector),
+                std::cend(other.InputVector),
+                std::begin(InputVector));
 
-			std::copy(
-				std::cbegin(other.OutputVector),
-				std::cend(other.OutputVector),
-				std::begin(OutputVector));
-		}
-	};
+            std::copy(
+                std::cbegin(other.OutputVector),
+                std::cend(other.OutputVector),
+                std::begin(OutputVector));
+        }
+    };
 }

@@ -20,14 +20,14 @@ namespace Neurolution
         static constexpr float TailLength = AppProperties::CellTailLength;
         static constexpr float EyeBase = AppProperties::CellEyeBase;
 
-		float LocationX{ 0.0f };
-		float LocationY{ 0.0f };
-		float Rotation{ 0.0f };
+        float LocationX{ 0.0f };
+        float LocationY{ 0.0f };
+        float Rotation{ 0.0f };
 
-		long Age{ 0 };
+        long Age{ 0 };
 
-		float MoveForceLeft{ 0.0f };
-		float MoveForceRight{ 0.0f };
+        float MoveForceLeft{ 0.0f };
+        float MoveForceRight{ 0.0f };
 
         int ClonedFrom = -1;
 
@@ -35,17 +35,17 @@ namespace Neurolution
 
         Random random;
 
-		std::vector<LightSensor>& GetEye() { return Network->Eye; }
+        std::vector<LightSensor>& GetEye() { return Network->Eye; }
 
-		bool IsPredator{ false };
+        bool IsPredator{ false };
 
         Cell(Random& r, int maxX, int maxY, bool isPredator = false)
-			: random(r)
-			, LocationX(static_cast<float>(r.NextDouble()*maxX))
-			, LocationY(static_cast<float>(r.NextDouble()*maxY))
-			, Rotation((float)(r.NextDouble() * 2.0 * M_PI))
-			, Network(std::make_shared<NeuronNetwork>(AppProperties::NetworkSize, r))
-			, IsPredator(isPredator)
+            : random(r)
+            , LocationX(static_cast<float>(r.NextDouble()*maxX))
+            , LocationY(static_cast<float>(r.NextDouble()*maxY))
+            , Rotation((float)(r.NextDouble() * 2.0 * M_PI))
+            , Network(std::make_shared<NeuronNetwork>(AppProperties::NetworkSize, r))
+            , IsPredator(isPredator)
         {
         }
 
@@ -61,14 +61,14 @@ namespace Neurolution
         {
             Network->IterateNetwork(random);
 
-            MoveForceLeft = 
-				0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleLeft] + 
-				1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalLeft] + 
-				1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongLeft];
-            MoveForceRight = 
-				0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleRight] +
-				1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalRight] +
-				1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongRight];
+            MoveForceLeft =
+                0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleLeft] +
+                1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalLeft] +
+                1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongLeft];
+            MoveForceRight =
+                0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleRight] +
+                1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalRight] +
+                1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongRight];
 
             Age++;
         }
@@ -88,25 +88,25 @@ namespace Neurolution
         {
             LocationX = static_cast<float>(rnd.NextDouble()*maxX);
             LocationY = static_cast<float>(rnd.NextDouble()*maxY);
-            Rotation = (float) (rnd.NextDouble() * 2.0 * M_PI);        
+            Rotation = (float)(rnd.NextDouble() * 2.0 * M_PI);
         }
 
-		bool PredatoryEat(float& preyEnergy)
-		{
-			for (;;)
-			{
-				float valueCopy = InterlockedCompareExchange(&CurrentEnergy, 0.0f, 0.0f); // means just read
-				float newValue = valueCopy + preyEnergy;
+        bool PredatoryEat(float& preyEnergy)
+        {
+            for (;;)
+            {
+                float valueCopy = InterlockedCompareExchange(&CurrentEnergy, 0.0f, 0.0f); // means just read
+                float newValue = valueCopy + preyEnergy;
 
-				if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
-				{
-					break;
-				}
-			}
+                if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
+                {
+                    break;
+                }
+            }
 
-			return true;
-		}
-	};
+            return true;
+        }
+    };
 
     //public sealed class CellUtils
     //{
