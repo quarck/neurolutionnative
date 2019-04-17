@@ -4,6 +4,8 @@
 
 #define _USE_MATH_DEFINES
 
+#include <memory>
+
 #include "AppProperties.h"
 #include "../Random.h"
 #include "NeuronNetwork.h"
