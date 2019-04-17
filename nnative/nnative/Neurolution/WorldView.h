@@ -103,7 +103,7 @@ namespace Neurolution
 
                 foodColor.GlApply();
 
-                float halfdiameter = static_cast<float>(std::sqrt(food.Value) * 5.0 / 2.0);
+                float halfdiameter = static_cast<float>(std::sqrt(food.Value) * 5.0 / 1.5);
 
                 int idx = 0;
                 glIndexi(++idx); glVertex3f(0.0f, halfdiameter, 0.0f);
@@ -142,7 +142,7 @@ namespace Neurolution
 
                 predatorColor.GlApply();
 
-                float halfdiameter = 7.0f;
+                float halfdiameter = 10.0f;
 
                 glBegin(GL_TRIANGLES);
 

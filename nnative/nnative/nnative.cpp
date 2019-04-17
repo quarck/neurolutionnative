@@ -73,7 +73,7 @@ void HandleKeyboard(WPARAM wParam)
     }
 }
 
-LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (!controller)
         return LRESULT();
@@ -174,23 +174,19 @@ LRESULT WINAPI WindowProcGL(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height, BYTE type, DWORD flags)
 {
+    static HINSTANCE hInstance = nullptr;
+
     if (!controller)
-        return HWND();
-
-    int         n, pf;
-    WNDCLASS    wc;
-    LOGPALETTE* lpPal;
-    PIXELFORMATDESCRIPTOR pfd;
-    static HINSTANCE hInstance = 0;
-
-    HWND        hWnd;
+        return nullptr;
 
     /* only register the window class once - use hInstance as a flag. */
+    WNDCLASS wc;
+
     if (!hInstance)
     {
         hInstance = GetModuleHandle(NULL);
         wc.style = CS_OWNDC;
-        wc.lpfnWndProc = (WNDPROC)WindowProcGL;
+        wc.lpfnWndProc = (WNDPROC)WindowProc;
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = hInstance;
@@ -204,11 +200,11 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
         {
             MessageBox(NULL, _T("RegisterClass() failed:  "
                 "Cannot register window class."), _T("Error"), MB_OK);
-            return NULL;
+            return nullptr;
         }
     }
 
-    hWnd = CreateWindow(_T("NNative"), title, WS_OVERLAPPEDWINDOW |
+    HWND hWnd = CreateWindow(_T("NNative"), title, WS_OVERLAPPEDWINDOW |
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         x, y, width, height, NULL, NULL, hInstance, NULL);
 
@@ -219,12 +215,13 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
         return NULL;
     }
 
-    auto& hDC = controller->GetHDC();
+    controller->SetHDC(GetDC(hWnd));
 
-    hDC = GetDC(hWnd);
+    auto& hDC = controller->GetHDC();
 
     /* there is no guarantee that the contents of the stack that become
        the pfd are zeroed, therefore _make sure_ to clear these bits. */
+    PIXELFORMATDESCRIPTOR pfd;
     memset(&pfd, 0, sizeof(pfd));
     pfd.nSize = sizeof(pfd);
     pfd.nVersion = 1;
@@ -232,7 +229,7 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
     pfd.iPixelType = type;
     pfd.cColorBits = 32;
 
-    pf = ChoosePixelFormat(hDC, &pfd);
+    int pf = ChoosePixelFormat(hDC, &pfd);
     if (pf == 0)
     {
         MessageBox(NULL, _T("ChoosePixelFormat() failed:  "
@@ -251,12 +248,12 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 
     if (pfd.dwFlags & PFD_NEED_PALETTE || pfd.iPixelType == PFD_TYPE_COLORINDEX)
     {
-        n = 1 << pfd.cColorBits;
+        int n = 1 << pfd.cColorBits;
         if (n > 256) n = 256;
+        
+        std::vector<unsigned char> lpPalMem(sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * n, 0);
 
-        lpPal = (LOGPALETTE*)malloc(sizeof(LOGPALETTE) +
-            sizeof(PALETTEENTRY) * n);
-        memset(lpPal, 0, sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * n);
+        LOGPALETTE* lpPal = reinterpret_cast<LOGPALETTE*>(&lpPalMem[0]);
         lpPal->palVersion = 0x300;
         lpPal->palNumEntries = n;
 
@@ -269,10 +266,9 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
             int redMask = (1 << pfd.cRedBits) - 1;
             int greenMask = (1 << pfd.cGreenBits) - 1;
             int blueMask = (1 << pfd.cBlueBits) - 1;
-            int i;
 
             /* fill in the entries with an RGB color ramp. */
-            for (i = 0; i < n; ++i)
+            for (int i = 0; i < n; ++i)
             {
                 lpPal->palPalEntry[i].peRed =
                     (((i >> pfd.cRedShift)   & redMask) * 255) / redMask;
@@ -303,16 +299,14 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
             lpPal->palPalEntry[3].peFlags = PC_NOCOLLAPSE;
         }
 
-        auto& hPalette = controller->GetHPalette();
+        controller->SetHPalette(CreatePalette(lpPal));
 
-        hPalette = CreatePalette(lpPal);
+        auto& hPalette = controller->GetHPalette();
         if (hPalette)
         {
             SelectPalette(hDC, hPalette, FALSE);
             RealizePalette(hDC);
         }
-
-        free(lpPal);
     }
 
     ReleaseDC(hWnd, hDC);
@@ -327,66 +321,40 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 
     controller = std::make_unique<Neurolution::MainController>(config);
 
-    HGLRC hRC;				/* opengl context */
-    HWND&  hWnd = controller->GetHWND();
-    MSG   msg;				/* message */
+    controller->SetHWND(
+        CreateOpenGLWindow(_T("Neurolution Native"), 0, 0,
+            Neurolution::AppProperties::WorldWidth / 3, Neurolution::AppProperties::WorldHeight / 3,
+            PFD_TYPE_RGBA, PFD_DOUBLEBUFFER));
 
-    hWnd = CreateOpenGLWindow(_T("Neurolution Native"), 0, 0,
-        Neurolution::AppProperties::WorldWidth / 2, Neurolution::AppProperties::WorldHeight / 2,
-        PFD_TYPE_RGBA, PFD_DOUBLEBUFFER);
-    if (hWnd == NULL)
-        exit(1);
+    if (controller->GetHWND() == nullptr)
+        return 1;
 
     auto& hDC = controller->GetHDC();
     auto& hPalette = controller->GetHPalette();
 
-    hDC = GetDC(hWnd);
-    hRC = wglCreateContext(hDC);
+    HGLRC hRC = wglCreateContext(hDC);
     wglMakeCurrent(hDC, hRC);
 
-    ShowWindow(hWnd, SW_SHOW);
-    UpdateWindow(hWnd);
+    ShowWindow(controller->GetHWND(), SW_SHOW);
+    UpdateWindow(controller->GetHWND());
 
     Init();
 
     controller->Start();
 
-    while (!controller->IsTerminating() && GetMessage(&msg, hWnd, 0, 0))
+    MSG msg;
+    while (!controller->IsTerminating() && GetMessage(&msg, controller->GetHWND(), 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
-    //while (!quitApp)
-    //{
-    //	if (!controller.IsAppPaused())
-    //	{
-    //		while (!quitApp && PeekMessage(&msg, hWnd, 0, 0, PM_NOREMOVE))
-    //		{
-    //			if (GetMessage(&msg, hWnd, 0, 0))
-    //			{
-    //				TranslateMessage(&msg);
-    //				DispatchMessage(&msg);
-    //			}
-    //		}
-    //		Display(false);
-    //	}
-    //	else
-    //	{
-    //		while (!quitApp && controller.IsAppPaused() && GetMessage(&msg, hWnd, 0, 0))
-    //		{
-    //			TranslateMessage(&msg);
-    //			DispatchMessage(&msg);
-    //		}
-    //	}
-    //}
-
     controller->Stop();
 
     wglMakeCurrent(NULL, NULL);
-    ReleaseDC(hWnd, hDC);
+    ReleaseDC(controller->GetHWND(), hDC);
     wglDeleteContext(hRC);
-    DestroyWindow(hWnd);
+    DestroyWindow(controller->GetHWND());
 
     if (hPalette)
         DeleteObject(hPalette);

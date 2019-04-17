@@ -8,7 +8,17 @@ namespace Neurolution
         int numWorkerThreads{ 4 }; // would be more more flexible in the future.. 
     public:
 
-        int GetNumWorkerThreads() const { return numWorkerThreads; }
+        RuntimeConfig()
+        {
+            SYSTEM_INFO sysinfo;
+            ::GetSystemInfo(&sysinfo);
+            numWorkerThreads = sysinfo.dwNumberOfProcessors;
+        }
+
+        int GetNumWorkerThreads() const 
+        {
+            return numWorkerThreads; 
+        }
     };
 
 }

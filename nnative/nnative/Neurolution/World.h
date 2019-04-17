@@ -278,7 +278,7 @@ namespace Neurolution
                             auto& dst = elements[dstIdx--];
 
                             src->CurrentEnergy -= birthEnergyConsumption;
-                            MakeBaby(src, dst, initialEnergy);
+                            CreateChild(src, dst, initialEnergy);
                         }
                     }
                 }
@@ -286,7 +286,7 @@ namespace Neurolution
                 for (auto& cell : elements)
                 {
                     if (cell->Age > AppProperties::OldSince)
-                        MakeBaby(cell, cell, cell->CurrentEnergy);
+                        CreateChild(cell, cell, cell->CurrentEnergy);
                 }
             }
 
@@ -669,7 +669,7 @@ namespace Neurolution
             GiveOneFood();
         }
 
-        void MakeBaby(std::shared_ptr<Cell>& source, std::shared_ptr<Cell>& destination, float initialEnergy)
+        void CreateChild(std::shared_ptr<Cell>& source, std::shared_ptr<Cell>& destination, float initialEnergy)
         {
             double rv = _random.NextDouble();
             bool severeMutations = (rv < AppProperties::SevereMutationFactor);
@@ -684,6 +684,8 @@ namespace Neurolution
             destination->Network->CleanOutputs();
 
             destination->RandomizeLocation(_random, _maxX, _maxY);
+
+            source->Age = 0; // kind of hack
         }
 
     };

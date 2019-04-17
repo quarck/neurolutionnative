@@ -47,8 +47,8 @@ namespace Neurolution
         static constexpr float CellTailLength = 4.0f;
         static constexpr float CellEyeBase = 3.0f;
 
-        static constexpr int WorldWidth = 1000;
-        static constexpr int WorldHeight = 1000;
+        static constexpr int WorldWidth = 1500;
+        static constexpr int WorldHeight = 1500;
 
         static constexpr float SevereMutationFactor = 0.15f;
         static constexpr float SevereMutationSlope = 0.33f;

@@ -57,17 +57,17 @@ namespace Neurolution
                 glColor3f(1.0f - factor, factor, 0.0f);
 
 
-                glIndexi(1); glVertex2f(0.0f, 10.0f);
-                glIndexi(2); glVertex2f(2.5f, 0.0f);
-                glIndexi(3); glVertex2f(-2.5f, 0.0f);
+                glIndexi(1); glVertex2f(0.0f, 15.0f);
+                glIndexi(2); glVertex2f(4.5f, 0.0f);
+                glIndexi(3); glVertex2f(-4.5f, 0.0f);
 
                 glIndexi(4); glVertex2f(0.0f, 0.0f);
-                glIndexi(5); glVertex2f(2.5f, 0.0f);
-                glIndexi(6); glVertex2f(3.0f, -5.0f);
+                glIndexi(5); glVertex2f(4.5f, 0.0f);
+                glIndexi(6); glVertex2f(6.0f, -5.0f);
 
                 glIndexi(7); glVertex2f(0.0f, 0.0f);
-                glIndexi(8); glVertex2f(-2.5f, 0.0f);
-                glIndexi(9); glVertex2f(-3.0f, -5.0f);
+                glIndexi(8); glVertex2f(-4.5f, 0.0f);
+                glIndexi(9); glVertex2f(-6.0f, -5.0f);
 
                 glEnd();
 

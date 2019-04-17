@@ -191,10 +191,17 @@ namespace Neurolution
         bool IsTerminating() const { return terminate; }
 
 
-        HWND& GetHWND() { return hWND; }
+        const HWND& GetHWND() const { return hWND; }
+        void SetHWND(HWND hwnd) 
+        { 
+            hWND = hwnd; 
+            SetHDC(GetDC(hWND));
+        }
 
-        HDC& GetHDC() { return hDC; }
+        const HDC& GetHDC() const { return hDC; }
+        void SetHDC(HDC hdc) { hDC = hdc; }
 
-        HPALETTE& GetHPalette() { return hPalette; }
+        const HPALETTE& GetHPalette() const { return hPalette; }
+        void SetHPalette(HPALETTE hp) { hPalette = hp; }
     };
 }
