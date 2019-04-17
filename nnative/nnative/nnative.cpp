@@ -317,6 +317,11 @@ HWND  CreateOpenGLWindow(const TCHAR* title, int x, int y, int width, int height
 
 int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousInst, _In_ LPWSTR lpszCmdLine, _In_ int nCmdShow)
 {
+    if (wcsstr(lpszCmdLine, L"-burn") == nullptr)
+    {
+        ::SetPriorityClass(::GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
+    }
+
     Neurolution::RuntimeConfig config;
 
     controller = std::make_unique<Neurolution::MainController>(config);
