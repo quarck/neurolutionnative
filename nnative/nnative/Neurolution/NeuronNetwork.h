@@ -1,13 +1,13 @@
 ﻿#pragma once
 #include <vector>
 #include "../Random.h"
-#include "Utils.h"
+#include "../Utils.h"
 #include "AppProperties.h"
+#include <ostream>
+#include <istream>
 
 namespace Neurolution
 {
-
-
     enum class LightSensorColor
     {
         Unset = 0,
@@ -32,7 +32,21 @@ namespace Neurolution
         {
 
         }
-    };
+	
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&Direction), sizeof(Direction));
+			stream.write(reinterpret_cast<const char*>(&Width), sizeof(Width));
+			stream.write(reinterpret_cast<const char*>(&Color), sizeof(Color));
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&Direction), sizeof(Direction));
+			stream.read(reinterpret_cast<char*>(&Width), sizeof(Width));
+			stream.read(reinterpret_cast<char*>(&Color), sizeof(Color));
+		}
+	};
 
     enum class NeuronState : int
     {
@@ -96,6 +110,26 @@ namespace Neurolution
                     Weights[i] = (float)(other.Weights[i] * alpha + (2.0 * rnd.NextDouble() - 1.0) * (1.0 - alpha));
             }
         }
+
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&Charge), sizeof(Charge));
+			stream.write(reinterpret_cast<const char*>(&State), sizeof(State));
+			int size = Weights.size();
+			stream.write(reinterpret_cast<const char*>(&size), sizeof(size));
+			stream.write(reinterpret_cast<const char*>(&Weights[0]), sizeof(Weights[0]) * size);
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&Charge), sizeof(Charge));
+			stream.read(reinterpret_cast<char*>(&State), sizeof(State));
+			int size = 0;
+			stream.read(reinterpret_cast<char*>(&size), sizeof(size));
+			Weights.resize(size);
+			stream.read(reinterpret_cast<char*>(&Weights[0]), sizeof(Weights[0]) * size);
+		}
+
     };
 
     struct NeuronNetwork
@@ -112,6 +146,10 @@ namespace Neurolution
 
         size_t GetVectorSize() const { return GetNetworkSize() + AppProperties::EyeSize; }
 
+		NeuronNetwork()
+		{
+		}
+
         NeuronNetwork(int networkSize, Random& rnd)
             : Eye(AppProperties::EyeSize)
             , Neurons(networkSize)
@@ -120,8 +158,6 @@ namespace Neurolution
         {
             for (int i = 0; i < AppProperties::EyeSize; ++i)
             {
-                //double iPrime = ((i >> 1) - AppProperties::EyeSize / 2) + 0.5;
-
                 int tripodIdx = i / 3;
                 LightSensorColor color = (LightSensorColor)((i % 3) + 1);
 
@@ -220,7 +256,6 @@ namespace Neurolution
             }
         }
 
-
         void PrepareIteration()
         {
             InputVector.swap(OutputVector);
@@ -262,5 +297,66 @@ namespace Neurolution
                 std::cend(other.OutputVector),
                 std::begin(OutputVector));
         }
-    };
+
+		void SaveTo(std::ostream& stream)
+		{
+			int numNeurons = Neurons.size();
+			int numEyeCells = Eye.size();
+			int vectorSize = InputVector.size();
+
+			if (OutputVector.size() != vectorSize)
+				throw std::runtime_error("Internal erorr: InputVector.size() must match OutputVector.size()");
+			
+			stream.write(reinterpret_cast<const char*>(&numNeurons), sizeof(numNeurons));
+			stream.write(reinterpret_cast<const char*>(&numEyeCells), sizeof(numEyeCells));
+			stream.write(reinterpret_cast<const char*>(&vectorSize), sizeof(vectorSize));
+
+			for (int nidx = 0; nidx < Neurons.size(); ++nidx)
+			{
+				Neurons[nidx].SaveTo(stream);
+			}
+
+			for (int eidx = 0; eidx < Eye.size(); ++eidx)
+			{
+				Eye[eidx].SaveTo(stream);
+			}
+
+			stream.write(reinterpret_cast<const char*>(&InputVector[0]), sizeof(InputVector[0]) * vectorSize);
+			stream.write(reinterpret_cast<const char*>(&OutputVector[0]), sizeof(OutputVector[0]) * vectorSize);
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			int numNeurons;
+			int numEyeCells;
+			int vectorSize;
+
+			if (OutputVector.size() != vectorSize)
+				throw std::runtime_error("Internal erorr: InputVector.size() must match OutputVector.size()");
+
+			stream.read(reinterpret_cast<char*>(&numNeurons), sizeof(numNeurons));
+			stream.read(reinterpret_cast<char*>(&numEyeCells), sizeof(numEyeCells));
+			stream.read(reinterpret_cast<char*>(&vectorSize), sizeof(vectorSize));
+
+			Neurons.resize(numNeurons);
+
+			for (int nidx = 0; nidx < Neurons.size(); ++nidx)
+			{
+				Neurons[nidx].LoadFrom(stream);
+			}
+
+			Eye.resize(numEyeCells);
+
+			for (int eidx = 0; eidx < Eye.size(); ++eidx)
+			{
+				Eye[eidx].LoadFrom(stream);
+			}
+
+			InputVector.resize(vectorSize);
+			OutputVector.resize(vectorSize);
+
+			stream.read(reinterpret_cast<char*>(&InputVector[0]), sizeof(InputVector[0]) * vectorSize);
+			stream.read(reinterpret_cast<char*>(&OutputVector[0]), sizeof(OutputVector[0]) * vectorSize);
+		}
+	};
 }
