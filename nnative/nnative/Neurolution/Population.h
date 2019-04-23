@@ -20,7 +20,7 @@ namespace Neurolution
             : std::vector<T>(size)
         {
 			if (allAlive)
-				idxFirstDead = size;
+				idxFirstDead = static_cast<int>(size);
         }
         size_t AliveSize() const
         {
@@ -69,7 +69,7 @@ namespace Neurolution
 		template <typename TSerializeFn>
 		void SaveTo(std::ostream& stream, TSerializeFn fn)
 		{
-			int sz = this->size();
+			auto sz = this->size();
 			stream.write(reinterpret_cast<const char*>(&sz), sizeof(sz));
 			stream.write(reinterpret_cast<const char*>(&idxFirstDead), sizeof(idxFirstDead));
 
