@@ -20,13 +20,37 @@ namespace Neurolution
     {
         float LocationX;
         float LocationY;
+
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&LocationX), sizeof(LocationX));
+			stream.write(reinterpret_cast<const char*>(&LocationY), sizeof(LocationY));
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&LocationX), sizeof(LocationX));
+			stream.read(reinterpret_cast<char*>(&LocationY), sizeof(LocationY));
+		}
     };
 
     struct Direction
     {
         float DirectionX;
         float DirectionY;
-    };
+
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&DirectionX), sizeof(DirectionX));
+			stream.write(reinterpret_cast<const char*>(&DirectionY), sizeof(DirectionY));
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&DirectionX), sizeof(DirectionX));
+			stream.read(reinterpret_cast<char*>(&DirectionY), sizeof(DirectionY));
+		}
+	};
 
     struct LocationAndDirectionWithvalue : public Direction, public Location
     {
@@ -39,7 +63,21 @@ namespace Neurolution
             LocationY = LoopValue(
                 LocationY + DirectionY + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxY));
         }
-    };
+
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&Value), sizeof(Value));
+			this->Direction::SaveTo(stream);
+			this->Location::SaveTo(stream);
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&Value), sizeof(Value));
+			this->Direction::LoadFrom(stream);
+			this->Location::LoadFrom(stream);
+		}
+	};
 
     struct DirectionWithDistanceSquare : public Direction
     {
@@ -51,6 +89,17 @@ namespace Neurolution
             DirectionY = dy;
             DistanceSquare = dx * dx + dy * dy;
         }
+
+		void SaveTo(std::ostream& stream)
+		{
+			this->Direction::SaveTo(stream);
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			this->Direction::LoadFrom(stream);
+			DistanceSquare = DirectionX * DirectionX + DirectionY * DirectionY;
+		}
     };
 
     struct Food : public LocationAndDirectionWithvalue
@@ -100,6 +149,16 @@ namespace Neurolution
                 DirectionY = (float)(rnd.NextDouble() * 0.5 - 0.25);
             }
         }
+
+		void SaveTo(std::ostream& stream)
+		{
+			this->LocationAndDirectionWithvalue::SaveTo(stream);
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			this->LocationAndDirectionWithvalue::LoadFrom(stream);
+		}
     };
 
     struct World
@@ -108,8 +167,8 @@ namespace Neurolution
 
         int numWorkerThreads;
 
-        std::vector<std::shared_ptr<Cell>> Cells;
-        std::vector<std::shared_ptr<Cell>> Predators;
+		Population<std::shared_ptr<Cell>> Cells;
+		Population<std::shared_ptr<Cell>> Predators;
         Population<Food> Foods;
 
         std::vector<std::vector<DirectionWithDistanceSquare>> CellDirections;
@@ -137,8 +196,8 @@ namespace Neurolution
             , _maxY(maxY)
             , _workingFolder(workingFolder)
             , numWorkerThreads(nWorkerThreads)
-            , Cells(numPreys)
-            , Foods(maxFoods)
+            , Cells(numPreys, true)
+            , Foods(maxFoods, true)
             , _foodsPerCycle(maxFoods)
             , Predators(numPredators)
             , CellDirections(nWorkerThreads)
@@ -165,22 +224,6 @@ namespace Neurolution
             }
         }
 
-        void InitializeFromTopFile(const std::string& filename)
-        {
-            //Cell masterCell = CellUtils.ReadCell(filename);
-            //if (masterCell != null)
-            //{
-            //    foreach (var cell in Cells)
-            //    {
-            //        cell.CloneFrom(masterCell, _random, _maxX, _maxY, false, 0.0f);
-            //        cell.Random = new Random(_random.Next());
-            //        cell.CurrentEnergy = AppProperties.InitialCellEnergy;
-            //        cell.LocationX = _random.Next(_maxX);
-            //        cell.LocationY = _random.Next(_maxY);
-            //    }
-            //}
-        }
-
         void InitializeFromWorldFile(const std::string& filename)
         {
             //List<Cell> cells = CellUtils.ReadCells(filename);
@@ -199,20 +242,6 @@ namespace Neurolution
         }
 
 
-        void SerializeBest(const std::shared_ptr<Cell>& cell, long step)
-        {
-            //if (!_workingFolderCreated)
-            //{
-            //    Directory.CreateDirectory(_workingFolder);
-            //    _workingFolderCreated = true;
-            //}
-
-            //DateTime now = DateTime.Now;
-            //string filename = $"{_workingFolder}/{step:D8}-{now:yyyy-MM-dd-HH-mm-ss}-top.xml";
-
-            //CellUtils.SaveCell(filename, cell);
-        }
-
         void SerializeWorld(const std::vector<std::shared_ptr<Cell>>& world, long step)
         {
             //if (!_workingFolderCreated)
@@ -227,10 +256,30 @@ namespace Neurolution
             //CellUtils.SaveCells(filename, world);
         }
 
-        void Save()
-        {
-            SerializeWorld(Cells, -1);
-        }
+
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&_maxX), sizeof(_maxX));
+			stream.write(reinterpret_cast<const char*>(&_maxY), sizeof(_maxY));
+			stream.write(reinterpret_cast<const char*>(&_foodsPerCycle), sizeof(_foodsPerCycle));
+			stream.write(reinterpret_cast<const char*>(&_nextFoodIdx), sizeof(_nextFoodIdx));
+
+			Cells.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
+			Predators.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
+			Foods.SaveTo(stream, [&](Food& item, std::ostream & s) {item.SaveTo(s); });
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&_maxX), sizeof(_maxX));
+			stream.read(reinterpret_cast<char*>(&_maxY), sizeof(_maxY));
+			stream.read(reinterpret_cast<char*>(&_foodsPerCycle), sizeof(_foodsPerCycle));
+			stream.read(reinterpret_cast<char*>(&_nextFoodIdx), sizeof(_nextFoodIdx));
+
+			Cells.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
+			Predators.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
+			Foods.LoadFrom(stream, [&](Food & item, std::istream & s) {item.LoadFrom(s); });
+		}
 
 
         std::vector<int> multipliers{ 6, 3, 2, 1 };

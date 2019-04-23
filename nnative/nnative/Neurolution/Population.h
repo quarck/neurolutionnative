@@ -16,10 +16,11 @@ namespace Neurolution
     {
         int idxFirstDead{ 0 }; // all dead by default
     public:
-        Population(size_t size)
+        Population(size_t size, bool allAlive = false)
             : std::vector<T>(size)
         {
-
+			if (allAlive)
+				idxFirstDead = size;
         }
         size_t AliveSize() const
         {
@@ -64,5 +65,33 @@ namespace Neurolution
             ++idxFirstDead;
             return (*this)[idxFirstDead - 1];
         }
+
+		template <typename TSerializeFn>
+		void SaveTo(std::ostream& stream, TSerializeFn fn)
+		{
+			int sz = this->size();
+			stream.write(reinterpret_cast<const char*>(&sz), sizeof(sz));
+			stream.write(reinterpret_cast<const char*>(&idxFirstDead), sizeof(idxFirstDead));
+
+			for (int idx = 0; idx < idxFirstDead; ++idx)
+			{
+				fn((*this)[idx], stream);
+			}
+		}
+
+		template <typename TSerializeFn>
+		void LoadFrom(std::istream& stream, TSerializeFn fn)
+		{
+			int sz{ 0 };
+			stream.read(reinterpret_cast<char*>(&sz), sizeof(sz));
+			this->resize(sz);
+
+			stream.read(reinterpret_cast<char*>(&idxFirstDead), sizeof(idxFirstDead));
+
+			for (int idx = 0; idx < idxFirstDead; ++idx)
+			{
+				fn((*this)[idx], stream);
+			}
+		}
     };
 }

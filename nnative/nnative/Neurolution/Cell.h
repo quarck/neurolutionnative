@@ -5,13 +5,14 @@
 #define _USE_MATH_DEFINES
 
 #include <memory>
+#include <math.h>
+
+#include "../Random.h"
+#include "../Utils.h"
 
 #include "AppProperties.h"
-#include "../Random.h"
 #include "NeuronNetwork.h"
-#include "Utils.h"
 
-#include <math.h>
 
 namespace Neurolution
 {
@@ -67,7 +68,8 @@ namespace Neurolution
                 0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleLeft] +
                 1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalLeft] +
                 1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongLeft];
-            MoveForceRight =
+
+			MoveForceRight =
                 0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleRight] +
                 1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalRight] +
                 1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongRight];
@@ -108,55 +110,36 @@ namespace Neurolution
 
             return true;
         }
+
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&LocationX), sizeof(LocationX));
+			stream.write(reinterpret_cast<const char*>(&LocationY), sizeof(LocationY));
+			stream.write(reinterpret_cast<const char*>(&Rotation), sizeof(Rotation));
+
+			stream.write(reinterpret_cast<const char*>(&CurrentEnergy), sizeof(CurrentEnergy));
+			stream.write(reinterpret_cast<const char*>(&IsPredator), sizeof(IsPredator));
+
+			stream.write(reinterpret_cast<const char*>(&Age), sizeof(Age));
+			stream.write(reinterpret_cast<const char*>(&ClonedFrom), sizeof(ClonedFrom));
+
+			Network->SaveTo(stream);
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&LocationX), sizeof(LocationX));
+			stream.read(reinterpret_cast<char*>(&LocationY), sizeof(LocationY));
+			stream.read(reinterpret_cast<char*>(&Rotation), sizeof(Rotation));
+
+			stream.read(reinterpret_cast<char*>(&CurrentEnergy), sizeof(CurrentEnergy));
+			stream.read(reinterpret_cast<char*>(&IsPredator), sizeof(IsPredator));
+
+			stream.read(reinterpret_cast<char*>(&Age), sizeof(Age));
+			stream.read(reinterpret_cast<char*>(&ClonedFrom), sizeof(ClonedFrom));
+
+			Network->LoadFrom(stream);
+		}
     };
-
-    //public sealed class CellUtils
-    //{
-    //    public static Cell ReadCell(string filename)
-    //    {
-    //        Cell ret = null;
-
-    //        XmlSerializer serializer = new XmlSerializer(typeof(Cell));
-
-    //        using (FileStream fs = new FileStream(filename, FileMode.Open))
-    //        {
-    //            ret = (Cell) serializer.Deserialize(fs);
-    //        }
-
-    //        return ret;
-    //    }
-
-    //    public static List<Cell> ReadCells(string filename)
-    //    {
-    //        List<Cell> ret = null;
-
-    //        XmlSerializer serializer = new XmlSerializer(typeof(List<Cell>));
-
-    //        using (FileStream fs = new FileStream(filename, FileMode.Open))
-    //        {
-    //            ret = (List<Cell>)serializer.Deserialize(fs);
-    //        }
-
-    //        return ret;
-    //    }
-
-    //    public static void SaveCell(string filename, Cell cell)
-    //    {
-    //        XmlSerializer serializer =new XmlSerializer(typeof(Cell));
-    //        using (TextWriter writer = new StreamWriter(filename))
-    //        {
-    //            serializer.Serialize(writer, cell);
-    //        } 
-    //    }
-
-    //    public static void SaveCells(string filename, List<Cell> cells)
-    //    {
-    //        XmlSerializer serializer = new XmlSerializer(typeof(List<Cell>));
-    //        using (TextWriter writer = new StreamWriter(filename))
-    //        {
-    //            serializer.Serialize(writer, cells);
-    //        }
-    //    }
-    //}
 
 }

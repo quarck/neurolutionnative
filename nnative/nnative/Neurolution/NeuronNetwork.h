@@ -1,10 +1,13 @@
 ﻿#pragma once
-#include <vector>
-#include "../Random.h"
-#include "../Utils.h"
-#include "AppProperties.h"
+
 #include <ostream>
 #include <istream>
+#include <vector>
+
+#include "../Random.h"
+#include "../Utils.h"
+
+#include "AppProperties.h"
 
 namespace Neurolution
 {
@@ -115,7 +118,7 @@ namespace Neurolution
 		{
 			stream.write(reinterpret_cast<const char*>(&Charge), sizeof(Charge));
 			stream.write(reinterpret_cast<const char*>(&State), sizeof(State));
-			int size = Weights.size();
+			int size = static_cast<int>(Weights.size());
 			stream.write(reinterpret_cast<const char*>(&size), sizeof(size));
 			stream.write(reinterpret_cast<const char*>(&Weights[0]), sizeof(Weights[0]) * size);
 		}
@@ -300,9 +303,9 @@ namespace Neurolution
 
 		void SaveTo(std::ostream& stream)
 		{
-			int numNeurons = Neurons.size();
-			int numEyeCells = Eye.size();
-			int vectorSize = InputVector.size();
+			int numNeurons = static_cast<int>(Neurons.size());
+			int numEyeCells = static_cast<int>(Eye.size());
+			int vectorSize = static_cast<int>(InputVector.size());
 
 			if (OutputVector.size() != vectorSize)
 				throw std::runtime_error("Internal erorr: InputVector.size() must match OutputVector.size()");
