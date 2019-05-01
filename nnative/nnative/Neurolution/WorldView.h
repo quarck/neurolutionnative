@@ -14,6 +14,8 @@
 #include <GL/gl.h>			/* OpenGL header file */
 #include <GL/glu.h>			/* OpenGL utilities header file */
 
+#include "../glText.h"
+
 #include "World.h"
 #include "CellView.h"
 
@@ -57,6 +59,28 @@ namespace Neurolution
             }
         }
 
+		void PrintControls()
+		{
+			glPushMatrix();
+
+			//glTranslatef(-AppProperties::WorldWidth / 2.0f, -AppProperties::WorldHeight / 2.0f, 0.0);
+			
+			auto a = glText::glFont::GetItem('A');
+			auto b = glText::glFont::GetItem('B');
+
+			glPixelZoom(3.5f, 3.5f);
+
+			glRasterPos2f(0.0f, 0.11f);			
+			glDrawPixels(a.width(), a.height(), GL_RGBA, GL_UNSIGNED_BYTE, a.data.data());
+			glRasterPos2f(0.0f, -0.11f);			
+			glDrawPixels(b.width(), b.height(), GL_RGBA, GL_UNSIGNED_BYTE, b.data.data());
+			/*for (int i = 0; i < menu.size(); i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, menu[i]);
+			}*/
+
+			glPopMatrix();
+		}
+
         void UpdateFrom(std::shared_ptr<World>& world)
         {
             glPushMatrix();
@@ -76,7 +100,6 @@ namespace Neurolution
 
             glEnd();
             // BG END
-
 
             glScalef(
                 static_cast<GLfloat>(2.0 / AppProperties::WorldWidth),
@@ -170,6 +193,8 @@ namespace Neurolution
             }
 
             glPopMatrix();
-        }
+
+			PrintControls();
+		}
     };
 }

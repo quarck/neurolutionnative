@@ -5,14 +5,18 @@ namespace Neurolution
 
     class RuntimeConfig
     {
-        int numWorkerThreads{ 4 }; // would be more more flexible in the future.. 
+        int numWorkerThreads; // would be more more flexible in the future.. 
     public:
 
         RuntimeConfig()
         {
+#ifdef _DEBUG
+			numWorkerThreads = 1;
+#else 
             SYSTEM_INFO sysinfo;
             ::GetSystemInfo(&sysinfo);
-            numWorkerThreads = sysinfo.dwNumberOfProcessors;
+			numWorkerThreads = sysinfo.dwNumberOfProcessors;
+#endif
         }
 
         int GetNumWorkerThreads() const 

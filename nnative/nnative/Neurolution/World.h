@@ -7,6 +7,10 @@
 
 #include <algorithm>
 #include <functional>
+#include <filesystem>
+#include <fstream>
+#include <chrono>
+#include <sstream>
 
 #include "../Random.h"
 #include "../ThreadGrid.h"
@@ -226,34 +230,29 @@ namespace Neurolution
 
         void InitializeFromWorldFile(const std::string& filename)
         {
-            //List<Cell> cells = CellUtils.ReadCells(filename);
-            //if (cells != null)
-            //{
-            //    Cells = cells.ToArray();
-
-            //    foreach (var cell in Cells)
-            //    {
-            //        cell.Random = new Random(_random.Next());
-            //        cell.CurrentEnergy = AppProperties.InitialCellEnergy;
-            //        cell.LocationX = _random.Next(_maxX);
-            //        cell.LocationY = _random.Next(_maxY);
-            //    }
-            //}
+			std::ifstream file(filename, std::ifstream::in | std::ifstream::binary);
+			LoadFrom(file);
         }
-
 
         void SerializeWorld(const std::vector<std::shared_ptr<Cell>>& world, long step)
         {
-            //if (!_workingFolderCreated)
-            //{
-            //    Directory.CreateDirectory(_workingFolder);
-            //    _workingFolderCreated = true;
-            //}
+            if (!_workingFolderCreated)
+            {
+				std::filesystem::create_directory(_workingFolder);
+                _workingFolderCreated = true;
+            }
 
-            //DateTime now = DateTime.Now;
-            //string filename = $"{_workingFolder}/{step:D8}-{now:yyyy-MM-dd-HH-mm-ss}-world.xml";
+			auto now = std::chrono::system_clock::now();
+			auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-            //CellUtils.SaveCells(filename, world);
+			std::stringstream ssFilename;
+			tm tm;
+			localtime_s(&tm, &in_time_t);
+			ssFilename << _workingFolder << "\\" << std::put_time(&tm, "%Y-%m-%d %X %H:%M:%S") 
+				<< ".world";
+
+			std::ofstream file(ssFilename.str(), std::ofstream::out | std::ofstream::binary);
+			SaveTo(file);
         }
 
 

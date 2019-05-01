@@ -172,16 +172,6 @@ namespace Neurolution
             uiNeedsUpdate = false;
         }
 
-        //private void UpdateUI(long step)
-        //{
-        //    lock (world)
-        //    {
-        //        _worldView.UpdateFrom(world);
-        //        GenerationLabel.Content = $"{step:D8}";
-        //    }
-        //}
-
-
         bool IsUINeedsUpdate() const { return uiNeedsUpdate; }
         void ClearUINeedsUpdate() { uiNeedsUpdate = false; }
 
