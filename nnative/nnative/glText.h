@@ -425,6 +425,264 @@ namespace glText
 			".9999.."
 			;
 
+
+		static const char* _Period =
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"...XX.."
+			"......."
+			;
+		static const char* _Comma =
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"...XX.."
+			"....X.."
+			;
+		static const char* _Question =
+			".?????."
+			"?.....?"
+			"......?"
+			".....?."
+			"....?.."
+			"...?..."
+			"...?..."
+			"......."
+			"...?..."
+			;
+		static const char* _Exlm =
+			"...!..."
+			"...!..."
+			"...!..."
+			"...!..."
+			"...!..."
+			"...!..."
+			"...!..."
+			"......."
+			"...!..."
+			;
+		static const char* _OpBracket =
+			"....(.."
+			"...(..."
+			"..(...."
+			"..(...."
+			"..(...."
+			"..(...."
+			"..(...."
+			"...(..."
+			"....(.."
+			;
+		static const char* _ClBracket =
+			"..)...."
+			"...)..."
+			"....).."
+			"....).."
+			"....).."
+			"....).."
+			"....).."
+			"...)..."
+			"..)...."
+			;
+		static const char* _AT =
+			".@@@@@."
+			"@.....@"
+			"@.....@"
+			"@.@@@.@"
+			"@.@.@.@"
+			"@.@@@@."
+			"@......"
+			"@.....@"
+			".@@@@@."
+			;
+		static const char* _S_QUOTE =
+			"..XX..."
+			"...X..."
+			"..X...."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			;
+		static const char* _D_QUOTE =
+			"XX..XX."
+			".X...X."
+			"X...X.."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			;
+		static const char* _DOLLAR =
+			"...$..."
+			".$$$$$."
+			"$..$..."
+			"$..$..."
+			".$$$$$."
+			"...$..$"
+			"...$..$"
+			".$$$$$."
+			"...$..."
+			;
+		static const char* _PERCENT =
+			".%....%"
+			"%.%..%."
+			".%..%.."
+			"....%.."
+			"...%..."
+			"..%...."
+			".%...%."
+			".%..%.%"
+			"%....%."
+			;
+
+		static const char* _HAT =
+			"...^..."
+			"..^.^.."
+			".^...^."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			;
+		static const char* _AND =
+			".XXX..."
+			"X...X.."
+			"X...X.."
+			".X..X.."
+			"..XX..X"
+			".X..XX."
+			"X...X.."
+			"X..X.X."
+			".XX...X"
+			;
+		static const char* _OR =
+			"...|..."
+			"...|..."
+			"...|..."
+			"...|..."
+			"...|..."
+			"...|..."
+			"...|..."
+			"...|..."
+			"...|..."
+			;
+		static const char* _STAR =
+			"......."
+			"...X..."
+			".X.X.X."
+			"..XXX.."
+			"XXXXXXX"
+			"..XXX.."
+			".X.X.X."
+			"...X..."
+			"......."
+			;
+		static const char* _MINUS =
+			"......."
+			"......."
+			"......."
+			"......."
+			"XXXXXXX"
+			"......."
+			"......."
+			"......."
+			"......."
+			;
+		static const char* _PLUS =
+			"......."
+			"...X..."
+			"...X..."
+			"...X..."
+			"XXXXXXX"
+			"...X..."
+			"...X..."
+			"...X..."
+			"......."
+			;
+		static const char* _LESS =
+			"......."
+			"....X.."
+			"...X..."
+			"..X...."
+			".X....."
+			"..X...."
+			"...X..."
+			"....X.."
+			"......."
+			;
+		static const char* _GREATER =
+			"......."
+			"..X...."
+			"...X..."
+			"....X.."
+			".....X."
+			"....X.."
+			"...X..."
+			"..X...."
+			"......."
+			;
+		static const char* _SLASH =
+			"......X"
+			"......X"
+			".....X."
+			"....X.."
+			"...X..."
+			"..X...."
+			".X....."
+			"X......"
+			"X......"
+			;
+		static const char* _BACKSLASH =
+			"X......"
+			"X......"
+			".X....."
+			"..X...."
+			"...X..."
+			"....X.."
+			".....X."
+			"......X"
+			"......X"
+			;
+
+		static const char* _ANGLE_BRACKET_OPEN =
+			"..XXX.."
+			"..X...."
+			"..X...."
+			"..X...."
+			"..X...."
+			"..X...."
+			"..X...."
+			"..X...."
+			"..XXX.."
+			;
+		static const char* _ANGLE_BRACKET_CLOSE =
+			"..XXX.."
+			"....X.."
+			"....X.."
+			"....X.."
+			"....X.."
+			"....X.."
+			"....X.."
+			"....X.."
+			"..XXX.."
+			;
+
+
 #pragma endregion
 
 		static const char* letters[256] = { _UNKNOWN };
@@ -576,6 +834,31 @@ namespace glText
 			letters['7'] = _7;
 			letters['8'] = _8;
 			letters['9'] = _9;
+
+
+			letters['.'] = _Period;
+			letters[','] = _Comma;
+			letters['?'] = _Question;
+			letters['!'] = _Exlm;
+			letters['('] = _OpBracket;
+			letters[')'] = _ClBracket;
+			letters['@'] = _AT;
+			letters['\''] = _S_QUOTE;
+			letters['"'] = _D_QUOTE;
+			letters['$'] = _DOLLAR;
+			letters['%'] = _PERCENT;
+			letters['^'] = _HAT;
+			letters['&'] = _AND;
+			letters['|'] = _OR;
+			letters['*'] = _STAR;
+			letters['-'] = _MINUS;
+			letters['+'] = _PLUS;
+			letters['<'] = _LESS;
+			letters['>'] = _GREATER;
+			letters['/'] = _SLASH;
+			letters['\\'] = _BACKSLASH;
+			letters['['] = _ANGLE_BRACKET_OPEN;
+			letters[']'] = _ANGLE_BRACKET_CLOSE;
 
 
 
