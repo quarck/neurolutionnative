@@ -7,29 +7,427 @@ namespace glText
 {
 	namespace glFont
 	{
+		constexpr int RAW_LTR_W = 7;
+		constexpr int RAW_LTR_H = 9;
+		constexpr int RES_LTR_W = 18;
+		constexpr int RES_LTR_H = 21;
+
+#pragma region "font data"
+		static const char* _UNKNOWN = 
+			"......."
+			".?????."
+			".?????."
+			".?????."
+			".?????."
+			".?????."
+			".?????."
+			".?????."
+			"......."
+			;
+
 		static const char* _A =
-			"..XX.."
-			"..XX.."
-			".X..X."
-			".X..X."
-			"X....X"
-			"X....X"
-			"XXXXXX"
-			"X....X"
-			"X....X";
+			"...X..."
+			"...X..."
+			"..X.X.."
+			"..X.X.."
+			".X...X."
+			".X...X."
+			".XXXXX."
+			"X.....X"
+			"X.....X"
+			;
 
 		static const char* _B =
-			"XXXX.."
-			"X...X."
-			"X...X."
-			"XXXX.."
-			"X...X."
-			"X....X"
-			"X....X"
-			"X....X"
-			"XXXXX.";
+			"XXXX..."
+			"X...X.."
+			"X...X.."
+			"XXXXX.."
+			"X....X."
+			"X.....X"
+			"X.....X"
+			"X....X."
+			"XXXXX.."
+			;
+		static const char* _C =
+			".XXXXX."
+			"X.....X"
+			"X......"
+			"X......"
+			"X......"
+			"X......"
+			"X......"
+			"X.....X"
+			".XXXXX."
+			;
 
-		static const char* letters[] = { _A, _B };
+		static const char* _D =
+			"XXXXD.."
+			"X....D."
+			"X.....X"
+			"X.....X"
+			"X.....X"
+			"X.....X"
+			"X.....D"
+			"X....D."
+			"XXXXX.."
+			;
+		static const char* _E =
+			"EEEEEEE"
+			"E.....E"
+			"E......"
+			"E......"
+			"EEEEE.."
+			"E......"
+			"E......"
+			"E.....E"
+			"EEEEEEE"
+			;
+		static const char* _F =
+			"FFFFFFF"
+			"F.....F"
+			"F......"
+			"F......"
+			"FFFFF.."
+			"F......"
+			"F......"
+			"F......"
+			"F......"
+			;
+		static const char* _G =
+			"..GGGG."
+			".G....G"
+			"G......"
+			"G......"
+			"G..GGGG"
+			"G..G..G"
+			"G.....G"
+			".G...G."
+			"..GGG.."
+			;
+		static const char* _H =
+			"HH...HH"
+			"H.....H"
+			"H.....H"
+			"H.....H"
+			"HHHHHHH"
+			"H.....H"
+			"H.....H"
+			"H.....H"
+			"HH...HH"
+			;
+		static const char* _I =
+			"..III.."
+			"...I..."
+			"...I..."
+			"...I..."
+			"...I..."
+			"...I..."
+			"...I..."
+			"...I..."
+			"..III.."
+			;
+		static const char* _J =
+			"..JJJ.."
+			"...J..."
+			"...J..."
+			"...J..."
+			"...J..."
+			"...J..."
+			"...J..."
+			"J..J..."
+			".JJ...."
+			;
+		static const char* _K =
+			"KK...KK"
+			"K...K.."
+			"K..K..."
+			"KKK...."
+			"K.K...."
+			"K..K..."
+			"K...k.."
+			"K....K."
+			"KK...KK"
+			;
+		static const char* _L =
+			"L......"
+			"L......"
+			"L......"
+			"L......"
+			"L......"
+			"L......"
+			"L......"
+			"L.....L"
+			"LLLLLLL"
+			;
+		static const char* _M =
+			"M.....M"
+			"MM...MM"
+			"M.M.M.M"
+			"M..M..M"
+			"M.....M"
+			"M.....M"
+			"M.....M"
+			"M.....M"
+			"M.....M"
+			;
+		static const char* _N =
+			"N.....N"
+			"NN....N"
+			"N.N...N"
+			"N.N...N"
+			"N..N..N"
+			"N...N.N"
+			"N...N.N"
+			"N....NN"
+			"N.....N"
+			;
+		static const char* _O =
+			"..OOO.."
+			".O...O."
+			"O.....O"
+			"O.....O"
+			"O.....O"
+			"O.....O"
+			"O.....O"
+			".O...O."
+			"..OOO.."
+			;
+		static const char* _P =
+			"PPPPP.."
+			"P....P."
+			"P.....P"
+			"P....P."
+			"PPPPP.."
+			"P......"
+			"P......"
+			"P......"
+			"PP....."
+			;
+		static const char* _Q =
+			"..OOO.."
+			".O...O."
+			"O.....O"
+			"O.....O"
+			"O.....O"
+			"O.....O"
+			"O.....O"
+			".O...O."
+			"..OOOQQ"
+			;
+		static const char* _R =
+			"PPPPP.."
+			"P....P."
+			"P.....P"
+			"P....P."
+			"PPPPP.."
+			"P.R...."
+			"P..R..."
+			"P...R.."
+			"PP...RR"
+			;
+		static const char* _S =
+			".SSS.S."
+			"S...SS."
+			"S......"
+			".S....."
+			"..SSS.."
+			".....S."
+			"......S"
+			"SS...S."
+			"S.SSS.."
+			;
+		static const char* _T =
+			"TTTTTTT"
+			"T..T..T"
+			"...T..."
+			"...T..."
+			"...T..."
+			"...T..."
+			"...T..."
+			"...T..."
+			"..TTT.."
+			;
+		static const char* _U =
+			"UU...UU"
+			"U.....U"
+			"U.....U"
+			"U.....U"
+			"U.....U"
+			"U.....U"
+			"U.....U"
+			".U...U."
+			"..UUU.."
+			;
+		static const char* _V =
+			"VV...VV"
+			"V.....V"
+			".V...V."
+			".V...V."
+			".V...V."
+			"..V.V.."
+			"..V.V.."
+			"...V..."
+			"...V..."
+			;
+
+		static const char* _W =
+			"WW...WW"
+			"W.....W"
+			"W.....W"
+			"W.....W"
+			"W.....W"
+			"W..W..W"
+			"W.W.W.W"
+			"WW...WW"
+			"W.....W"
+			;
+		static const char* _X =
+			"XX...XX"
+			"X.....X"
+			".X...X."
+			"..X.X.."
+			"...X..."
+			"..X.X.."
+			".X...X."
+			"X.....X"
+			"XX...XX"
+			;
+		static const char* _Y =
+			"XX...XX"
+			"X.....X"
+			".X...X."
+			"..X.X.."
+			"...X..."
+			"...Y..."
+			"...Y..."
+			"...Y..."
+			"..YYY.."
+			;
+		static const char* _Z =
+			"ZZZZZZZ"
+			"Z.....Z"
+			".....Z."
+			"....Z.."
+			"...Z..."
+			"..Z...."
+			".Z....."
+			"Z.....Z"
+			"ZZZZZZZ"
+			;
+		static const char* _0 =
+			"..000.."
+			".0...0."
+			"0...0.0"
+			"0..0..0"
+			"0..0..0"
+			"0.0...0"
+			"0.0...0"
+			".0...0."
+			"..000.."
+			;
+		static const char* _1 =
+			"...1..."
+			"..11..."
+			".1.1..."
+			"...1..."
+			"...1..."
+			"...1..."
+			"...1..."
+			"...1..."
+			"..111.."
+			;
+		static const char* _2 =
+			".2222.."
+			"2....2."
+			".....2."
+			"....2.."
+			"...2..."
+			"..2...."
+			".2....."
+			"2.....2"
+			"2222222"
+			;
+		static const char* _3 =
+			".3333.."
+			"3....3."
+			"......3"
+			".....3."
+			"..333.."
+			".....3."
+			"......3"
+			"3....3."
+			".3333.."
+			;
+		static const char* _4 =
+			"....444"
+			"...4..4"
+			"..4...4"
+			".4....4"
+			"4444444"
+			"......4"
+			"......4"
+			"......4"
+			".....44"
+			;
+		static const char* _5 =
+			"5555555"
+			"5......"
+			"5......"
+			"55555.."
+			".....5."
+			"......5"
+			"......5"
+			"5....5."
+			".5555.."
+			;
+		static const char* _6 =
+			"..6666."
+			".6....."
+			".6....."
+			".6666.."
+			"6....6."
+			"6.....6"
+			"6.....6"
+			".6...6."
+			"..666.."
+			;
+		static const char* _7 =
+			"7777777"
+			"7.....7"
+			".....7."
+			"....7.."
+			"...7..."
+			"..7...."
+			"..7...."
+			"..7...."
+			"..7...."
+			;
+		static const char* _8 =
+			"..888.."
+			".8...8."
+			".8...8."
+			"..888.."
+			".8...8."
+			"8.....8"
+			"8.....8"
+			".8...8."
+			"..888.."
+			;
+		static const char* _9 =
+			"..999.."
+			".9...9."
+			"9.....9"
+			"9.....9"
+			".999999"
+			"......9"
+			"......9"
+			".....9."
+			".9999.."
+			;
+
+#pragma endregion
+
+		static const char* letters[256] = { _UNKNOWN };
 
 		template <int H, int W>
 		struct FontItem 
@@ -40,9 +438,14 @@ namespace glText
 			std::array<uint32_t, H* W> data;
 		};
 
-		using FontItemInst = FontItem<21, 15>;
+		using FontItemInst = FontItem<RES_LTR_H, RES_LTR_W>;
 
-
+		constexpr int HALO_FACTOR = 8;
+		constexpr int PRELUMINOSITY_FACTOR = 4;
+		constexpr int TAIL_LUMINOSITY_FACTOR = 8;
+		constexpr int POSTLUMINOSITY_DIV1 = 7;
+		constexpr int POSTLUMINOSITY_DIV2 = 10;
+		
 		void GenerateLetter(FontItemInst& dst, const char* src, int rawH, int rawW)
 		{
 			std::vector<unsigned> rawIntensity(dst.data.size(), 0);
@@ -51,46 +454,35 @@ namespace glText
 			{
 				for (int srcX = 0; srcX < rawW; ++srcX)
 				{
-					int val = src[(rawH - srcY - 1) * rawW + srcX] == 'X' ? 255 : 0;
-					int dstXc = srcX * 2 + 2;
+					int val = src[(rawH - srcY - 1) * rawW + srcX] != '.' ? 255 : 0;
+					int dstXc = srcX * 2 + 1;
 					int dstYc = srcY * 2 + 2;
 
+					// Ignition
+					rawIntensity[(dstYc + 0) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR;
+					// Full bringhness 
 					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 0)] += val;
-
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 0)] += val / 3;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 0)] += val / 3;
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 1)] += val / 3;
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc - 1)] += val / 3;
-
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 1)] += val / 9;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc - 1)] += val / 9;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 1)] += val / 9;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc - 1)] += val / 9;
-
-					rawIntensity[(dstYc + 2) * dst.width() + (dstXc + 0)] += val / 15;
-					rawIntensity[(dstYc - 2) * dst.width() + (dstXc + 0)] += val / 15;
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 2)] += val / 15;
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc - 2)] += val / 15;
-
-					rawIntensity[(dstYc + 2) * dst.width() + (dstXc + 1)] += val / 33;
-					rawIntensity[(dstYc + 2) * dst.width() + (dstXc - 1)] += val / 33;
-					rawIntensity[(dstYc - 2) * dst.width() + (dstXc + 1)] += val / 33;
-					rawIntensity[(dstYc - 2) * dst.width() + (dstXc - 1)] += val / 33;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 2)] += val / 33;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 2)] += val / 33;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc - 2)] += val / 33;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc - 2)] += val / 33;
+					//  Full bringhness 
+					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 1)] += val;
+					// Post-luminosity 
+					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 2)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2;
+					// tail 
+					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 3)] += val / TAIL_LUMINOSITY_FACTOR;
 
 
-					//rawIntensity[(2 * srcY + 0) * dst.width() + (2 * srcX + 2)] += val / 8;
-					//rawIntensity[(2 * srcY + 2) * dst.width() + (2 * srcX + 0)] += val / 8;
-					//rawIntensity[(2 * srcY + 4) * dst.width() + (2 * srcX + 2)] += val / 8;
-					//rawIntensity[(2 * srcY + 2) * dst.width() + (2 * srcX + 4)] += val / 8;
+					// Upper halo 
+					rawIntensity[(dstYc + 1) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR / HALO_FACTOR;
+					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 0)] += val / HALO_FACTOR;
+					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 1)] += val / HALO_FACTOR;
+					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 2)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2 / HALO_FACTOR;
+					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 3)] += val / TAIL_LUMINOSITY_FACTOR / HALO_FACTOR;
 
-					//rawIntensity[(2 * srcY + 0) * dst.width() + (2 * srcX + 0)] += val / 32;
-					//rawIntensity[(2 * srcY + 4) * dst.width() + (2 * srcX + 0)] += val / 32;
-					//rawIntensity[(2 * srcY + 0) * dst.width() + (2 * srcX + 4)] += val / 32;
-					//rawIntensity[(2 * srcY + 4) * dst.width() + (2 * srcX + 4)] += val / 32;
+					// Buttom halo
+					rawIntensity[(dstYc - 1) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR / HALO_FACTOR;
+					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 0)] += val / HALO_FACTOR;
+					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 1)] += val / HALO_FACTOR;
+					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 2)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2 / HALO_FACTOR;
+					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 3)] += val / TAIL_LUMINOSITY_FACTOR / HALO_FACTOR;
 				}
 			}
 
@@ -117,14 +509,84 @@ namespace glText
 
 		void GenerateFonts()
 		{
+			for (int i = 0; i < 256; ++i)
+				letters[i] = _UNKNOWN;
+
+			letters['A'] = _A;
+			letters['B'] = _B;
+			letters['C'] = _C;
+			letters['D'] = _D;
+			letters['E'] = _E;
+			letters['F'] = _F;
+			letters['G'] = _G;
+			letters['H'] = _H;
+			letters['I'] = _I;
+			letters['J'] = _J;
+			letters['K'] = _K;
+			letters['L'] = _L;
+			letters['M'] = _M;
+			letters['N'] = _N;
+			letters['O'] = _O;
+			letters['P'] = _P;
+			letters['Q'] = _Q;
+			letters['R'] = _R;
+			letters['S'] = _S;
+			letters['T'] = _T;
+			letters['U'] = _U;
+			letters['V'] = _V;
+			letters['W'] = _W;
+			letters['X'] = _X;
+			letters['Y'] = _Y;
+			letters['Z'] = _Z;
+
+			letters['a'] = _A;
+			letters['b'] = _B;
+			letters['c'] = _C;
+			letters['d'] = _D;
+			letters['e'] = _E;
+			letters['f'] = _F;
+			letters['g'] = _G;
+			letters['h'] = _H;
+			letters['i'] = _I;
+			letters['j'] = _J;
+			letters['k'] = _K;
+			letters['l'] = _L;
+			letters['m'] = _M;
+			letters['n'] = _N;
+			letters['o'] = _O;
+			letters['p'] = _P;
+			letters['q'] = _Q;
+			letters['r'] = _R;
+			letters['s'] = _S;
+			letters['t'] = _T;
+			letters['u'] = _U;
+			letters['v'] = _V;
+			letters['w'] = _W;
+			letters['x'] = _X;
+			letters['y'] = _Y;
+			letters['z'] = _Z;
+
+			letters['0'] = _0;
+			letters['1'] = _1;
+			letters['2'] = _2;
+			letters['3'] = _3;
+			letters['4'] = _4;
+			letters['5'] = _5;
+			letters['6'] = _6;
+			letters['7'] = _7;
+			letters['8'] = _8;
+			letters['9'] = _9;
+
+
+
 			font.resize(sizeof(letters) / sizeof(letters[0]));
 			for (int i = 0; i < font.size(); ++i)
 			{
-				GenerateLetter(font[i], letters[i], 9, 6);
+				GenerateLetter(font[i], letters[i], RAW_LTR_H, RAW_LTR_W);
 			}
 		}
 
-		FontItemInst GetItem(char ltr)
+		FontItemInst GetItem(unsigned char ltr)
 		{
 			if (!initialized)
 			{
@@ -132,9 +594,8 @@ namespace glText
 				initialized = true;
 			}
 
-			return font[ltr-'A'];
+			return font[ltr];
 		}
-
 	}
 
 
