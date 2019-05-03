@@ -683,6 +683,102 @@ namespace glText
 			;
 
 
+
+
+
+		static const char* _CUR_BRACKET_OPEN =
+			"...XX.."
+			"..X...."
+			"..X...."
+			"..X...."
+			".X....."
+			"..X...."
+			"..X...."
+			"..X...."
+			"...XX.."
+			;
+		static const char* _CUR_BRACKET_CLOSE =
+			"..XX..."
+			"....X.."
+			"....X.."
+			"....X.."
+			".....X."
+			"....X.."
+			"....X.."
+			"....X.."
+			"..XX..."
+			;
+
+		static const char* _TILDA =
+			".XX..XX"
+			"X..XX.."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			;
+		static const char* _HASH =
+			"......."
+			".X...X."
+			"XXXXXXX"
+			".X...X."
+			".X...X."
+			"XXXXXXX"
+			".X...X."
+			"......."
+			"......."
+			;
+		static const char* _SEMICOL =
+			"......."
+			"......."
+			"......."
+			"......."
+			"..XX..."
+			"......."
+			"..XX..."
+			"...X..."
+			"...X..."
+			;
+
+		static const char* _DOUBLE_PERIOD =
+			"......."
+			"......."
+			"......."
+			"......."
+			"..XX..."
+			"......."
+			"..XX..."
+			"......."
+			"......."
+			;
+		static const char* _UNDERSCORE =
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"XXXXXXX"
+			;
+		static const char* _EUQALS =
+			"......."
+			"......."
+			"......."
+			".XXXXX."
+			"......."
+			".XXXXX."
+			"......."
+			"......."
+			"......."
+			;
+
+
+
 #pragma endregion
 
 		static const char* letters[256] = { _UNKNOWN };
@@ -860,6 +956,15 @@ namespace glText
 			letters['['] = _ANGLE_BRACKET_OPEN;
 			letters[']'] = _ANGLE_BRACKET_CLOSE;
 
+			letters['{'] = _CUR_BRACKET_OPEN;
+			letters['}'] = _CUR_BRACKET_CLOSE;
+			letters['~'] = _TILDA;
+			letters['#'] = _HASH;
+			letters[';'] = _SEMICOL;
+			letters[':'] = _DOUBLE_PERIOD;
+			letters['_'] = _UNDERSCORE;
+			letters['='] = _EUQALS;
+		
 
 
 			font.resize(sizeof(letters) / sizeof(letters[0]));
