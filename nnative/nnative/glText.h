@@ -986,48 +986,72 @@ namespace glText
 			int height;
 			std::vector<uint32_t> data;
 
-			Label(int w, int h) : width(w), height(h), data(w* h) {}
+			//Label(int w, int h) : width(w), height(h), data(w* h) {}
+
+			Label(const std::string& text, uint32_t bgColor, uint32_t fgColor)
+				: width((int)(text.size()* RES_LTR_W))
+				, height(RES_LTR_H)  // always one-liners atm
+				, data(width * height)
+			{
+				Update(text, bgColor, fgColor);
+			}
 
 			uint32_t& px(int x, int y) noexcept { return data[y * width + x]; }
 			const uint32_t& px(int x, int y) const noexcept  { return data[y * width + x]; }
-		};
 
-		Label GenerateTextLabel(const std::string& text, uint32_t bgColor, uint32_t fgColor) noexcept
-		{
-			const int imgW = (int)(text.size() * RES_LTR_W);
-			const int imgH = RES_LTR_H; // always one-liners atm
-			Label lbl{ imgW, imgH };
-
-			uint32_t fgR = fgColor & 0xff;
-			uint32_t fgG = (fgColor >> 8) & 0xff;
-			uint32_t fgB = (fgColor >> 16) & 0xff;
-			
-			for (int i = 0; i < text.size(); ++i)
+			void Update(const std::string& text, uint32_t bgColor, uint32_t fgColor) noexcept
 			{
-				int bofs = i * RES_LTR_W;
-				const auto& fi = GetFontItem((unsigned char)text[i]);
+				const int imgW = (int)(text.size() * RES_LTR_W);
+				const int imgH = RES_LTR_H; // always one-liners atm
 
-				for (int y = 0; y < RES_LTR_H; ++y)
+				if (width != imgW || height != imgH)
 				{
-					for (int x = 0; x < RES_LTR_W; ++x)
-					{
-						auto val = fi.px(x, y);
-						if (val == 0) // bg
-							lbl.px(x + bofs, y) = bgColor;
-						else
-						{
-							uint32_t r = fgR * val / 255;
-							uint32_t g = fgG * val / 255;
-							uint32_t b = fgB * val / 255;
-
-							lbl.px(x + bofs, y) = 0xff000000 | (b << 16) | (g << 8) | r;
-						}
-					}
+					width = imgW;
+					height = imgH;
+					data.resize(width * height);
 				}
+
+				uint32_t fgR = fgColor & 0xff;
+				uint32_t fgG = (fgColor >> 8) & 0xff;
+				uint32_t fgB = (fgColor >> 16) & 0xff;
+
+				for (int i = 0; i < text.size(); ++i)
+				{
+					int dst_pos = i * RES_LTR_W;
+					int src_pos = 0;
+
+					const auto& fi = GetFontItem((unsigned char)text[i]);
+
+					for (int y = 0; y < RES_LTR_H; ++y)
+					{
+						for (int x = 0; x < RES_LTR_W; ++x)
+						{
+							auto val = fi.data[src_pos++];
+
+							if (val == 0) // bg
+								data[dst_pos++] = bgColor;
+							else
+							{
+								uint32_t r = fgR * val / 255;
+								uint32_t g = fgG * val / 255;
+								uint32_t b = fgB * val / 255;
+
+								data[dst_pos++] = 0xff000000 | (b << 16) | (g << 8) | r;
+							}
+						}
+
+						dst_pos += width - RES_LTR_W;
+					}
+				} // for (int i...
 			}
 
-			return lbl; // hail RVO
-		}
+			void DrawAt(float x, float y)
+			{
+				glRasterPos2f(x, y);
+				glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+			}
+		};
+
 	}
 
 

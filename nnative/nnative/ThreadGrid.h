@@ -7,6 +7,7 @@
 #include <memory>
 #include <atomic>
 #include <functional>
+#include <iostream>
 
 class ThreadGrid
 {
@@ -52,24 +53,32 @@ public:
         }
     }
 
-    void GridRun(std::function<void(int, int)>&& item)
+    void GridRun(std::function<void(int, int)>&& item) noexcept
     {
-        std::unique_lock<std::mutex> m(taskLock);
+		try 
+		{
+			std::unique_lock<std::mutex> m(taskLock);
 
-        std::fill(std::begin(hasTask), std::end(hasTask), true);
-        numActiveThreads = numThreads;
+			std::fill(std::begin(hasTask), std::end(hasTask), true);
+			numActiveThreads = numThreads;
 
-        task = std::move(item);
+			task = std::move(item);
 
-        // this will wake waiting threads, but only when we unlcok the taskLock -
-        // i.e. when we do wait ourselves below
-        taskAwailableCond.notify_all();
+			// this will wake waiting threads, but only when we unlcok the taskLock -
+			// i.e. when we do wait ourselves below
+			taskAwailableCond.notify_all();
 
-        // Wait for the theads to finish
-        taskDoneCond.wait(m, [&] {return numActiveThreads == 0; });
+			// Wait for the theads to finish
+			taskDoneCond.wait(m, [&] {return numActiveThreads == 0; });
 
-        // Finally - ensure we clean up the task closure
-        task = std::function<void(int, int)>();
+			// Finally - ensure we clean up the task closure
+			task = std::function<void(int, int)>();
+		}
+		catch (...)
+		{
+			std::cerr << "unhandled exception in GridRun" << std::endl;
+			std::terminate();
+		}
     }
 
 private:

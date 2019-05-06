@@ -1,7 +1,7 @@
 #pragma once
 
 // Quick reverse square root from Quake 3 source code 
-inline float Q_rsqrt(float number)
+inline float Q_rsqrt(float number)  noexcept
 {
     int i;
     float x2, y;
@@ -18,7 +18,7 @@ inline float Q_rsqrt(float number)
 }
 
 template <typename T>
-T LoopValue(const T& val, const T& minValue, const T& maxValue)
+T LoopValue(const T& val, const T& minValue, const T& maxValue)  noexcept
 {
     if (val >= minValue) // "likely()" == first branch of the if
     {
@@ -31,7 +31,7 @@ T LoopValue(const T& val, const T& minValue, const T& maxValue)
 
 
 template <typename T>
-const T& ValueCap(const T& val, const  T& min, const T& max)
+const T& ValueCap(const T& val, const  T& min, const T& max)  noexcept
 {
     if (val >= min)
     {
@@ -43,7 +43,7 @@ const T& ValueCap(const T& val, const  T& min, const T& max)
 }
 
 
-float InterlockedCompareExchange(float volatile * _Destination, float _Exchange, float _Comparand)
+float InterlockedCompareExchange(float volatile * _Destination, float _Exchange, float _Comparand)  noexcept
 {
     static_assert(sizeof(float) == sizeof(long),
         "InterlockedCompareExchange(float*,float,float): expect float to be same size as long");

@@ -60,7 +60,7 @@ namespace Neurolution
     {
         float Value;
 
-        void Step(Random& rnd, int maxX, int maxY)
+        void Step(Random& rnd, int maxX, int maxY)  noexcept
         {
             LocationX = LoopValue(
                 LocationX + DirectionX + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxX));
@@ -68,7 +68,7 @@ namespace Neurolution
                 LocationY + DirectionY + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxY));
         }
 
-		void SaveTo(std::ostream& stream)
+		void SaveTo(std::ostream& stream) 
 		{
 			stream.write(reinterpret_cast<const char*>(&Value), sizeof(Value));
 			this->Direction::SaveTo(stream);
@@ -87,7 +87,7 @@ namespace Neurolution
     {
         float DistanceSquare;
 
-        void Set(float dx, float dy)
+        void Set(float dx, float dy)  noexcept
         {
             DirectionX = dx;
             DirectionY = dy;
@@ -117,7 +117,7 @@ namespace Neurolution
             Reset(rnd, maxX, maxY);
         }
 
-        float Consume(float delta = 0.071f)
+        float Consume(float delta = 0.071f)  noexcept
         {
             float ret = 0.0f;
 
@@ -138,9 +138,9 @@ namespace Neurolution
             return ret;
         }
 
-        bool IsEmpty() const { return Value < 0.00001; }
+        bool IsEmpty() const  noexcept { return Value < 0.00001; }
 
-        void Reset(Random& rnd, int maxX, int maxY, bool valueOnly = false)
+        void Reset(Random& rnd, int maxX, int maxY, bool valueOnly = false)  noexcept
         {
             Value = AppProperties::FoodInitialValue;// * (0.5 + rnd.NextDouble());
 
@@ -283,7 +283,7 @@ namespace Neurolution
 
         std::vector<int> multipliers{ 6, 3, 2, 1 };
 
-        void IterateBabyMaking(long step, std::vector<std::shared_ptr<Cell>>& elements, float birthEnergyConsumption, float initialEnergy)
+        void IterateBabyMaking(long step, std::vector<std::shared_ptr<Cell>>& elements, float birthEnergyConsumption, float initialEnergy)  noexcept
         {
             if (step != 0 && (step % AppProperties::StepsPerBirthCheck == 0)
                 && (std::any_of(
@@ -340,7 +340,7 @@ namespace Neurolution
 
         }
 
-        void Iterate(long step)
+        void Iterate(long step)  noexcept
         {
             if (step == 0)
                 WorldInitialize();
@@ -408,7 +408,7 @@ namespace Neurolution
             });
         }
 
-        void IterateCellEye(int threadIdx, long step, std::shared_ptr<Cell>& cell)
+        void IterateCellEye(int threadIdx, long step, std::shared_ptr<Cell>& cell)  noexcept
         {
             if (cell->CurrentEnergy < 0.00001f)
                 return;
@@ -582,7 +582,7 @@ namespace Neurolution
             }
         }
 
-        void IterateCellThinkingAndMoving(int threadIdx, long step, std::shared_ptr<Cell>& cell)
+        void IterateCellThinkingAndMoving(int threadIdx, long step, std::shared_ptr<Cell>& cell) noexcept
         {
             float forceLeft = 0.0f;
             float forceRight = 0.0f;
@@ -633,7 +633,7 @@ namespace Neurolution
 
         }
 
-        void IterateCellCollisions(int threadIdx, long step, std::shared_ptr<Cell>& cell)
+        void IterateCellCollisions(int threadIdx, long step, std::shared_ptr<Cell>& cell)  noexcept
         {
             if (!cell->IsPredator)
             {
@@ -682,7 +682,7 @@ namespace Neurolution
             }
         }
 
-        void GiveOneFood()
+        void GiveOneFood()  noexcept
         {
             if (Foods.DeadSize() > 0)
             {
@@ -698,7 +698,7 @@ namespace Neurolution
             }
         }
 
-        void WorldInitialize()
+        void WorldInitialize()  noexcept
         {
             // cleanput outputs & foods 
             for (auto& cell : Cells)
@@ -717,7 +717,7 @@ namespace Neurolution
             GiveOneFood();
         }
 
-        void CreateChild(std::shared_ptr<Cell>& source, std::shared_ptr<Cell>& destination, float initialEnergy)
+        void CreateChild(std::shared_ptr<Cell>& source, std::shared_ptr<Cell>& destination, float initialEnergy)  noexcept
         {
             double rv = _random.NextDouble();
             bool severeMutations = (rv < AppProperties::SevereMutationFactor);

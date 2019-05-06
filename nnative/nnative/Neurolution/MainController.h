@@ -20,6 +20,9 @@ namespace Neurolution
         std::mutex worldLock;
         std::shared_ptr<WorldView> _worldView;
 
+		int iterationPerSeconds{ 0 };
+		long currentStep{ 0 };
+
         std::thread calcThread;
 
         std::atomic_bool terminate{ false };
@@ -68,77 +71,12 @@ namespace Neurolution
             terminate = true;
         }
 
-
-        //private void buttonStartNew_Click(object sender, RoutedEventArgs e)
-        //{
-        //    HideAllControls();
-        //    _worldView = new WorldView(grid, world);
-        //    world.MultiThreaded = MultiThreaded.IsChecked ?? false;
-        //    new Thread(this.CalcThread).Start();
-        //}
-
-        //private void buttonLoadSavedTop_Click(object sender, RoutedEventArgs e)
-        //{
-        //    OpenFileDialog dialog = new OpenFileDialog();
-
-        //    dialog.Filter = "XML Files (.xml)|*.xml|All Files (*.*)|*.*";
-        //    dialog.FilterIndex = 1;
-
-        //    dialog.Multiselect = false;
-
-        //    bool? userClickedOK = dialog.ShowDialog();
-
-        //    if (userClickedOK == true)
-        //    {
-        //        // Open the selected file to read.
-        //        string filename = dialog.FileName;
-
-        //        world.InitializeFromTopFile(filename);
-
-        //        _worldView = new WorldView(grid, world);
-        //        HideAllControls();
-
-        //        world.MultiThreaded = MultiThreaded.IsChecked ?? false;
-
-        //        new Thread(this.CalcThread).Start();
-        //    }
-        //}
-
-        //private void buttonLoadSavedWorld_Click(object sender, RoutedEventArgs e)
-        //{
-        //    OpenFileDialog dialog = new OpenFileDialog();
-
-        //    dialog.Filter = "XML Files (.xml)|*.xml|All Files (*.*)|*.*";
-        //    dialog.FilterIndex = 1;
-
-        //    dialog.Multiselect = false;
-
-        //    bool? userClickedOK = dialog.ShowDialog();
-
-        //    if (userClickedOK == true)
-        //    {
-        //        // Open the selected file to read.
-        //        string filename = dialog.FileName;
-
-        //        world.InitializeFromWorldFile(filename);
-
-        //        _worldView = new WorldView(grid, world);
-        //        HideAllControls();
-
-        //        world.MultiThreaded = MultiThreaded.IsChecked ?? false;
-
-        //        new Thread(this.CalcThread).Start();
-        //    }
-        //}
-
         void CalcThread()
         {
-            //var start = DateTime.Now;
-            //var end = start + TimeSpan.FromSeconds(20);
-
             auto lastUIUpdate = std::chrono::high_resolution_clock::now();
+			long lastUpdateAt = 0;
 
-            for (long step = 0; !terminate; ++step)
+            for (currentStep = 0; !terminate; ++currentStep)
             {
                 while (appPaused && !terminate)
                     ::Sleep(100);
@@ -146,9 +84,12 @@ namespace Neurolution
                 auto now = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> sinceLastUpdate = std::chrono::duration_cast<std::chrono::duration<double>>(now - lastUIUpdate);
 
-                if (step % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0)
+                if (currentStep % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0)
                 {
+					iterationPerSeconds = static_cast<long>((currentStep - lastUpdateAt) / sinceLastUpdate.count());
+
                     lastUIUpdate = now;
+					lastUpdateAt = currentStep;
 
                     uiNeedsUpdate = true;
                     ::SendMessage(hWND, WM_USER, 0, 0);
@@ -161,14 +102,14 @@ namespace Neurolution
                 }
 
                 std::lock_guard<std::mutex> l(worldLock);
-                world->Iterate(step);
+                world->Iterate(currentStep);
             }
         }
 
         void DrawWorld()
         {
             std::lock_guard<std::mutex> l(worldLock);
-            _worldView->UpdateFrom(world);
+            _worldView->UpdateFrom(world, currentStep, iterationPerSeconds);
             uiNeedsUpdate = false;
         }
 
