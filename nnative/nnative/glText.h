@@ -9,7 +9,7 @@ namespace glText
 	{
 		constexpr int RAW_LTR_W = 7;
 		constexpr int RAW_LTR_H = 9;
-		constexpr int RES_LTR_W = 10;
+		constexpr int RES_LTR_W = 9;
 		constexpr int RES_LTR_H = 13;
 
 #pragma region "font data"
@@ -222,8 +222,8 @@ namespace glText
 			"O.....O"
 			"O.....O"
 			"O.....O"
-			"O.....O"
-			".O...O."
+			"O....Q."
+			".OQQQ.."
 			"..OOOQQ"
 			;
 		static const char* _R =
@@ -267,8 +267,8 @@ namespace glText
 			"U.....U"
 			"U.....U"
 			"U.....U"
-			".U...U."
-			"..UUU.."
+			"U.....U"
+			".UUUUU."
 			;
 		static const char* _V =
 			"VV...VV"
@@ -572,9 +572,9 @@ namespace glText
 			"......."
 			;
 		static const char* _AND =
-			".XXX..."
-			"X...X.."
-			"X...X.."
+			"..XX..."
+			".X..X.."
+			".X..X.."
 			".X..X.."
 			"..XX..X"
 			".X..XX."
@@ -798,23 +798,23 @@ namespace glText
 		template <int H, int W>
 		struct FontItem 
 		{
-			static constexpr int height() { return H; }
-			static constexpr int width() { return W; }
+			static constexpr int height() noexcept { return H; }
+			static constexpr int width() noexcept { return W; }
 
 			std::array<uint8_t, H* W> data;
 
-			uint8_t px(int x, int y) const { return data[y * W + x];  }
+			uint8_t px(int x, int y) const noexcept { return data[y * W + x];  }
 		};
 
 		using FontItemInst = FontItem<RES_LTR_H, RES_LTR_W>;
 
-		constexpr int HALO_FACTOR = 16;
+		constexpr int HALO_FACTOR = 8;
 		constexpr int PRELUMINOSITY_FACTOR = 4;
 		constexpr int TAIL_LUMINOSITY_FACTOR = 16;
-		constexpr int POSTLUMINOSITY_DIV1 = 7;
+		constexpr int POSTLUMINOSITY_DIV1 = 5;
 		constexpr int POSTLUMINOSITY_DIV2 = 10;
 		
-		void GenerateLetter(FontItemInst& dst, const char* src, int rawH, int rawW)
+		void GenerateLetter(FontItemInst& dst, const char* src, int rawH, int rawW) noexcept
 		{
 			std::vector<unsigned> rawIntensity(dst.data.size(), 0);
 
@@ -824,23 +824,23 @@ namespace glText
 				{
 					int val = src[(rawH - srcY - 1) * rawW + srcX] != '.' ? 255 : 0;
 					int dstXc = srcX * 1 + 1;
-					int dstYc = srcY * 1 + 2;
+					int dstYc = srcY * 1 + 1;
 
 					// Ignition
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR;
-					// Full bringhness 
+					//rawIntensity[(dstYc + 0) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR;
+					//// Full bringhness 
 					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 0)] += val;
 					// Post-luminosity 
 					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 1)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2;
-					// tail 
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 2)] += val / TAIL_LUMINOSITY_FACTOR;
+					 // tail 
+					//rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 2)] += val / TAIL_LUMINOSITY_FACTOR;
 
 
 					// Upper halo 
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR / HALO_FACTOR;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 0)] += val / HALO_FACTOR;
+	/*				rawIntensity[(dstYc + 1) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR / HALO_FACTOR;
+	*/				rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 0)] += val / HALO_FACTOR;
 					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 1)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2 / HALO_FACTOR;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 2)] += val / TAIL_LUMINOSITY_FACTOR / HALO_FACTOR;
+					//rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 2)] += val / TAIL_LUMINOSITY_FACTOR / HALO_FACTOR;
 				}
 			}
 
@@ -854,7 +854,7 @@ namespace glText
 		static std::vector<FontItemInst> font;
 		static bool initialized = false;
 
-		void GenerateFonts()
+		void GenerateFonts() noexcept
 		{
 			for (int i = 0; i < 256; ++i)
 				letters[i] = _UNKNOWN;
@@ -969,7 +969,7 @@ namespace glText
 			}
 		}
 
-		FontItemInst GetFontItem(unsigned char ltr)
+		FontItemInst GetFontItem(unsigned char ltr) noexcept
 		{
 			if (!initialized)
 			{
@@ -988,16 +988,20 @@ namespace glText
 
 			Label(int w, int h) : width(w), height(h), data(w* h) {}
 
-			uint32_t& px(int x, int y) { return data[y * width + x]; }
-			const uint32_t& px(int x, int y) const { return data[y * width + x]; }
+			uint32_t& px(int x, int y) noexcept { return data[y * width + x]; }
+			const uint32_t& px(int x, int y) const noexcept  { return data[y * width + x]; }
 		};
 
-		Label GenerateTextLabel(const std::string& text, uint32_t bgColor)
+		Label GenerateTextLabel(const std::string& text, uint32_t bgColor, uint32_t fgColor) noexcept
 		{
-			const int imgW = text.size() * RES_LTR_W;
+			const int imgW = (int)(text.size() * RES_LTR_W);
 			const int imgH = RES_LTR_H; // always one-liners atm
 			Label lbl{ imgW, imgH };
 
+			uint32_t fgR = fgColor & 0xff;
+			uint32_t fgG = (fgColor >> 8) & 0xff;
+			uint32_t fgB = (fgColor >> 16) & 0xff;
+			
 			for (int i = 0; i < text.size(); ++i)
 			{
 				int bofs = i * RES_LTR_W;
@@ -1011,7 +1015,13 @@ namespace glText
 						if (val == 0) // bg
 							lbl.px(x + bofs, y) = bgColor;
 						else
-							lbl.px(x + bofs, y) = 0xff000000 | (val << 16) | (val << 8) | val;
+						{
+							uint32_t r = fgR * val / 255;
+							uint32_t g = fgG * val / 255;
+							uint32_t b = fgB * val / 255;
+
+							lbl.px(x + bofs, y) = 0xff000000 | (b << 16) | (g << 8) | r;
+						}
 					}
 				}
 			}

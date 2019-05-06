@@ -63,10 +63,10 @@ namespace Neurolution
 		{
 			glPushMatrix();
 
-			glPixelZoom(1.f, 1.0f);
+			glPixelZoom(1.f, 1.f);
 
-			auto lbl = glText::glFont::GenerateTextLabel("<SP> - start/pause, <esc> - quit", 0xff00001f);
-			glRasterPos2f(-1.0, -1);
+			auto lbl = glText::glFont::GenerateTextLabel("<SP> - start/pause, <esc> - quit", 0xff191919, 0xff00007f);
+			glRasterPos2f(-1.0, -0.99);
 			glDrawPixels(lbl.width, lbl.height, GL_RGBA, GL_UNSIGNED_BYTE, &lbl.data[0]);
 
 			glPopMatrix();
