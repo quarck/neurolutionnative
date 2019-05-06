@@ -63,29 +63,11 @@ namespace Neurolution
 		{
 			glPushMatrix();
 
-			//glTranslatef(-AppProperties::WorldWidth / 2.0f, -AppProperties::WorldHeight / 2.0f, 0.0);
-			
 			glPixelZoom(1.f, 1.0f);
 
-			for (int idx = 0; idx < 256; ++ idx)
-			{
-				int x = idx % 16;
-				int y = idx / 16;
-
-				auto ltr = glText::glFont::GetItem((unsigned char)idx);
-
-				glRasterPos2f(-1.0 + 0.08*x, 0.8 - 0.11f * y);
-				glDrawPixels(ltr.width(), ltr.height(), GL_RGBA, GL_UNSIGNED_BYTE, ltr.data.data());
-			}
-
-			//auto a = glText::glFont::GetItem('A');
-			//auto b = glText::glFont::GetItem('B');
-
-
-			//glRasterPos2f(0.0f, 0.11f);			
-			//glDrawPixels(a.width(), a.height(), GL_RGBA, GL_UNSIGNED_BYTE, a.data.data());
-			//glRasterPos2f(0.0f, -0.11f);			
-			//glDrawPixels(b.width(), b.height(), GL_RGBA, GL_UNSIGNED_BYTE, b.data.data());
+			auto lbl = glText::glFont::GenerateTextLabel("<SP> - start/pause, <esc> - quit", 0xff00001f);
+			glRasterPos2f(-1.0, -1);
+			glDrawPixels(lbl.width, lbl.height, GL_RGBA, GL_UNSIGNED_BYTE, &lbl.data[0]);
 
 			glPopMatrix();
 		}
@@ -109,6 +91,7 @@ namespace Neurolution
 
             glEnd();
             // BG END
+			PrintControls();
 
             glScalef(
                 static_cast<GLfloat>(2.0 / AppProperties::WorldWidth),
@@ -203,7 +186,6 @@ namespace Neurolution
 
             glPopMatrix();
 
-			PrintControls();
 		}
     };
 }

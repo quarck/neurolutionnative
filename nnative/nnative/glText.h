@@ -9,8 +9,8 @@ namespace glText
 	{
 		constexpr int RAW_LTR_W = 7;
 		constexpr int RAW_LTR_H = 9;
-		constexpr int RES_LTR_W = 18;
-		constexpr int RES_LTR_H = 21;
+		constexpr int RES_LTR_W = 10;
+		constexpr int RES_LTR_H = 13;
 
 #pragma region "font data"
 		static const char* _UNKNOWN = 
@@ -22,6 +22,18 @@ namespace glText
 			".?????."
 			".?????."
 			".?????."
+			"......."
+			;
+
+		static const char* _SPACECHR =
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
+			"......."
 			"......."
 			;
 
@@ -789,14 +801,16 @@ namespace glText
 			static constexpr int height() { return H; }
 			static constexpr int width() { return W; }
 
-			std::array<uint32_t, H* W> data;
+			std::array<uint8_t, H* W> data;
+
+			uint8_t px(int x, int y) const { return data[y * W + x];  }
 		};
 
 		using FontItemInst = FontItem<RES_LTR_H, RES_LTR_W>;
 
-		constexpr int HALO_FACTOR = 8;
+		constexpr int HALO_FACTOR = 16;
 		constexpr int PRELUMINOSITY_FACTOR = 4;
-		constexpr int TAIL_LUMINOSITY_FACTOR = 8;
+		constexpr int TAIL_LUMINOSITY_FACTOR = 16;
 		constexpr int POSTLUMINOSITY_DIV1 = 7;
 		constexpr int POSTLUMINOSITY_DIV2 = 10;
 		
@@ -809,52 +823,31 @@ namespace glText
 				for (int srcX = 0; srcX < rawW; ++srcX)
 				{
 					int val = src[(rawH - srcY - 1) * rawW + srcX] != '.' ? 255 : 0;
-					int dstXc = srcX * 2 + 1;
-					int dstYc = srcY * 2 + 2;
+					int dstXc = srcX * 1 + 1;
+					int dstYc = srcY * 1 + 2;
 
 					// Ignition
 					rawIntensity[(dstYc + 0) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR;
 					// Full bringhness 
 					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 0)] += val;
-					//  Full bringhness 
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 1)] += val;
 					// Post-luminosity 
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 2)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2;
+					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 1)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2;
 					// tail 
-					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 3)] += val / TAIL_LUMINOSITY_FACTOR;
+					rawIntensity[(dstYc + 0) * dst.width() + (dstXc + 2)] += val / TAIL_LUMINOSITY_FACTOR;
 
 
 					// Upper halo 
 					rawIntensity[(dstYc + 1) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR / HALO_FACTOR;
 					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 0)] += val / HALO_FACTOR;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 1)] += val / HALO_FACTOR;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 2)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2 / HALO_FACTOR;
-					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 3)] += val / TAIL_LUMINOSITY_FACTOR / HALO_FACTOR;
-
-					// Buttom halo
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc - 1)] += val / PRELUMINOSITY_FACTOR / HALO_FACTOR;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 0)] += val / HALO_FACTOR;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 1)] += val / HALO_FACTOR;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 2)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2 / HALO_FACTOR;
-					rawIntensity[(dstYc - 1) * dst.width() + (dstXc + 3)] += val / TAIL_LUMINOSITY_FACTOR / HALO_FACTOR;
+					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 1)] += val * POSTLUMINOSITY_DIV1 / POSTLUMINOSITY_DIV2 / HALO_FACTOR;
+					rawIntensity[(dstYc + 1) * dst.width() + (dstXc + 2)] += val / TAIL_LUMINOSITY_FACTOR / HALO_FACTOR;
 				}
 			}
 
 			for (int idx = 0; idx < dst.data.size(); ++idx)
 			{
 				unsigned ri = rawIntensity[idx];
-				if (rawIntensity[idx] >= 255)
-				{
-					dst.data[idx] = 0xffffffff;
-				}
-				else if (ri == 0)
-				{
-					dst.data[idx] = 0x0;
-				}
-				else
-				{
-					dst.data[idx] = (ri << 24) | (ri << 16) | (ri << 8) | (ri);
-				}
+				dst.data[idx] = static_cast<uint8_t>(ri <= 255 ? ri : 255);
 			}
 		}
 
@@ -865,6 +858,8 @@ namespace glText
 		{
 			for (int i = 0; i < 256; ++i)
 				letters[i] = _UNKNOWN;
+
+			letters[' '] = _SPACECHR;
 
 			letters['A'] = _A;
 			letters['B'] = _B;
@@ -974,7 +969,7 @@ namespace glText
 			}
 		}
 
-		FontItemInst GetItem(unsigned char ltr)
+		FontItemInst GetFontItem(unsigned char ltr)
 		{
 			if (!initialized)
 			{
@@ -983,6 +978,45 @@ namespace glText
 			}
 
 			return font[ltr];
+		}
+
+		struct Label
+		{
+			int width; 
+			int height;
+			std::vector<uint32_t> data;
+
+			Label(int w, int h) : width(w), height(h), data(w* h) {}
+
+			uint32_t& px(int x, int y) { return data[y * width + x]; }
+			const uint32_t& px(int x, int y) const { return data[y * width + x]; }
+		};
+
+		Label GenerateTextLabel(const std::string& text, uint32_t bgColor)
+		{
+			const int imgW = text.size() * RES_LTR_W;
+			const int imgH = RES_LTR_H; // always one-liners atm
+			Label lbl{ imgW, imgH };
+
+			for (int i = 0; i < text.size(); ++i)
+			{
+				int bofs = i * RES_LTR_W;
+				const auto& fi = GetFontItem((unsigned char)text[i]);
+
+				for (int y = 0; y < RES_LTR_H; ++y)
+				{
+					for (int x = 0; x < RES_LTR_W; ++x)
+					{
+						auto val = fi.px(x, y);
+						if (val == 0) // bg
+							lbl.px(x + bofs, y) = bgColor;
+						else
+							lbl.px(x + bofs, y) = 0xff000000 | (val << 16) | (val << 8) | val;
+					}
+				}
+			}
+
+			return lbl; // hail RVO
 		}
 	}
 
