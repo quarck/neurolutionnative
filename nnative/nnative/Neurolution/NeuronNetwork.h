@@ -86,7 +86,7 @@ namespace Neurolution
             CloneFrom(other, rnd, severe);
         }
 
-        void CloneFrom(const Neuron& other, Random& rnd, bool severe)
+        void CloneFrom(const Neuron& other, Random& rnd, bool severe) noexcept
         {
             Charge = 0.0f;
             State = NeuronState::Idle;
@@ -145,9 +145,9 @@ namespace Neurolution
 
         std::vector<float> OutputVector;
 
-        size_t GetNetworkSize() const { return Neurons.size(); }
+        size_t GetNetworkSize() const noexcept { return Neurons.size(); }
 
-        size_t GetVectorSize() const { return GetNetworkSize() + AppProperties::EyeSize; }
+        size_t GetVectorSize() const noexcept { return GetNetworkSize() + AppProperties::EyeSize; }
 
 		NeuronNetwork()
 		{
@@ -177,7 +177,7 @@ namespace Neurolution
             }
         }
 
-        void IterateNetwork(Random& rnd, std::vector<float>& inputVector, std::vector<float>& outputVector)
+        void IterateNetwork(Random& rnd, std::vector<float>& inputVector, std::vector<float>& outputVector) noexcept
         {
             for (unsigned int j = 0; j < Neurons.size(); ++j)
             {
@@ -259,23 +259,23 @@ namespace Neurolution
             }
         }
 
-        void PrepareIteration()
+        void PrepareIteration() noexcept
         {
             InputVector.swap(OutputVector);
         }
 
-        void IterateNetwork(Random& rnd)
+        void IterateNetwork(Random& rnd) noexcept
         {
             IterateNetwork(rnd, InputVector, OutputVector);
         }
 
-        void CleanOutputs()
+        void CleanOutputs() noexcept
         {
             std::fill(std::begin(InputVector), std::end(InputVector), 0.0f);
             std::fill(std::begin(OutputVector), std::end(OutputVector), 0.0f);
         }
 
-        void CloneFrom(const NeuronNetwork& other, Random& rnd, bool severeMutations = false, float severity = 0.0f)
+        void CloneFrom(const NeuronNetwork& other, Random& rnd, bool severeMutations = false, float severity = 0.0f) noexcept
         {
             size_t newSize = other.Neurons.size();
 

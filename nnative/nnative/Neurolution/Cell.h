@@ -38,7 +38,7 @@ namespace Neurolution
 
         Random random;
 
-        std::vector<LightSensor>& GetEye() { return Network->Eye; }
+        std::vector<LightSensor>& GetEye() noexcept { return Network->Eye; }
 
         bool IsPredator{ false };
 
@@ -52,7 +52,7 @@ namespace Neurolution
         {
         }
 
-        void PrepareIteration()
+        void PrepareIteration() noexcept
         {
             Network->PrepareIteration();
         }
@@ -60,7 +60,7 @@ namespace Neurolution
         // set sensors 
         // call Iterate
         // digest Motor* params 
-        void IterateNetwork(long step)
+        void IterateNetwork(long step) noexcept
         {
             Network->IterateNetwork(random);
 
@@ -77,7 +77,7 @@ namespace Neurolution
             Age++;
         }
 
-        void CloneFrom(const Cell& other, Random& rnd, int maxX, int maxY, bool severeMutations, float severity)
+        void CloneFrom(const Cell& other, Random& rnd, int maxX, int maxY, bool severeMutations, float severity) noexcept
         {
             //RandomizeLocation(rnd, maxX, maxY);
 
@@ -88,14 +88,14 @@ namespace Neurolution
             Age = 0;
         }
 
-        void RandomizeLocation(Random& rnd, int maxX, int maxY)
+        void RandomizeLocation(Random& rnd, int maxX, int maxY) noexcept
         {
             LocationX = static_cast<float>(rnd.NextDouble()*maxX);
             LocationY = static_cast<float>(rnd.NextDouble()*maxY);
             Rotation = (float)(rnd.NextDouble() * 2.0 * M_PI);
         }
 
-        bool PredatoryEat(float& preyEnergy)
+        bool PredatoryEat(float& preyEnergy) noexcept
         {
             for (;;)
             {

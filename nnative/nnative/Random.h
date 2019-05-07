@@ -18,17 +18,17 @@ public:
         generator.seed(seed);
     }
 
-    double NextDouble()
+    double NextDouble() noexcept
     {
         return realDistribution(generator);
     }
 
-    int Next()
+    int Next() noexcept
     {
         return intDistribution(generator);
     }
 
-    int Next(int max)
+    int Next(int max) noexcept
     {
         return Next() % max;
     }

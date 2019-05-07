@@ -2,6 +2,7 @@
 
 #include <array>
 #include <stdint.h>
+#include <numeric>
 
 namespace glText
 {
@@ -746,9 +747,9 @@ namespace glText
 		static const char* _SEMICOL =
 			"......."
 			"......."
-			"......."
-			"......."
 			"..XX..."
+			"......."
+			"......."
 			"......."
 			"..XX..."
 			"...X..."
@@ -758,9 +759,9 @@ namespace glText
 		static const char* _DOUBLE_PERIOD =
 			"......."
 			"......."
-			"......."
-			"......."
 			"..XX..."
+			"......."
+			"......."
 			"......."
 			"..XX..."
 			"......."
@@ -980,51 +981,71 @@ namespace glText
 			return font[ltr];
 		}
 
-		struct Label
+	}
+
+	struct Label
+	{
+		int width;
+		int height;
+		std::vector<uint32_t> data;
+
+		Label(uint32_t bgColor, const std::string& text, uint32_t fgColor)
+			: width(0)
+			, height(0) 
 		{
-			int width; 
-			int height;
-			std::vector<uint32_t> data;
+			Update(text, bgColor, fgColor);
+		}
 
-			//Label(int w, int h) : width(w), height(h), data(w* h) {}
+		Label(uint32_t bgColor,
+			std::initializer_list<std::pair<std::string, uint32_t>> texts)
+			: width(0)
+			, height(0)
+		{
+			Update(bgColor, texts);
+		}
 
-			Label(const std::string& text, uint32_t bgColor, uint32_t fgColor)
-				: width((int)(text.size()* RES_LTR_W))
-				, height(RES_LTR_H)  // always one-liners atm
-				, data(width * height)
+		uint32_t& px(int x, int y) noexcept { return data[y * width + x]; }
+		const uint32_t& px(int x, int y) const noexcept { return data[y * width + x]; }
+
+		void Update(
+			uint32_t bgColor,
+			std::initializer_list<std::pair<std::string, uint32_t>> texts
+		) noexcept
+		{
+			size_t maxLen = std::reduce(texts.begin(), texts.end(),
+				static_cast<size_t>(0), // init 
+				[&](const size_t& mx, const std::pair<std::string, uint32_t> & s) { return mx > s.first.size() ? mx : s.first.size(); });
+
+			const int imgW = (int)(maxLen * glFont::RES_LTR_W);
+			const int imgH = (int)(texts.size() * glFont::RES_LTR_H); // always one-liners atm
+
+			if (width != imgW || height != imgH)
 			{
-				Update(text, bgColor, fgColor);
+				width = imgW;
+				height = imgH;
+				data.resize(width * height);
 			}
 
-			uint32_t& px(int x, int y) noexcept { return data[y * width + x]; }
-			const uint32_t& px(int x, int y) const noexcept  { return data[y * width + x]; }
-
-			void Update(const std::string& text, uint32_t bgColor, uint32_t fgColor) noexcept
+			int vIdx = 0;
+			for (const auto& textP: texts)
 			{
-				const int imgW = (int)(text.size() * RES_LTR_W);
-				const int imgH = RES_LTR_H; // always one-liners atm
-
-				if (width != imgW || height != imgH)
-				{
-					width = imgW;
-					height = imgH;
-					data.resize(width * height);
-				}
+				const auto& text = textP.first;
+				const auto fgColor = textP.second;
 
 				uint32_t fgR = fgColor & 0xff;
 				uint32_t fgG = (fgColor >> 8) & 0xff;
 				uint32_t fgB = (fgColor >> 16) & 0xff;
 
-				for (int i = 0; i < text.size(); ++i)
+				for (int i = 0; i < maxLen; ++i)
 				{
-					int dst_pos = i * RES_LTR_W;
+					int dst_pos = i * glFont::RES_LTR_W + glFont::RES_LTR_H * width * ((int)texts.size() - vIdx - 1);
 					int src_pos = 0;
 
-					const auto& fi = GetFontItem((unsigned char)text[i]);
+					const auto& fi = i < text.size() ? glFont::GetFontItem((unsigned char)text[i]) : glFont::GetFontItem(' ');
 
-					for (int y = 0; y < RES_LTR_H; ++y)
+					for (int y = 0; y < glFont::RES_LTR_H; ++y)
 					{
-						for (int x = 0; x < RES_LTR_W; ++x)
+						for (int x = 0; x < glFont::RES_LTR_W; ++x)
 						{
 							auto val = fi.data[src_pos++];
 
@@ -1040,19 +1061,68 @@ namespace glText
 							}
 						}
 
-						dst_pos += width - RES_LTR_W;
+						dst_pos += width - glFont::RES_LTR_W;
 					}
 				} // for (int i...
-			}
 
-			void DrawAt(float x, float y)
+				++vIdx;
+			}
+		}
+
+		void Update(
+			const std::string& text,
+			uint32_t bgColor,
+			uint32_t fgColor
+		) noexcept
+		{
+			const int imgW = (int)(text.size() * glFont::RES_LTR_W);
+			const int imgH = (int)(glFont::RES_LTR_H); // always one-liners atm
+
+			if (width != imgW || height != imgH)
 			{
-				glRasterPos2f(x, y);
-				glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+				width = imgW;
+				height = imgH;
+				data.resize(width * height);
 			}
-		};
 
-	}
+			uint32_t fgR = fgColor & 0xff;
+			uint32_t fgG = (fgColor >> 8) & 0xff;
+			uint32_t fgB = (fgColor >> 16) & 0xff;
 
+			for (int i = 0; i < text.size(); ++i)
+			{
+				int dst_pos = i * glFont::RES_LTR_W;
+				int src_pos = 0;
 
+				const auto& fi = glFont::GetFontItem((unsigned char)text[i]);
+
+				for (int y = 0; y < glFont::RES_LTR_H; ++y)
+				{
+					for (int x = 0; x < glFont::RES_LTR_W; ++x)
+					{
+						auto val = fi.data[src_pos++];
+
+						if (val == 0) // bg
+							data[dst_pos++] = bgColor;
+						else
+						{
+							uint32_t r = fgR * val / 255;
+							uint32_t g = fgG * val / 255;
+							uint32_t b = fgB * val / 255;
+
+							data[dst_pos++] = 0xff000000 | (b << 16) | (g << 8) | r;
+						}
+					}
+
+					dst_pos += width - glFont::RES_LTR_W;
+				}
+			} // for (int i...
+		}
+
+		void DrawAt(float x, float y)
+		{
+			glRasterPos2f(x, y);
+			glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+		}
+	};
 }

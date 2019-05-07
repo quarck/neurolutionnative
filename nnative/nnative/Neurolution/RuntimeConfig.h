@@ -19,7 +19,7 @@ namespace Neurolution
 #endif
         }
 
-        int GetNumWorkerThreads() const 
+        int GetNumWorkerThreads() const noexcept 
         {
             return numWorkerThreads; 
         }

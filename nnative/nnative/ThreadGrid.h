@@ -31,6 +31,7 @@ public:
         , threads(n)
         , threadIsActive(n)
         , hasTask(n)
+		, numActiveThreads{0}
     {
         for (int i = 0; i < n; ++i)
         {

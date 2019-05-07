@@ -109,7 +109,7 @@ namespace Neurolution
         void DrawWorld()
         {
             std::lock_guard<std::mutex> l(worldLock);
-            _worldView->UpdateFrom(world, currentStep, iterationPerSeconds);
+            _worldView->UpdateFrom(world, currentStep, iterationPerSeconds, config.GetNumWorkerThreads());
             uiNeedsUpdate = false;
         }
 

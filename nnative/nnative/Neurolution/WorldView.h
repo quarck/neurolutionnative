@@ -38,7 +38,7 @@ namespace Neurolution
         std::shared_ptr<World> _world;
         std::vector<std::shared_ptr<CellView>> CellViews;
 
-		glText::glFont::Label controlsLabel{ "<SP> - start/pause, <esc> - quit", 0xff191919, 0xff00007f };
+		glText::Label controlsLabel{ 0xff191919, "<SP> - start/pause, <esc> - quit", 0xff00007f };
 
     public:
 
@@ -72,7 +72,7 @@ namespace Neurolution
 			glPopMatrix();
 		}
 
-		void PrintStats(long step, int ips) noexcept
+		void PrintStats(long step, int ips, int numThreads) noexcept
 		{
 			glPushMatrix();
 
@@ -81,13 +81,20 @@ namespace Neurolution
 			std::ostringstream ostr;
 			ostr << "STEP: " << step << ", IPS: " << ips;
 
-			glText::glFont::Label lbl{ ostr.str(), 0xff191919, 0xff006f00 };
-			lbl.DrawAt(-1.0, 0.95);
+			std::ostringstream rcfg;
+			rcfg << "#THR: " << numThreads;
+
+			glText::Label lbl(0xff191919, 
+				{ 
+					std::pair(ostr.str(), 0xff006f00u), 
+					std::pair(rcfg.str(), 0xff9f004fu),
+				});
+			lbl.DrawAt(-1.0, 0.88);
 
 			glPopMatrix();
 		}
 
-        void UpdateFrom(std::shared_ptr<World>& world, long step, int ips)  noexcept
+        void UpdateFrom(std::shared_ptr<World>& world, long step, int ips, int numThreads)  noexcept
         {
             glPushMatrix();
 
@@ -107,7 +114,7 @@ namespace Neurolution
             glEnd();
             // BG END
 			PrintControls();
-			PrintStats(step, ips);
+			PrintStats(step, ips, numThreads);
 
             glScalef(
                 static_cast<GLfloat>(2.0 / AppProperties::WorldWidth),

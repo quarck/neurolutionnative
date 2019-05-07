@@ -22,29 +22,35 @@ namespace Neurolution
 			if (allAlive)
 				idxFirstDead = static_cast<int>(size);
         }
-        size_t AliveSize() const
+        size_t AliveSize() const noexcept
         {
             return idxFirstDead;
         }
 
-        size_t DeadSize() const
+        size_t DeadSize() const noexcept
         {
             return this->std::vector<T>::size() - AliveSize();
         }
 
-        void Kill(int idx)
+        void Kill(int idx) noexcept
         {
-            if (idx >= idxFirstDead)
-                throw PopulationException("Entry is already dead");
-            if (idx < 0 || idx >= this->std::vector<T>::size())
-                throw PopulationException("Invalid idx");
+			if (idx >= idxFirstDead)
+			{
+				std::cout << "Population: entry is already dead" << std::endl;
+				std::terminate();
+			}
+			if (idx < 0 || idx >= this->std::vector<T>::size())
+			{
+				std::cout << "Invalid idx" << std::endl;
+				std::terminate();
+			}
 
             std::swap((*this)[idx], (*this)[idxFirstDead - 1]);
             --idxFirstDead;
         }
 
         template <typename F>
-        void KillAll(F&& fn)
+        void KillAll(F&& fn) noexcept
         {
             for (int idx = 0; idx < idxFirstDead; ++idx)
             {
@@ -58,10 +64,13 @@ namespace Neurolution
             }
         }
 
-        T& Reanimate()
+        T& Reanimate() noexcept
         {
-            if (DeadSize() == 0)
-                throw PopulationException("No dead bodies left");
+			if (DeadSize() == 0)
+			{
+				std::cout << "No dead bodies left" << std::endl;
+				std::terminate();
+			}
             ++idxFirstDead;
             return (*this)[idxFirstDead - 1];
         }
