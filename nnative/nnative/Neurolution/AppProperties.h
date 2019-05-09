@@ -58,7 +58,7 @@ namespace Neurolution
         static constexpr float MoveEnergyFactor = 0.0001f;
         static constexpr float InitialCellEnergy = 1.0f;
 
-        static constexpr float MaxEnergyCapacity = 14.0f;
+        static constexpr float MaxEnergyCapacity = 144.0f;
         static constexpr float SedatedAtEnergyLevel = 2.0f;
 
         static constexpr float BirthEnergyConsumption = 2.0f;

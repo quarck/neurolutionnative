@@ -61,16 +61,7 @@ void HandleKeyboard(WPARAM wParam)
     if (!controller)
         return;
 
-    switch (wParam)
-    {
-    case 27:			/* ESC key */
-        controller->Stop();
-        PostQuitMessage(0);
-        break;
-    case ' ':
-        controller->SetAppIsPaused(!controller->IsAppPaused());
-        break;
-    }
+	controller->OnKeyboard(wParam);
 }
 
 LRESULT WINAPI WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

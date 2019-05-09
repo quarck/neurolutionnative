@@ -33,12 +33,52 @@ namespace Neurolution
         }
     };
 
+	struct WorldViewDetails
+	{
+		int numActiveThreads;
+		long currentIteration;
+		int iterationsPerSecond;
+		bool showDetailedcontrols;
+		bool paused;
+
+		WorldViewDetails(int nThr, bool p) 
+			: numActiveThreads{ nThr }
+			, currentIteration { 0 }
+			, iterationsPerSecond { 0 }
+			, showDetailedcontrols { false }
+			, paused { p }
+		{
+
+		}
+	};
+
     class WorldView
     {
         std::shared_ptr<World> _world;
         std::vector<std::shared_ptr<CellView>> CellViews;
 
-		glText::Label controlsLabel{ 0xff191919, "<SP> - start/pause, <esc> - quit", 0xff00007f };
+		static constexpr uint32_t labelBgs = 0xff191919;
+		static constexpr uint32_t controlsLabelFg = 0xff00007f;
+		static constexpr uint32_t rugxaKoloro = 0xff0000ff;
+
+		std::string controlsLine0{ "<S> - Save,  <L> - Load, <R> - Reset"};
+		std::string controlsLine1{ "<F> - (Un)Freeze Predators, <B> - Brainwash predators" };
+		std::string controlsLine2{ "<G> - Recover hamsters" };
+		std::string controlsBottomLine{"<SPACE> - (un)pause, <esc> - quit, <?> - more" };
+
+		glText::Label controlsLabel{ labelBgs, controlsBottomLine, controlsLabelFg };
+
+		glText::Label controlsLabelDetailed{
+			labelBgs, 
+			{
+				std::pair(controlsLine0, rugxaKoloro),
+				std::pair(controlsLine1, rugxaKoloro),
+				std::pair(controlsLine2, rugxaKoloro),
+				std::pair(controlsBottomLine, rugxaKoloro),
+			}
+		};
+
+		glText::Label pausedLabel{ labelBgs, "<< PAUSED >>", rugxaKoloro };
 
     public:
 
@@ -61,28 +101,32 @@ namespace Neurolution
             }
         }
 
-		void PrintControls() noexcept
+		void PrintControls(const WorldViewDetails& details) noexcept
 		{
 			glPushMatrix();
 
 			glPixelZoom(1.f, 1.f);
 
-			controlsLabel.DrawAt(-1.0, -0.99);
+			((details.showDetailedcontrols || details.paused) ? controlsLabelDetailed : controlsLabel)
+				.DrawAt(-1.0, -0.99);
+
+			if (details.paused)
+				pausedLabel.DrawAt(-0.1, 0);
 
 			glPopMatrix();
 		}
 
-		void PrintStats(long step, int ips, int numThreads) noexcept
+		void PrintStats(const WorldViewDetails& details) noexcept
 		{
 			glPushMatrix();
 
 			glPixelZoom(1.f, 1.f);
 
 			std::ostringstream ostr;
-			ostr << "STEP: " << step << ", IPS: " << ips;
+			ostr << "ITER: " << details.currentIteration << ", IPS: " << details.iterationsPerSecond;
 
 			std::ostringstream rcfg;
-			rcfg << "#THR: " << numThreads;
+			rcfg << "#THR: " << details.numActiveThreads;
 
 			glText::Label lbl(0xff191919, 
 				{ 
@@ -94,7 +138,9 @@ namespace Neurolution
 			glPopMatrix();
 		}
 
-        void UpdateFrom(std::shared_ptr<World>& world, long step, int ips, int numThreads)  noexcept
+        void UpdateFrom(std::shared_ptr<World>& world, 
+			const WorldViewDetails& details
+		)  noexcept
         {
             glPushMatrix();
 
@@ -113,8 +159,8 @@ namespace Neurolution
 
             glEnd();
             // BG END
-			PrintControls();
-			PrintStats(step, ips, numThreads);
+			PrintControls(details);
+			PrintStats(details);
 
             glScalef(
                 static_cast<GLfloat>(2.0 / AppProperties::WorldWidth),

@@ -20,15 +20,18 @@ namespace Neurolution
         std::mutex worldLock;
         std::shared_ptr<WorldView> _worldView;
 
-		int iterationPerSeconds{ 0 };
-		long currentStep{ 0 };
+
+		WorldViewDetails viewDetails;
+
+		//int iterationPerSeconds{ 0 };
+		//long currentStep{ 0 };
 
         std::thread calcThread;
 
         std::atomic_bool terminate{ false };
 
         std::atomic_bool uiNeedsUpdate{ false };
-        std::atomic_bool appPaused{ false };
+        std::atomic_bool appPaused{ true };
 
         HDC hDC;				/* device context */
         HPALETTE hPalette{ 0 };			/* custom palette (if needed) */
@@ -38,6 +41,7 @@ namespace Neurolution
 
         MainController(RuntimeConfig& cfg)
             : config(cfg)
+			, viewDetails { cfg.GetNumWorkerThreads(), true }
         {
             //string documents = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             //string workingFolder = $"{documents}\\Neurolution\\{DateTime.Now:yyyy-MM-dd-HH-mm}";
@@ -76,20 +80,30 @@ namespace Neurolution
             auto lastUIUpdate = std::chrono::high_resolution_clock::now();
 			long lastUpdateAt = 0;
 
-            for (currentStep = 0; !terminate; ++currentStep)
+            for (viewDetails.currentIteration = 0; !terminate; ++viewDetails.currentIteration)
             {
-                while (appPaused && !terminate)
-                    ::Sleep(100);
+				while (appPaused && !terminate)
+				{
+					::Sleep(100);
+					uiNeedsUpdate = true;
+					::SendMessage(hWND, WM_USER, 0, 0);
+					while (uiNeedsUpdate)
+					{
+						// Keep yeild-ing the thread while UI thread is doing the painting job, 
+						// this is to avoid the white lock situation
+						std::this_thread::yield();
+					}
+				}
 
                 auto now = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> sinceLastUpdate = std::chrono::duration_cast<std::chrono::duration<double>>(now - lastUIUpdate);
 
-                if (currentStep % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0)
+                if (viewDetails.currentIteration % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0)
                 {
-					iterationPerSeconds = static_cast<long>((currentStep - lastUpdateAt) / sinceLastUpdate.count());
+					viewDetails.iterationsPerSecond = static_cast<long>((viewDetails.currentIteration - lastUpdateAt) / sinceLastUpdate.count());
 
                     lastUIUpdate = now;
-					lastUpdateAt = currentStep;
+					lastUpdateAt = viewDetails.currentIteration;
 
                     uiNeedsUpdate = true;
                     ::SendMessage(hWND, WM_USER, 0, 0);
@@ -102,14 +116,34 @@ namespace Neurolution
                 }
 
                 std::lock_guard<std::mutex> l(worldLock);
-                world->Iterate(currentStep);
+                world->Iterate(viewDetails.currentIteration);
             }
         }
+
+		void OnKeyboard(WPARAM wParam)
+		{
+			switch (wParam)
+			{
+			case 27:			/* ESC key */
+				Stop();
+				PostQuitMessage(0);
+				break;
+			case ' ':
+				appPaused = !appPaused;
+				break;
+
+			case '?':
+				viewDetails.showDetailedcontrols = !viewDetails.showDetailedcontrols;
+				__faststorefence();
+				break;
+			}
+		}
 
         void DrawWorld()
         {
             std::lock_guard<std::mutex> l(worldLock);
-            _worldView->UpdateFrom(world, currentStep, iterationPerSeconds, config.GetNumWorkerThreads());
+			viewDetails.paused = appPaused;
+            _worldView->UpdateFrom(world, viewDetails);
             uiNeedsUpdate = false;
         }
 
