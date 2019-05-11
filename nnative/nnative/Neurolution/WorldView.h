@@ -111,7 +111,7 @@ namespace Neurolution
 				.DrawAt(-1.0, -0.99);
 
 			if (details.paused)
-				pausedLabel.DrawAt(-0.1, 0);
+				pausedLabel.DrawAt(-0.2, 0);
 
 			glPopMatrix();
 		}

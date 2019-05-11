@@ -6,6 +6,9 @@
 #include <mutex>
 #include <chrono>
 
+#include <Commdlg.h>
+#include <Windows.h> // file dialogs 
+
 #include "World.h"
 #include "WorldView.h"
 #include "RuntimeConfig.h"
@@ -136,6 +139,30 @@ namespace Neurolution
 				viewDetails.showDetailedcontrols = !viewDetails.showDetailedcontrols;
 				__faststorefence();
 				break;
+
+			case 'S': case 's': 
+				onSave();
+				break;
+
+			case 'L': case 'l': 
+				onLoad();
+				break;
+
+			case 'r': case 'R': 
+				onResetWorld();
+				break;
+
+			case 'f': case 'F': 
+				onToggleFreezePredators();
+				break;
+
+			case 'b': case 'B': 
+				onBrainwashPredators();
+				break;
+
+			case 'g': case 'G': 
+				onRecoverHamsters();
+				break;
 			}
 		}
 
@@ -168,5 +195,71 @@ namespace Neurolution
 
         const HPALETTE& GetHPalette() const { return hPalette; }
         void SetHPalette(HPALETTE hp) { hPalette = hp; }
+
+	private:
+
+		void onSave()
+		{
+			TCHAR file[MAX_PATH] = _T("");
+
+			OPENFILENAME ofn;
+			ZeroMemory(&ofn, sizeof(ofn));
+			ofn.lStructSize = sizeof(ofn);
+
+			ofn.hwndOwner = hWND;
+			ofn.lpstrFilter = _T("N-Network (*.nn)\0*.nn\0");
+			ofn.lpstrFile = &file[0];
+			ofn.nMaxFile = MAX_PATH;
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofn.lpstrDefExt = _T("nn");
+
+			if (::GetSaveFileName(&ofn))
+			{
+				int i = 0;
+				// proceed 
+			}
+		}
+
+		void onLoad()
+		{
+			TCHAR file[MAX_PATH] = _T("");
+
+			OPENFILENAME ofn;
+			ZeroMemory(&ofn, sizeof(ofn));
+			ofn.lStructSize = sizeof(ofn);
+
+			ofn.hwndOwner = hWND;
+			ofn.lpstrFilter = _T("N-Network (*.nn)\0*.nn\0");
+			ofn.lpstrFile = &file[0];
+			ofn.nMaxFile = MAX_PATH;
+			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+			ofn.lpstrDefExt = _T("nn");
+
+			if (::GetOpenFileName(&ofn))
+			{
+				int i = 0;
+				// proceed 
+			}
+		}
+
+		void onResetWorld()
+		{
+
+		}
+
+		void onToggleFreezePredators()
+		{
+
+		}
+
+		void onBrainwashPredators()
+		{
+
+		}
+
+		void onRecoverHamsters()
+		{
+
+		}
     };
 }
