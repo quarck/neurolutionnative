@@ -1,5 +1,7 @@
 ﻿#pragma once 
 
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <memory>
 #include <thread>
 #include <atomic>
@@ -90,7 +92,7 @@ namespace Neurolution
 					::Sleep(100);
 					uiNeedsUpdate = true;
 					::SendMessage(hWND, WM_USER, 0, 0);
-					while (uiNeedsUpdate)
+					while (uiNeedsUpdate && !terminate)
 					{
 						// Keep yeild-ing the thread while UI thread is doing the painting job, 
 						// this is to avoid the white lock situation
@@ -110,7 +112,7 @@ namespace Neurolution
 
                     uiNeedsUpdate = true;
                     ::SendMessage(hWND, WM_USER, 0, 0);
-                    while (uiNeedsUpdate)
+                    while (uiNeedsUpdate && !terminate)
                     {
                         // Keep yeild-ing the thread while UI thread is doing the painting job, 
                         // this is to avoid the white lock situation
@@ -200,45 +202,57 @@ namespace Neurolution
 
 		void onSave()
 		{
-			TCHAR file[MAX_PATH] = _T("");
+			WCHAR file[MAX_PATH] = L"";
+			char mbsFile[MAX_PATH * 4];
 
 			OPENFILENAME ofn;
 			ZeroMemory(&ofn, sizeof(ofn));
 			ofn.lStructSize = sizeof(ofn);
 
 			ofn.hwndOwner = hWND;
-			ofn.lpstrFilter = _T("N-Network (*.nn)\0*.nn\0");
+			ofn.lpstrFilter = L"N-Network (*.nn)\0*.nn\0";
 			ofn.lpstrFile = &file[0];
 			ofn.nMaxFile = MAX_PATH;
 			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-			ofn.lpstrDefExt = _T("nn");
+			ofn.lpstrDefExt = L"nn";
 
 			if (::GetSaveFileName(&ofn))
 			{
-				int i = 0;
-				// proceed 
+				size_t nc = ::wcstombs(mbsFile, file, MAX_PATH * 4 - 1);
+				if (nc > 0 && nc < MAX_PATH * 4)
+				{
+					std::lock_guard<std::mutex> l(worldLock);
+					std::ofstream file(mbsFile, std::ofstream::out | std::ofstream::binary);
+					world->SaveTo(file);
+				}
 			}
 		}
 
 		void onLoad()
 		{
-			TCHAR file[MAX_PATH] = _T("");
+			WCHAR file[MAX_PATH] = L"";
+			char mbsFile[MAX_PATH * 4];
 
 			OPENFILENAME ofn;
 			ZeroMemory(&ofn, sizeof(ofn));
 			ofn.lStructSize = sizeof(ofn);
 
 			ofn.hwndOwner = hWND;
-			ofn.lpstrFilter = _T("N-Network (*.nn)\0*.nn\0");
+			ofn.lpstrFilter = L"N-Network (*.nn)\0*.nn\0";
 			ofn.lpstrFile = &file[0];
 			ofn.nMaxFile = MAX_PATH;
 			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-			ofn.lpstrDefExt = _T("nn");
+			ofn.lpstrDefExt = L"nn";
 
 			if (::GetOpenFileName(&ofn))
 			{
-				int i = 0;
-				// proceed 
+				size_t nc = ::wcstombs(mbsFile, file, MAX_PATH * 4 - 1);
+				if (nc > 0 && nc < MAX_PATH * 4)
+				{
+					std::lock_guard<std::mutex> l(worldLock);
+					std::ifstream file(mbsFile, std::ifstream::in | std::ifstream::binary);
+					world->LoadFrom(file);
+				}
 			}
 		}
 

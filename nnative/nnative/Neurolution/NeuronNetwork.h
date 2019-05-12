@@ -334,12 +334,12 @@ namespace Neurolution
 			int numEyeCells;
 			int vectorSize;
 
-			if (OutputVector.size() != vectorSize)
-				throw std::runtime_error("Internal erorr: InputVector.size() must match OutputVector.size()");
-
 			stream.read(reinterpret_cast<char*>(&numNeurons), sizeof(numNeurons));
 			stream.read(reinterpret_cast<char*>(&numEyeCells), sizeof(numEyeCells));
 			stream.read(reinterpret_cast<char*>(&vectorSize), sizeof(vectorSize));
+
+			if (OutputVector.size() != vectorSize)
+				throw std::runtime_error("Internal erorr: InputVector.size() must match OutputVector.size()");
 
 			Neurons.resize(numNeurons);
 

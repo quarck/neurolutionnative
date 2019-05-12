@@ -78,7 +78,7 @@ namespace Neurolution
 		template <typename TSerializeFn>
 		void SaveTo(std::ostream& stream, TSerializeFn fn)
 		{
-			auto sz = this->size();
+			int sz = static_cast<int>(this->size());
 			stream.write(reinterpret_cast<const char*>(&sz), sizeof(sz));
 			stream.write(reinterpret_cast<const char*>(&idxFirstDead), sizeof(idxFirstDead));
 

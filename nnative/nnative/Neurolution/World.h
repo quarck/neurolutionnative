@@ -234,7 +234,7 @@ namespace Neurolution
 			LoadFrom(file);
         }
 
-        void SerializeWorld(const std::vector<std::shared_ptr<Cell>>& world, long step)
+        void SerializeWorld(long step)
         {
             if (!_workingFolderCreated)
             {
