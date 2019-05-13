@@ -202,8 +202,23 @@ namespace Neurolution
 
 		void onSave()
 		{
-			WCHAR file[MAX_PATH] = L"";
+			//if (!_workingFolderCreated)
+			//{
+			//	std::filesystem::create_directory(_workingFolder);
+			//	_workingFolderCreated = true;
+			//}
+			WCHAR file[MAX_PATH];
 			char mbsFile[MAX_PATH * 4];
+
+			auto now = std::chrono::system_clock::now();
+			auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+//
+			std::stringstream ssFilename;
+			tm tm;
+			localtime_s(&tm, &in_time_t);
+			ssFilename << std::put_time(&tm, "%Y%m%d_%H%M%S.nn");
+			::mbstowcs(file, ssFilename.str().c_str(), MAX_PATH - 1);
 
 			OPENFILENAME ofn;
 			ZeroMemory(&ofn, sizeof(ofn));

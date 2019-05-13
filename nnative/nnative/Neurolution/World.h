@@ -248,8 +248,7 @@ namespace Neurolution
 			std::stringstream ssFilename;
 			tm tm;
 			localtime_s(&tm, &in_time_t);
-			ssFilename << _workingFolder << "\\" << std::put_time(&tm, "%Y-%m-%d %X %H:%M:%S") 
-				<< ".world";
+			ssFilename << _workingFolder << "\\" << std::put_time(&tm, "%Y%m%d_%H%M%S.nn");
 
 			std::ofstream file(ssFilename.str(), std::ofstream::out | std::ofstream::binary);
 			SaveTo(file);
