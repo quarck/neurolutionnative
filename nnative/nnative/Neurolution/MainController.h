@@ -130,8 +130,7 @@ namespace Neurolution
 			switch (wParam)
 			{
 			case 27:			/* ESC key */
-				Stop();
-				PostQuitMessage(0);
+				onExit();
 				break;
 			case ' ':
 				appPaused = !appPaused;
@@ -200,13 +199,30 @@ namespace Neurolution
 
 	private:
 
-		void onSave()
+		void onExit()
 		{
-			//if (!_workingFolderCreated)
-			//{
-			//	std::filesystem::create_directory(_workingFolder);
-			//	_workingFolderCreated = true;
-			//}
+			int ret = ::MessageBox(hWND, L"Save before exiting?", L"Caption", MB_YESNOCANCEL);
+
+			if (ret == IDYES)
+			{
+				if (!onSave())
+				{
+					return;
+				}
+			}
+			else if (ret == IDCANCEL)
+			{
+				return;
+			}
+
+			Stop();
+			PostQuitMessage(0);
+		}
+
+		bool onSave()
+		{
+			bool ret = false;
+
 			WCHAR file[MAX_PATH];
 			char mbsFile[MAX_PATH * 4];
 
@@ -239,8 +255,11 @@ namespace Neurolution
 					std::lock_guard<std::mutex> l(worldLock);
 					std::ofstream file(mbsFile, std::ofstream::out | std::ofstream::binary);
 					world->SaveTo(file);
+					ret = true;
 				}
 			}
+
+			return ret;
 		}
 
 		void onLoad()

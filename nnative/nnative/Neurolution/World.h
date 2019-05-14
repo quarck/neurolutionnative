@@ -228,33 +228,12 @@ namespace Neurolution
             }
         }
 
-        void InitializeFromWorldFile(const std::string& filename)
+ /*       void InitializeFromWorldFile(const std::string& filename)
         {
 			std::ifstream file(filename, std::ifstream::in | std::ifstream::binary);
 			LoadFrom(file);
         }
-
-        void SerializeWorld(long step)
-        {
-            if (!_workingFolderCreated)
-            {
-				std::filesystem::create_directory(_workingFolder);
-                _workingFolderCreated = true;
-            }
-
-			auto now = std::chrono::system_clock::now();
-			auto in_time_t = std::chrono::system_clock::to_time_t(now);
-
-			std::stringstream ssFilename;
-			tm tm;
-			localtime_s(&tm, &in_time_t);
-			ssFilename << _workingFolder << "\\" << std::put_time(&tm, "%Y%m%d_%H%M%S.nn");
-
-			std::ofstream file(ssFilename.str(), std::ofstream::out | std::ofstream::binary);
-			SaveTo(file);
-        }
-
-
+*/
 		void SaveTo(std::ostream& stream)
 		{
 			stream.write(reinterpret_cast<const char*>(&_maxX), sizeof(_maxX));
@@ -284,14 +263,14 @@ namespace Neurolution
 
         void IterateBabyMaking(long step, std::vector<std::shared_ptr<Cell>>& elements, float birthEnergyConsumption, float initialEnergy)  noexcept
         {
-            if (step != 0 && (step % AppProperties::StepsPerBirthCheck == 0)
-                && (std::any_of(
+			if (step == 0 || step % AppProperties::StepsPerBirthCheck != 0)
+				return;
+
+            if (std::any_of(
                     std::begin(elements),
                     std::end(elements),
                     [=](std::shared_ptr<Cell>& x) { return x->CurrentEnergy > birthEnergyConsumption; }
-                )
-                    || (step % AppProperties::SerializeTopEveryNStep == 0)
-                    ))
+                ))
             {
                 int quant = static_cast<int>(elements.size() / 16);
 
