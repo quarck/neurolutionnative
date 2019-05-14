@@ -58,23 +58,18 @@ namespace Neurolution
         std::vector<std::shared_ptr<CellView>> CellViews;
 
 		static constexpr uint32_t labelBgs = 0xff191919;
-		static constexpr uint32_t controlsLabelFg = 0xff00007f;
-		static constexpr uint32_t rugxaKoloro = 0xff0000ff;
+		static constexpr uint32_t controlsLabelFg = 0xff0f0f7f;
+		static constexpr uint32_t rugxaKoloro = 0xff0f0fdf;
 
-		std::string controlsLine0{ "<S> - Save,  <L> - Load, <R> - Reset"};
-		std::string controlsLine1{ "<F> - (Un)Freeze Predators, <B> - Brainwash predators" };
-		std::string controlsLine2{ "<G> - Recover hamsters" };
-		std::string controlsBottomLine{"<SPACE> - (un)pause, <esc> - quit, <?> - more" };
-
-		glText::Label controlsLabel{ labelBgs, controlsBottomLine, controlsLabelFg };
+		glText::Label controlsLabel{ labelBgs, "<?> - help", controlsLabelFg };
 
 		glText::Label controlsLabelDetailed{
 			labelBgs, 
 			{
-				std::pair(controlsLine0, rugxaKoloro),
-				std::pair(controlsLine1, rugxaKoloro),
-				std::pair(controlsLine2, rugxaKoloro),
-				std::pair(controlsBottomLine, rugxaKoloro),
+				std::pair("<S> - Save,  <L> - Load, <R> - Reset", rugxaKoloro),
+				std::pair("<F> - (Un)Freeze Predators, <B> - Brainwash predators", rugxaKoloro),
+				std::pair("<G> - Recover hamsters", rugxaKoloro),
+				std::pair("<?> - help ON/OFF, <SPACE> - (un)pause, <esc> - quit", rugxaKoloro),
 			}
 		};
 
