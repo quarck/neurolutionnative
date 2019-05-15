@@ -989,7 +989,7 @@ namespace glText
 		int height;
 		std::vector<uint32_t> data;
 
-		Label(uint32_t bgColor, const std::string& text, uint32_t fgColor)
+		Label(uint32_t bgColor, uint32_t fgColor, const std::string& text)
 			: width(0)
 			, height(0) 
 		{
@@ -997,7 +997,7 @@ namespace glText
 		}
 
 		Label(uint32_t bgColor,
-			std::initializer_list<std::pair<std::string, uint32_t>> texts)
+			std::initializer_list<std::pair<uint32_t, std::string>> texts)
 			: width(0)
 			, height(0)
 		{
@@ -1009,12 +1009,12 @@ namespace glText
 
 		void Update(
 			uint32_t bgColor,
-			std::initializer_list<std::pair<std::string, uint32_t>> texts
+			std::initializer_list<std::pair<uint32_t, std::string>> texts
 		) noexcept
 		{
 			size_t maxLen = std::reduce(texts.begin(), texts.end(),
 				static_cast<size_t>(0), // init 
-				[&](const size_t& mx, const std::pair<std::string, uint32_t> & s) { return mx > s.first.size() ? mx : s.first.size(); });
+				[&](const size_t& mx, const std::pair<uint32_t, std::string> & s) { return mx > s.second.size() ? mx : s.second.size(); });
 
 			const int imgW = (int)(maxLen * glFont::RES_LTR_W);
 			const int imgH = (int)(texts.size() * glFont::RES_LTR_H); // always one-liners atm
@@ -1029,8 +1029,8 @@ namespace glText
 			int vIdx = 0;
 			for (const auto& textP: texts)
 			{
-				const auto& text = textP.first;
-				const auto fgColor = textP.second;
+				const auto& text = textP.second;
+				const auto fgColor = textP.first;
 
 				uint32_t fgR = fgColor & 0xff;
 				uint32_t fgG = (fgColor >> 8) & 0xff;

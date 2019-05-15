@@ -1,13 +1,4 @@
 ﻿#pragma once 
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
-//using System.Windows;
-//using System.Windows.Controls;
-//using System.Windows.Media;
-//using System.Windows.Shapes;
 
 #include <memory>
 
@@ -54,45 +45,45 @@ namespace Neurolution
 
     class WorldView
     {
-        std::shared_ptr<World> _world;
-        std::vector<std::shared_ptr<CellView>> CellViews;
+		static constexpr uint32_t LABELS_BACKGROUND = 0xff191919;
+		static constexpr uint32_t CONTROLS_LABEL_FOREGROUND = 0xff0f0f7f;
+		static constexpr uint32_t RUGA_KOLORO = 0xff0f0fdf;
+		static constexpr uint32_t VERDA_KOLORO = 0xff006f00u;
+		static constexpr uint32_t CFG_CLR_FOREGROUND = 0xff9f004fu;
+		
+		std::shared_ptr<World> _world;
+        std::vector<std::shared_ptr<CellView>> _cellViews;
 
-		static constexpr uint32_t labelBgs = 0xff191919;
-		static constexpr uint32_t controlsLabelFg = 0xff0f0f7f;
-		static constexpr uint32_t rugxaKoloro = 0xff0f0fdf;
+		glText::Label _controlsLabel{ LABELS_BACKGROUND, CONTROLS_LABEL_FOREGROUND, "<?> - help" };
 
-		glText::Label controlsLabel{ labelBgs, "<?> - help", controlsLabelFg };
-
-		glText::Label controlsLabelDetailed{
-			labelBgs, 
+		glText::Label _controlsLabelDetailed{
+			LABELS_BACKGROUND,
 			{
-				std::pair("<S> - Save,  <L> - Load, <R> - Reset", rugxaKoloro),
-				std::pair("<F> - (Un)Freeze Predators, <B> - Brainwash predators", rugxaKoloro),
-				std::pair("<G> - Recover hamsters", rugxaKoloro),
-				std::pair("<?> - help ON/OFF, <SPACE> - (un)pause, <esc> - quit", rugxaKoloro),
+				std::pair(RUGA_KOLORO, "<S> - Save,  <L> - Load" /*", <R> - Reset" */),
+//				std::pair(RUGA_KOLORO, "<F> - (Un)Freeze _predators, <B> - Brainwash predators"),
+				//std::pair(RUGA_KOLORO, "<G> - Recover hamsters"),
+				std::pair(RUGA_KOLORO, "<?> - help ON/OFF, <SPACE> - (un)pause, <esc> - quit"),
 			}
 		};
 
-		glText::Label pausedLabel{ labelBgs, "<< PAUSED >>", rugxaKoloro };
+		glText::Label _iterAndCfgLabel{ LABELS_BACKGROUND, VERDA_KOLORO, "_TMP_" };
+
+		glText::Label _pausedLabel{ LABELS_BACKGROUND, RUGA_KOLORO, "<< PAUSED >>" };
+
+		Color _foodColor{ 192, 64, 64 };
+		Color _predatorColor{ 64, 64, 255 };
 
     public:
 
-        //public Line[] FoodLocations;
-
-        //public Line[] PredatorLocations;
-
-        Color foodColor{ 192, 64, 64 };
-        Color predatorColor{ 64, 64, 255 };
-
         WorldView(std::shared_ptr<World>& world)
             : _world(world)
-            , CellViews(world->Cells.size())
+            , _cellViews(world->_cells.size())
         {
             Random rnd = Random();
 
-            for (int i = 0; i < _world->Cells.size(); ++i)
+            for (int i = 0; i < _world->_cells.size(); ++i)
             {
-                CellViews[i] = std::make_shared<CellView>(_world->Cells[i], rnd);
+                _cellViews[i] = std::make_shared<CellView>(_world->_cells[i], rnd);
             }
         }
 
@@ -102,11 +93,11 @@ namespace Neurolution
 
 			glPixelZoom(1.f, 1.f);
 
-			((details.showDetailedcontrols || details.paused) ? controlsLabelDetailed : controlsLabel)
+			((details.showDetailedcontrols || details.paused) ? _controlsLabelDetailed : _controlsLabel)
 				.DrawAt(-1.0, -0.99);
 
 			if (details.paused)
-				pausedLabel.DrawAt(-0.2, 0);
+				_pausedLabel.DrawAt(-0.2, 0);
 
 			glPopMatrix();
 		}
@@ -123,12 +114,13 @@ namespace Neurolution
 			std::ostringstream rcfg;
 			rcfg << "#THR: " << details.numActiveThreads;
 
-			glText::Label lbl(0xff191919, 
+			_iterAndCfgLabel.Update(
+				LABELS_BACKGROUND,
 				{ 
-					std::pair(ostr.str(), 0xff006f00u), 
-					std::pair(rcfg.str(), 0xff9f004fu),
+					std::pair(VERDA_KOLORO, ostr.str()),
+					std::pair(CFG_CLR_FOREGROUND, rcfg.str()),
 				});
-			lbl.DrawAt(-1.0, 0.88);
+			_iterAndCfgLabel.DrawAt(-1.0, 0.88);
 
 			glPopMatrix();
 		}
@@ -164,12 +156,12 @@ namespace Neurolution
 
             glTranslatef(-AppProperties::WorldWidth / 2.0f, -AppProperties::WorldHeight / 2.0f, 0.0);
 
-            for (auto& cellView : CellViews)
+            for (auto& cellView : _cellViews)
             {
                 cellView->Draw();
             }
 
-            for (auto& food : _world->Foods)
+            for (auto& food : _world->_foods)
             {
                 if (food.Value < 0.01)
                     continue;
@@ -180,7 +172,7 @@ namespace Neurolution
 
                 glBegin(GL_TRIANGLES);
 
-                foodColor.GlApply();
+                _foodColor.GlApply();
 
                 float halfdiameter = static_cast<float>(std::sqrt(food.Value) * 5.0 / 1.5);
 
@@ -207,7 +199,7 @@ namespace Neurolution
                 glPopMatrix();
             }
 
-            for (auto& predator : _world->Predators)
+            for (auto& predator : _world->_predators)
             {
                 if (predator->CurrentEnergy < 0.001f)
                     continue; // dead one
@@ -219,7 +211,7 @@ namespace Neurolution
                     static_cast<float>(predator->Rotation / M_PI * 180.0 - 90.0),
                     0.0f, 0.0f, 1.0f);
 
-                predatorColor.GlApply();
+                _predatorColor.GlApply();
 
                 float halfdiameter = 10.0f;
 
@@ -249,7 +241,6 @@ namespace Neurolution
             }
 
             glPopMatrix();
-
 		}
     };
 }

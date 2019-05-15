@@ -165,19 +165,19 @@ namespace Neurolution
 		}
     };
 
-    struct World
+    class World
     {
-        static constexpr float Sqrt2 = 1.4142135623730950488016887242097f; // unfortunately std::sqrt is not a constexpr function
+        static constexpr float SQRT_2 = 1.4142135623730950488016887242097f; // unfortunately std::sqrt is not a constexpr function
 
-        int numWorkerThreads;
+        int _numWorkerThreads;
 
-		Population<std::shared_ptr<Cell>> Cells;
-		Population<std::shared_ptr<Cell>> Predators;
-        Population<Food> Foods;
+		Population<std::shared_ptr<Cell>> _cells;
+		Population<std::shared_ptr<Cell>> _predators;
+        Population<Food> _foods;
 
-        std::vector<std::vector<DirectionWithDistanceSquare>> CellDirections;
-        std::vector<std::vector<DirectionWithDistanceSquare>> PredatorDirections;
-        std::vector<std::vector<DirectionWithDistanceSquare>> FoodDirections;
+        std::vector<std::vector<DirectionWithDistanceSquare>> _cellDirections;
+        std::vector<std::vector<DirectionWithDistanceSquare>> _predatorDirections;
+        std::vector<std::vector<DirectionWithDistanceSquare>> _foodDirections;
 
         int _maxX;
         int _maxY;
@@ -192,6 +192,7 @@ namespace Neurolution
 
         ThreadGrid _grid;
 
+	public:
         World(const std::string& workingFolder,
             int nWorkerThreads,
             int numPreys, int maxFoods, int numPredators, int maxX, int maxY)
@@ -199,32 +200,32 @@ namespace Neurolution
             , _maxX(maxX)
             , _maxY(maxY)
             , _workingFolder(workingFolder)
-            , numWorkerThreads(nWorkerThreads)
-            , Cells(numPreys, true)
-            , Foods(maxFoods)
+            , _numWorkerThreads(nWorkerThreads)
+            , _cells(numPreys, true)
+            , _foods(maxFoods)
             , _foodsPerCycle(maxFoods)
-            , Predators(numPredators, true)
-            , CellDirections(nWorkerThreads)
-            , FoodDirections(nWorkerThreads)
-            , PredatorDirections(nWorkerThreads)
+            , _predators(numPredators, true)
+            , _cellDirections(nWorkerThreads)
+            , _foodDirections(nWorkerThreads)
+            , _predatorDirections(nWorkerThreads)
         {
             for (int i = 0; i < numPreys; ++i)
-                Cells[i] = std::make_shared<Cell>(_random, maxX, maxY, false);
+                _cells[i] = std::make_shared<Cell>(_random, maxX, maxY, false);
 
             for (int i = 0; i < numPredators; ++i)
-                Predators[i] = std::make_shared<Cell>(_random, maxX, maxY, true);
+                _predators[i] = std::make_shared<Cell>(_random, maxX, maxY, true);
 
             for (int i = 0; i < _foodsPerCycle; ++i)
             {
-                Foods.Reanimate() = Food(_random, maxX, maxY);
+                _foods.Reanimate() = Food(_random, maxX, maxY);
             }
 
-            for (int i = 0; i < numWorkerThreads; ++i)
+            for (int i = 0; i < _numWorkerThreads; ++i)
             {
                 // Some in-efficiency here, yes
-                CellDirections[i] = std::vector<DirectionWithDistanceSquare>(numPreys);
-                FoodDirections[i] = std::vector<DirectionWithDistanceSquare>(maxFoods);
-                PredatorDirections[i] = std::vector<DirectionWithDistanceSquare>(numPredators);
+                _cellDirections[i] = std::vector<DirectionWithDistanceSquare>(numPreys);
+                _foodDirections[i] = std::vector<DirectionWithDistanceSquare>(maxFoods);
+                _predatorDirections[i] = std::vector<DirectionWithDistanceSquare>(numPredators);
             }
         }
 
@@ -241,9 +242,9 @@ namespace Neurolution
 			stream.write(reinterpret_cast<const char*>(&_foodsPerCycle), sizeof(_foodsPerCycle));
 			stream.write(reinterpret_cast<const char*>(&_nextFoodIdx), sizeof(_nextFoodIdx));
 
-			Cells.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
-			Predators.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
-			Foods.SaveTo(stream, [&](Food& item, std::ostream & s) {item.SaveTo(s); });
+			_cells.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
+			_predators.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
+			_foods.SaveTo(stream, [&](Food& item, std::ostream & s) {item.SaveTo(s); });
 		}
 
 		void LoadFrom(std::istream& stream)
@@ -253,11 +254,12 @@ namespace Neurolution
 			stream.read(reinterpret_cast<char*>(&_foodsPerCycle), sizeof(_foodsPerCycle));
 			stream.read(reinterpret_cast<char*>(&_nextFoodIdx), sizeof(_nextFoodIdx));
 
-			Cells.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
-			Predators.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
-			Foods.LoadFrom(stream, [&](Food & item, std::istream & s) {item.LoadFrom(s); });
+			_cells.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
+			_predators.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
+			_foods.LoadFrom(stream, [&](Food & item, std::istream & s) {item.LoadFrom(s); });
 		}
 
+	private:
 
         std::vector<int> multipliers{ 6, 3, 2, 1 };
 
@@ -318,13 +320,14 @@ namespace Neurolution
 
         }
 
+	public:
         void Iterate(long step)  noexcept
         {
             if (step == 0)
                 WorldInitialize();
 
-            for (int idx = 0; idx < Foods.AliveSize(); ++idx)
-                Foods[idx].Step(_random, _maxX, _maxY);
+            for (int idx = 0; idx < _foods.AliveSize(); ++idx)
+                _foods[idx].Step(_random, _maxX, _maxY);
 
 
 
@@ -337,63 +340,65 @@ namespace Neurolution
             _grid.GridRun(
                 [&](int idx, int n)
             {
-                for (int cellIdx = idx; cellIdx < Cells.size(); cellIdx += n)
+                for (int cellIdx = idx; cellIdx < _cells.size(); cellIdx += n)
                 {
-                    IterateCellEye(idx, step, Cells[cellIdx]);
+                    IterateCellEye(idx, step, _cells[cellIdx]);
                 }
-                for (int pIdx = idx; pIdx < Predators.size(); pIdx += n)
+                for (int pIdx = idx; pIdx < _predators.size(); pIdx += n)
                 {
-                    IterateCellEye(idx, step, Predators[pIdx]);
-                }
-            });
-
-            _grid.GridRun(
-                [&](int idx, int n)
-            {
-                for (int cellIdx = idx; cellIdx < Cells.size(); cellIdx += n)
-                {
-                    IterateCellThinkingAndMoving(idx, step, Cells[cellIdx]);
-                }
-                for (int pIdx = idx; pIdx < Predators.size(); pIdx += n)
-                {
-                    IterateCellThinkingAndMoving(idx, step, Predators[pIdx]);
+                    IterateCellEye(idx, step, _predators[pIdx]);
                 }
             });
 
             _grid.GridRun(
                 [&](int idx, int n)
             {
-                for (int cellIdx = idx; cellIdx < Cells.size(); cellIdx += n)
+                for (int cellIdx = idx; cellIdx < _cells.size(); cellIdx += n)
                 {
-                    IterateCellCollisions(idx, step, Cells[cellIdx]);
+                    IterateCellThinkingAndMoving(idx, step, _cells[cellIdx]);
+                }
+                for (int pIdx = idx; pIdx < _predators.size(); pIdx += n)
+                {
+                    IterateCellThinkingAndMoving(idx, step, _predators[pIdx]);
+                }
+            });
+
+            _grid.GridRun(
+                [&](int idx, int n)
+            {
+                for (int cellIdx = idx; cellIdx < _cells.size(); cellIdx += n)
+                {
+                    IterateCellCollisions(idx, step, _cells[cellIdx]);
                 }
             });
 
             // Kill any empty foods 
-            Foods.KillAll([](Food& f) { return f.Value < 0.001f; });
+            _foods.KillAll([](Food& f) { return f.Value < 0.001f; });
 
             _grid.GridRun(
                 [&](int idx, int n)
             {
                 if (idx == 0)
                 {
-                    IterateBabyMaking(step, Cells, AppProperties::BirthEnergyConsumption, AppProperties::InitialCellEnergy);
+                    IterateBabyMaking(step, _cells, AppProperties::BirthEnergyConsumption, AppProperties::InitialCellEnergy);
                 }
                 if (idx == 1 || n == 1)
                 {
-                    IterateBabyMaking(step, Predators, AppProperties::PredatorBirthEnergyConsumption, AppProperties::PredatorInitialValue);
+                    IterateBabyMaking(step, _predators, AppProperties::PredatorBirthEnergyConsumption, AppProperties::PredatorInitialValue);
                 }
             });
         }
+
+	private:
 
         void IterateCellEye(int threadIdx, long step, std::shared_ptr<Cell>& cell)  noexcept
         {
             if (cell->CurrentEnergy < 0.00001f)
                 return;
 
-            auto& cellDirections = CellDirections[threadIdx];
-            auto& foodDirections = FoodDirections[threadIdx];
-            auto& predatorDirections = PredatorDirections[threadIdx];
+            auto& cellDirections = _cellDirections[threadIdx];
+            auto& foodDirections = _foodDirections[threadIdx];
+            auto& predatorDirections = _predatorDirections[threadIdx];
 
             cell->PrepareIteration();
 
@@ -406,9 +411,9 @@ namespace Neurolution
 
 
             // Calculate light sensor values 
-            for (int idx = 0; idx < Foods.AliveSize(); ++idx)
+            for (int idx = 0; idx < _foods.AliveSize(); ++idx)
             {
-                auto& item = Foods[idx];
+                auto& item = _foods[idx];
 
                 float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
                 float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
@@ -416,9 +421,9 @@ namespace Neurolution
                 foodDirections[idx].Set(dx, dy);
             }
 
-            for (int idx = 0; idx < Predators.size(); ++idx)
+            for (int idx = 0; idx < _predators.size(); ++idx)
             {
-                auto& item = Predators[idx];
+                auto& item = _predators[idx];
 
                 float dx = LoopValue(item->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
                 float dy = LoopValue(item->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
@@ -426,9 +431,9 @@ namespace Neurolution
                 predatorDirections[idx].Set(dx, dy);
             }
 
-            for (int idx = 0; idx < Cells.size(); ++idx)
+            for (int idx = 0; idx < _cells.size(); ++idx)
             {
-                auto& item = Cells[idx];
+                auto& item = _cells[idx];
 
                 float dx = LoopValue(item->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
                 float dy = LoopValue(item->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
@@ -457,9 +462,9 @@ namespace Neurolution
                     float value = 0.0f;
 
                     // This cell can see foods only
-                    for (unsigned int idx = 0; idx < Foods.AliveSize(); ++idx)
+                    for (unsigned int idx = 0; idx < _foods.AliveSize(); ++idx)
                     {
-                        auto& foodItem = Foods[idx];
+                        auto& foodItem = _foods[idx];
                         if (foodItem.Value < 0.01f)
                             continue;
 
@@ -493,7 +498,7 @@ namespace Neurolution
                     for (unsigned int idx = 0; idx < cellDirections.size(); ++idx)
                     {
                         auto& cellDirection = cellDirections[idx];
-                        auto& cellItem = Cells[idx];
+                        auto& cellItem = _cells[idx];
 
                         if (cellItem->CurrentEnergy < 0.01f)
                             continue;
@@ -530,7 +535,7 @@ namespace Neurolution
                     for (unsigned int idx = 0; idx < predatorDirections.size(); ++idx)
                     {
                         auto& predator = predatorDirections[idx];
-                        auto& predatorItem = Predators[idx];
+                        auto& predatorItem = _predators[idx];
 
                         if (predatorItem->CurrentEnergy < 0.01f)
                             continue;
@@ -575,8 +580,8 @@ namespace Neurolution
                 forceRight += cell->MoveForceRight / 4.0f;
             }
 
-            float forwardForce = ((forceLeft + forceRight) / Sqrt2);
-            float rotationForce = (forceLeft - forceRight) / Sqrt2;
+            float forwardForce = ((forceLeft + forceRight) / SQRT_2);
+            float rotationForce = (forceLeft - forceRight) / SQRT_2;
 
             float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * AppProperties::MoveEnergyFactor;
 
@@ -618,9 +623,9 @@ namespace Neurolution
                 if (cell->CurrentEnergy < AppProperties::MaxEnergyCapacity)
                 {
                     // Analyze the outcome - did it get any food? 
-                    for (int foodIdx = 0; foodIdx < Foods.AliveSize(); ++foodIdx)
+                    for (int foodIdx = 0; foodIdx < _foods.AliveSize(); ++foodIdx)
                     {
-                        auto& food = Foods[foodIdx];
+                        auto& food = _foods[foodIdx];
                         if (food.IsEmpty())
                             continue;
 
@@ -637,7 +642,7 @@ namespace Neurolution
                 if (cell->CurrentEnergy > AppProperties::SporeEnergyLevel)
                 {
                     // Analyze the outcome - did it hit any predators? 
-                    for (auto& predator : Predators)
+                    for (auto& predator : _predators)
                     {
                         if (predator->CurrentEnergy < 0.0001f)
                             continue; // skip deads 
@@ -662,16 +667,16 @@ namespace Neurolution
 
         void GiveOneFood()  noexcept
         {
-            if (Foods.DeadSize() > 0)
+            if (_foods.DeadSize() > 0)
             {
-                Foods.Reanimate().Reset(_random, _maxX, _maxY);
+                _foods.Reanimate().Reset(_random, _maxX, _maxY);
             }
             else
             {
-                if (Foods[_nextFoodIdx].Value < AppProperties::FoodInitialValue / 2.0f)
+                if (_foods[_nextFoodIdx].Value < AppProperties::FoodInitialValue / 2.0f)
                 {
-                    Foods[_nextFoodIdx].Reset(_random, _maxX, _maxY);
-                    _nextFoodIdx = (_nextFoodIdx + 1) % Foods.size();
+                    _foods[_nextFoodIdx].Reset(_random, _maxX, _maxY);
+                    _nextFoodIdx = (_nextFoodIdx + 1) % _foods.size();
                 }
             }
         }
@@ -679,14 +684,14 @@ namespace Neurolution
         void WorldInitialize()  noexcept
         {
             // cleanput outputs & foods 
-            for (auto& cell : Cells)
+            for (auto& cell : _cells)
             {
                 cell->CurrentEnergy = AppProperties::InitialCellEnergy;
                 cell->Network->CleanOutputs();
                 //cell.RandomizeLocation(_random, _maxX, _maxY);
             }
 
-            for (auto& predator : Predators)
+            for (auto& predator : _predators)
             {
                 predator->CurrentEnergy = AppProperties::PredatorInitialValue;
                 predator->Network->CleanOutputs();
@@ -714,5 +719,7 @@ namespace Neurolution
             source->Age = 0; // kind of hack
         }
 
+
+		friend class WorldView;
     };
 }
