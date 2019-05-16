@@ -12,18 +12,6 @@
 
 namespace Neurolution
 {
-    struct Color
-    {
-        unsigned short R, G, B;
-        Color(int r, int g, int b) : R(r), G(g), B(b) {}
-        Color() : Color(255, 255, 255) {}
-
-        void GlApply() noexcept
-        {
-            glColor3f(R / 255.0f, G / 255.0f, B / 255.0f);
-        }
-    };
-
 	struct WorldViewDetails
 	{
 		int numActiveThreads;
@@ -71,13 +59,12 @@ namespace Neurolution
 		glText::Label _pausedLabel{ LABELS_BACKGROUND, RUGA_KOLORO, "<< PAUSED >>" };
 
 		Color _foodColor{ 192, 64, 64 };
-		Color _predatorColor{ 64, 64, 255 };
-
+		
     public:
 
         WorldView(std::shared_ptr<World>& world)
             : _world(world)
-            , _cellViews(world->_cells.size())
+            , _cellViews(world->_cells.size() + world->_predators.size())
         {
             Random rnd = Random();
 
@@ -85,7 +72,14 @@ namespace Neurolution
             {
                 _cellViews[i] = std::make_shared<CellView>(_world->_cells[i], rnd);
             }
-        }
+
+			int ofs = _world->_cells.size();
+		
+			for (int i = 0; i < _world->_predators.size(); ++i)
+			{
+				_cellViews[ofs + i] = std::make_shared<CellView>(_world->_predators[i], rnd);
+			}
+		}
 
 		void PrintControls(const WorldViewDetails& details) noexcept
 		{
@@ -193,47 +187,6 @@ namespace Neurolution
                 glIndexi(++idx); glVertex3f(-halfdiameter, 0.0f, 0.0f);
                 glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 1.5f, 0.0f);
                 glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 1.5f, 0.0f);
-
-                glEnd();
-
-                glPopMatrix();
-            }
-
-            for (auto& predator : _world->_predators)
-            {
-                if (predator->CurrentEnergy < 0.001f)
-                    continue; // dead one
-
-                glPushMatrix();
-
-                glTranslatef(predator->LocationX, predator->LocationY, 0.0);
-                glRotatef(
-                    static_cast<float>(predator->Rotation / M_PI * 180.0 - 90.0),
-                    0.0f, 0.0f, 1.0f);
-
-                _predatorColor.GlApply();
-
-                float halfdiameter = 10.0f;
-
-                glBegin(GL_TRIANGLES);
-
-                int idx = 0;
-                glIndexi(++idx); glVertex3f(0.0f, 2.5f*halfdiameter, 0.0f);
-                glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
-                glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
-
-                glIndexi(++idx); glVertex3f(0.0f, -halfdiameter, 0.0f);
-                glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
-                glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
-
-
-                glIndexi(++idx); glVertex3f(halfdiameter, 0.0f, 0.0f);
-                glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
-                glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
-
-                glIndexi(++idx); glVertex3f(-halfdiameter, 0.0f, 0.0f);
-                glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
-                glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
 
                 glEnd();
 

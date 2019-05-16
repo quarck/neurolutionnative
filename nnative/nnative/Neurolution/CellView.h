@@ -9,9 +9,23 @@
 
 namespace Neurolution
 {
+	struct Color
+	{
+		unsigned short R, G, B;
+		Color(int r, int g, int b) : R(r), G(g), B(b) {}
+		Color() : Color(255, 255, 255) {}
+
+		void GlApply() noexcept
+		{
+			glColor3f(R / 255.0f, G / 255.0f, B / 255.0f);
+		}
+	};
+
     class CellView
     {
         std::shared_ptr<Cell> _cell;
+
+		Color _predatorColor{ 64, 64, 255 };
 	public:
 
         CellView(std::shared_ptr<Cell>& c, Random& rnd)
@@ -19,7 +33,7 @@ namespace Neurolution
         {
         }
 
-        void Draw()
+        void DrawNonPredator()
         {
             if (_cell->CurrentEnergy >= 0.0001f &&
                 _cell->LocationX >= 0.0 && _cell->LocationX < AppProperties::WorldWidth
@@ -57,5 +71,54 @@ namespace Neurolution
                 glPopMatrix();
             }
         }
+
+		void DrawPredator()
+		{
+			if (_cell->CurrentEnergy < 0.001f)
+				return;
+
+			glPushMatrix();
+
+			glTranslatef(_cell->LocationX, _cell->LocationY, 0.0);
+			glRotatef(
+				static_cast<float>(_cell->Rotation / M_PI * 180.0 - 90.0),
+				0.0f, 0.0f, 1.0f);
+
+			_predatorColor.GlApply();
+
+			float halfdiameter = 10.0f;
+
+			glBegin(GL_TRIANGLES);
+
+			int idx = 0;
+			glIndexi(++idx); glVertex3f(0.0f, 2.5f * halfdiameter, 0.0f);
+			glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
+
+			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter, 0.0f);
+			glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
+
+
+			glIndexi(++idx); glVertex3f(halfdiameter, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
+
+			glIndexi(++idx); glVertex3f(-halfdiameter, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
+
+			glEnd();
+
+			glPopMatrix();
+		}
+
+		void Draw()
+		{
+			if (_cell->IsPredator)
+				DrawPredator();
+			else
+				DrawNonPredator();
+		}
     };
 }
