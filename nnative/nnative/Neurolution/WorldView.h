@@ -20,6 +20,9 @@ namespace Neurolution
 		bool showDetailedcontrols;
 		bool paused;
 
+		int numPredators;
+		int numPreys;
+
 		WorldViewDetails(int nThr, bool p) 
 			: numActiveThreads{ nThr }
 			, currentIteration { 0 }
@@ -36,7 +39,7 @@ namespace Neurolution
 		static constexpr uint32_t LABELS_BACKGROUND = 0xff191919;
 		static constexpr uint32_t CONTROLS_LABEL_FOREGROUND = 0xff0f0f7f;
 		static constexpr uint32_t RUGA_KOLORO = 0xff0f0fdf;
-		static constexpr uint32_t VERDA_KOLORO = 0xff006f00u;
+		static constexpr uint32_t VERDA_KOLORO = 0xff108f10u;
 		static constexpr uint32_t CFG_CLR_FOREGROUND = 0xff9f004fu;
 		
 		std::shared_ptr<World> _world;
@@ -73,7 +76,7 @@ namespace Neurolution
                 _cellViews[i] = std::make_shared<CellView>(_world->_cells[i], rnd);
             }
 
-			int ofs = _world->_cells.size();
+			int ofs = static_cast<int>(_world->_cells.size()); // static_please_please_please_cast<int>(..)
 		
 			for (int i = 0; i < _world->_predators.size(); ++i)
 			{
@@ -102,8 +105,11 @@ namespace Neurolution
 
 			glPixelZoom(1.f, 1.f);
 
-			std::ostringstream ostr;
-			ostr << "ITER: " << details.currentIteration << ", IPS: " << details.iterationsPerSecond;
+			std::ostringstream iterstr;
+			iterstr << "ITER: " << details.currentIteration << ", IPS: " << details.iterationsPerSecond;
+
+			std::ostringstream szstr;
+			szstr << "PREDATORS: " << details.numPredators << ", PREY: " << details.numPreys;
 
 			std::ostringstream rcfg;
 			rcfg << "#THR: " << details.numActiveThreads;
@@ -111,10 +117,11 @@ namespace Neurolution
 			_iterAndCfgLabel.Update(
 				LABELS_BACKGROUND,
 				{ 
-					std::pair(VERDA_KOLORO, ostr.str()),
+					std::pair(VERDA_KOLORO, iterstr.str()),
+					std::pair(VERDA_KOLORO, szstr.str()),
 					std::pair(CFG_CLR_FOREGROUND, rcfg.str()),
 				});
-			_iterAndCfgLabel.DrawAt(-1.0, 0.88);
+			_iterAndCfgLabel.DrawAt(-1.0, 0.78);
 
 			glPopMatrix();
 		}

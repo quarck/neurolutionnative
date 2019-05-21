@@ -21,9 +21,13 @@ namespace Neurolution
 
         static constexpr int NetworkSize = 512;
 
-        static constexpr int WorldSize = 128;
+        static constexpr int MaxPreyCount = 1024;
+		static constexpr int InitialPreyCount = 128;
+
         static constexpr int FoodCountPerIteration = 24;
-        static constexpr int PredatorCountPerIteration = 16;
+
+        static constexpr int MaxPredatorCount = 128;
+		static constexpr int InitialPredatorCount = 16;
 
         static constexpr int NetworkMoveForceGentleLeft = EyeSize + 0;
         static constexpr int NetworkMoveForceGentleRight = EyeSize + 1;

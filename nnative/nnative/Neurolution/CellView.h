@@ -115,6 +115,9 @@ namespace Neurolution
 
 		void Draw()
 		{
+			if (!_cell->Alive)
+				return;
+
 			if (_cell->IsPredator)
 				DrawPredator();
 			else
