@@ -14,12 +14,13 @@ namespace Neurolution
     template <typename T>
     class Population : public std::vector<T>
     {
-		int idxFirstDead;
+        int idxFirstDead{ 0 }; // all dead by default
     public:
-        Population(size_t size, int firstDead = 0)
-            : std::vector<T>{ size }
-			, idxFirstDead{ firstDead }
+        Population(size_t size, bool allAlive = false)
+            : std::vector<T>(size)
         {
+			if (allAlive)
+				idxFirstDead = static_cast<int>(size);
         }
         size_t AliveSize() const noexcept
         {
@@ -31,7 +32,7 @@ namespace Neurolution
             return this->std::vector<T>::size() - AliveSize();
         }
 
-        void Mortigxumu(int idx) noexcept
+        void Kill(int idx) noexcept
         {
 			if (idx >= idxFirstDead)
 			{
@@ -49,7 +50,7 @@ namespace Neurolution
         }
 
         template <typename F>
-        void MortigxumuCxiun(F&& fn) noexcept
+        void KillAll(F&& fn) noexcept
         {
             for (int idx = 0; idx < idxFirstDead; ++idx)
             {

@@ -23,8 +23,6 @@ namespace Neurolution
         static constexpr float TailLength = AppProperties::CellTailLength;
         static constexpr float EyeBase = AppProperties::CellEyeBase;
 
-		bool Alive{ true }; // and well.. 
-
         float LocationX{ 0.0f };
         float LocationY{ 0.0f };
         float Rotation{ 0.0f };

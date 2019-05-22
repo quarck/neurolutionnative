@@ -51,16 +51,15 @@ namespace Neurolution
             //string documents = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             //string workingFolder = $"{documents}\\Neurolution\\{DateTime.Now:yyyy-MM-dd-HH-mm}";
 
-            world = std::make_shared<World>(                
-				AppProperties::WorldWidth,
-				AppProperties::WorldHeight,
-				config.GetNumWorkerThreads(),
-				AppProperties::MaxPreyCount,
-				AppProperties::MaxPredatorCount,
-				AppProperties::FoodCountPerIteration,
-				AppProperties::InitialPreyCount,
-				AppProperties::InitialPredatorCount
-				);
+            world = std::make_shared<World>(
+                std::string(""),
+                config.GetNumWorkerThreads(),
+                AppProperties::WorldSize,
+                AppProperties::FoodCountPerIteration,
+                AppProperties::PredatorCountPerIteration,
+                AppProperties::WorldWidth,
+                AppProperties::WorldHeight);
+
             _worldView = std::make_shared<WorldView>(world);
         }
 
@@ -172,8 +171,6 @@ namespace Neurolution
         {
             std::lock_guard<std::mutex> l(worldLock);
 			viewDetails.paused = appPaused;
-			viewDetails.numPredators = world->GetNumPredators();
-			viewDetails.numPreys = world->GetNumPreys();
             _worldView->UpdateFrom(world, viewDetails);
             uiNeedsUpdate = false;
         }
