@@ -270,7 +270,7 @@ namespace Neurolution
 			int nextCloneMapIdx = 0;
 
 			if (step == 0 || step % AppProperties::StepsPerBirthCheck != 0)
-				return;
+				return  0;
 
             if (std::any_of(
                     std::begin(elements),
