@@ -274,7 +274,7 @@ namespace Neurolution
                     [=](std::shared_ptr<Cell>& x) { return x->CurrentEnergy > birthEnergyConsumption; }
                 ))
             {
-                int quant = static_cast<int>(elements.size() / 16);
+                int quant = static_cast<int>(elements.size() / 32);
 
                 std::sort(std::begin(elements), std::end(elements),
                     [](std::shared_ptr<Cell>& x, std::shared_ptr<Cell>& y) {
@@ -292,24 +292,39 @@ namespace Neurolution
                 int srcIdx = 0;
                 int dstIdx = static_cast<int>(elements.size() - 1); //quant * 4;
 
-                for (auto multiplier : multipliers)
-                {
-                    for (int q = 0; q < quant; ++q)
-                    {
-                        auto& src = elements[srcIdx++];
+				while (srcIdx < dstIdx)
+				{
+					auto& src = elements[srcIdx];
 
-                        for (int j = 0; j < multiplier; ++j)
-                        {
-                            if (src->CurrentEnergy < birthEnergyConsumption)
-                                break;
+					if (src->CurrentEnergy < birthEnergyConsumption)
+					{
+						++srcIdx;
+						continue;
+					}
 
-                            auto& dst = elements[dstIdx--];
+					auto& dst = elements[dstIdx--];
+					src->CurrentEnergy -= birthEnergyConsumption;
+					CreateChild(src, dst, initialEnergy);
+				}
 
-                            src->CurrentEnergy -= birthEnergyConsumption;
-                            CreateChild(src, dst, initialEnergy);
-                        }
-                    }
-                }
+                //for (auto multiplier : multipliers)
+                //{
+                //    for (int q = 0; q < quant; ++q)
+                //    {
+                //        auto& src = elements[srcIdx++];
+
+                //        for (int j = 0; j < multiplier; ++j)
+                //        {
+                //            if (src->CurrentEnergy < birthEnergyConsumption)
+                //                break;
+
+                //            auto& dst = elements[dstIdx--];
+
+                //            src->CurrentEnergy -= birthEnergyConsumption;
+                //            CreateChild(src, dst, initialEnergy);
+                //        }
+                //    }
+                //}
 
                 for (auto& cell : elements)
                 {
