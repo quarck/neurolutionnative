@@ -174,6 +174,8 @@ namespace Neurolution
 		Population<std::shared_ptr<Cell>> _cells;
 		Population<std::shared_ptr<Cell>> _predators;
         Population<Food> _foods;
+		std::vector<std::pair<int, int>> _interGenerationCloneMapCells;
+		std::vector<std::pair<int, int>> _interGenerationCloneMapPredators;
 
         std::vector<std::vector<DirectionWithDistanceSquare>> _cellDirections;
         std::vector<std::vector<DirectionWithDistanceSquare>> _predatorDirections;
@@ -202,10 +204,12 @@ namespace Neurolution
             , _workingFolder(workingFolder)
             , _numWorkerThreads(nWorkerThreads)
             , _cells(numPreys, true)
-            , _foods(maxFoods)
+			, _interGenerationCloneMapCells(numPreys)
+			, _foods(maxFoods)
             , _foodsPerCycle(maxFoods)
             , _predators(numPredators, true)
-            , _cellDirections(nWorkerThreads)
+			, _interGenerationCloneMapPredators(numPredators)
+			, _cellDirections(nWorkerThreads)
             , _foodDirections(nWorkerThreads)
             , _predatorDirections(nWorkerThreads)
         {
@@ -229,12 +233,6 @@ namespace Neurolution
             }
         }
 
- /*       void InitializeFromWorldFile(const std::string& filename)
-        {
-			std::ifstream file(filename, std::ifstream::in | std::ifstream::binary);
-			LoadFrom(file);
-        }
-*/
 		void SaveTo(std::ostream& stream)
 		{
 			stream.write(reinterpret_cast<const char*>(&_maxX), sizeof(_maxX));
@@ -261,10 +259,16 @@ namespace Neurolution
 
 	private:
 
-        std::vector<int> multipliers{ 6, 3, 2, 1 };
-
-        void IterateBabyMaking(long step, std::vector<std::shared_ptr<Cell>>& elements, float birthEnergyConsumption, float initialEnergy)  noexcept
+        int IterateBabyMaking(
+			long step, 
+			std::vector<std::shared_ptr<Cell>>& elements, 
+			std::vector<std::pair<int, int>>& cloneMap,
+			float birthEnergyConsumption, 
+			float initialEnergy
+		)  noexcept
         {
+			int nextCloneMapIdx = 0;
+
 			if (step == 0 || step % AppProperties::StepsPerBirthCheck != 0)
 				return;
 
@@ -281,14 +285,6 @@ namespace Neurolution
                     return x->CurrentEnergy > y->CurrentEnergy;
                 });
 
-                //if (step % AppProperties::SerializeTopEveryNStep == 0)
-                //{
-                //	SerializeBest(elements[0], step);
-
-                //	if (step % AppProperties::SerializeWorldEveryNStep == 0)
-                //		SerializeWorld(elements, step);
-                //}
-
                 int srcIdx = 0;
                 int dstIdx = static_cast<int>(elements.size() - 1); //quant * 4;
 
@@ -302,37 +298,22 @@ namespace Neurolution
 						continue;
 					}
 
-					auto& dst = elements[dstIdx--];
+					//auto& dst = elements[dstIdx];
 					src->CurrentEnergy -= birthEnergyConsumption;
-					CreateChild(src, dst, initialEnergy);
+					auto& cm = cloneMap[nextCloneMapIdx++];
+					cm.first = srcIdx;
+					cm.second = dstIdx--;
+					//CreateChild(src, dst, initialEnergy);
 				}
-
-                //for (auto multiplier : multipliers)
+        
+                //for (auto& cell : elements)
                 //{
-                //    for (int q = 0; q < quant; ++q)
-                //    {
-                //        auto& src = elements[srcIdx++];
-
-                //        for (int j = 0; j < multiplier; ++j)
-                //        {
-                //            if (src->CurrentEnergy < birthEnergyConsumption)
-                //                break;
-
-                //            auto& dst = elements[dstIdx--];
-
-                //            src->CurrentEnergy -= birthEnergyConsumption;
-                //            CreateChild(src, dst, initialEnergy);
-                //        }
-                //    }
+                //    if (cell->Age > AppProperties::OldSince)
+                //        CreateChild(cell, cell, cell->CurrentEnergy);
                 //}
-
-                for (auto& cell : elements)
-                {
-                    if (cell->Age > AppProperties::OldSince)
-                        CreateChild(cell, cell, cell->CurrentEnergy);
-                }
             }
 
+			return nextCloneMapIdx;
         }
 
 	public:
@@ -390,18 +371,44 @@ namespace Neurolution
             // Kill any empty foods 
             _foods.KillAll([](Food& f) { return f.Value < 0.001f; });
 
-            _grid.GridRun(
-                [&](int idx, int n)
-            {
-                if (idx == 0)
-                {
-                    IterateBabyMaking(step, _cells, AppProperties::BirthEnergyConsumption, AppProperties::InitialCellEnergy);
-                }
-                if (idx == 1 || n == 1)
-                {
-                    IterateBabyMaking(step, _predators, AppProperties::PredatorBirthEnergyConsumption, AppProperties::PredatorInitialValue);
-                }
-            });
+			if (step != 0 && step % AppProperties::StepsPerBirthCheck == 0)
+			{
+				int nmCells = IterateBabyMaking(step, _cells, _interGenerationCloneMapCells, AppProperties::BirthEnergyConsumption, AppProperties::InitialCellEnergy);
+				int nmPredators = IterateBabyMaking(step, _predators, _interGenerationCloneMapPredators, AppProperties::PredatorBirthEnergyConsumption, AppProperties::PredatorInitialValue);
+
+				_grid.GridRun(
+					[&](int idx, int n)
+					{
+						for (int i = idx; i < nmCells; i += n)
+						{
+							auto& p = _interGenerationCloneMapCells[i];
+							CreateChild(_cells[p.first], _cells[p.second], AppProperties::InitialCellEnergy);
+						}
+
+						for (int i = idx; i < nmPredators; i += n)
+						{
+							auto& p = _interGenerationCloneMapPredators[i];
+							CreateChild(_predators[p.first], _predators[p.second], AppProperties::PredatorInitialValue);
+						}
+					});
+
+				_grid.GridRun(
+					[&](int idx, int n)
+					{
+						for (int cellIdx = idx; cellIdx < _cells.size(); cellIdx += n)
+						{
+							auto& cell = _cells[cellIdx];
+							if (cell->Age > AppProperties::OldSince)
+								CreateChild(cell, cell, cell->CurrentEnergy);
+						}
+						for (int pIdx = idx; pIdx < _predators.size(); pIdx += n)
+						{
+							auto& cell = _predators[pIdx];
+							if (cell->Age > AppProperties::OldSince)
+								CreateChild(cell, cell, cell->CurrentEnergy);
+						}
+					});
+			}
         }
 
 	private:
