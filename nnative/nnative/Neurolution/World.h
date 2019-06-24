@@ -17,6 +17,7 @@
 
 #include "Cell.h"
 #include "Population.h"
+#include "../Utils.h"
 
 namespace Neurolution
 {
@@ -38,76 +39,101 @@ namespace Neurolution
 		}
     };
 
-    struct Direction
+    struct Orientation
     {
-        float DirectionX;
-        float DirectionY;
+        float OrientationX;
+        float OrientationY;
 
 		void SaveTo(std::ostream& stream)
 		{
-			stream.write(reinterpret_cast<const char*>(&DirectionX), sizeof(DirectionX));
-			stream.write(reinterpret_cast<const char*>(&DirectionY), sizeof(DirectionY));
+			stream.write(reinterpret_cast<const char*>(&OrientationX), sizeof(OrientationX));
+			stream.write(reinterpret_cast<const char*>(&OrientationY), sizeof(OrientationY));
 		}
 
 		void LoadFrom(std::istream& stream)
 		{
-			stream.read(reinterpret_cast<char*>(&DirectionX), sizeof(DirectionX));
-			stream.read(reinterpret_cast<char*>(&DirectionY), sizeof(DirectionY));
+			stream.read(reinterpret_cast<char*>(&OrientationX), sizeof(OrientationX));
+			stream.read(reinterpret_cast<char*>(&OrientationY), sizeof(OrientationY));
 		}
 	};
 
-    struct LocationAndDirectionWithvalue : public Direction, public Location
+	struct Velocity
+	{
+		float VelocityX;
+		float VelocityY;
+
+		void SaveTo(std::ostream& stream)
+		{
+			stream.write(reinterpret_cast<const char*>(&VelocityX), sizeof(VelocityX));
+			stream.write(reinterpret_cast<const char*>(&VelocityY), sizeof(VelocityY));
+		}
+
+		void LoadFrom(std::istream& stream)
+		{
+			stream.read(reinterpret_cast<char*>(&VelocityX), sizeof(VelocityX));
+			stream.read(reinterpret_cast<char*>(&VelocityY), sizeof(VelocityY));
+		}
+	};
+
+	template <typename WorldProp>
+	struct LocationAndDirectionWithValue : public Orientation, public Location, public Velocity
     {
         float Value;
 
         void Step(Random& rnd, int maxX, int maxY)  noexcept
         {
             LocationX = LoopValue(
-                LocationX + DirectionX + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxX));
+                LocationX + OrientationX + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxX));
             LocationY = LoopValue(
-                LocationY + DirectionY + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxY));
+                LocationY + OrientationY + (float)(rnd.NextDouble() * 0.25 - 0.125), 0.0f, static_cast<float>(maxY));
         }
 
 		void SaveTo(std::ostream& stream) 
 		{
 			stream.write(reinterpret_cast<const char*>(&Value), sizeof(Value));
-			this->Direction::SaveTo(stream);
+			this->Orientation::SaveTo(stream);
 			this->Location::SaveTo(stream);
+			this->Velocity::SaveTo(stream);
 		}
 
 		void LoadFrom(std::istream& stream)
 		{
 			stream.read(reinterpret_cast<char*>(&Value), sizeof(Value));
-			this->Direction::LoadFrom(stream);
+			this->Orientation::LoadFrom(stream);
 			this->Location::LoadFrom(stream);
+			this->Velocity::LoadFrom(stream);
 		}
 	};
 
-    struct DirectionWithDistanceSquare : public Direction
+	template <typename WorldProp>
+    struct DirectionWithDistanceSquare : public Orientation
     {
         float DistanceSquare;
 
         void Set(float dx, float dy)  noexcept
         {
-            DirectionX = dx;
-            DirectionY = dy;
+            OrientationX = dx;
+            OrientationY = dy;
             DistanceSquare = dx * dx + dy * dy;
         }
 
 		void SaveTo(std::ostream& stream)
 		{
-			this->Direction::SaveTo(stream);
+			this->Orientation::SaveTo(stream);
 		}
 
 		void LoadFrom(std::istream& stream)
 		{
-			this->Direction::LoadFrom(stream);
-			DistanceSquare = DirectionX * DirectionX + DirectionY * DirectionY;
+			this->Orientation::LoadFrom(stream);
+			DistanceSquare = OrientationX * OrientationX + OrientationY * OrientationY;
 		}
     };
 
-    struct Food : public LocationAndDirectionWithvalue
+	template <typename WorldProp>
+    struct Food : public LocationAndDirectionWithValue<WorldProp>
     {
+		using BaseType = LocationAndDirectionWithValue<WorldProp>;
+
         Food()
         {
         }
@@ -121,14 +147,15 @@ namespace Neurolution
         {
             float ret = 0.0f;
 
-            while (Value > 0.001)
+            while (BaseType::Value > 0.001)
             {
-                float valueCopy = InterlockedCompareExchange(&Value, 0.0f, 0.0f);
+				float* basedAddr = &(this->BaseType::Value);
+                float valueCopy = InterlockedCompareExchange(basedAddr, 0.0f, 0.0f);
                 float newDelta = valueCopy < 0.5f ? valueCopy : 0.5f;
                 float newValue = valueCopy - newDelta;
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (InterlockedCompareExchange(&Value, newValue, valueCopy) == valueCopy)
+                if (InterlockedCompareExchange(basedAddr, newValue, valueCopy) == valueCopy)
                 {
                     ret = valueCopy - newValue;
                     break;
@@ -138,48 +165,52 @@ namespace Neurolution
             return ret;
         }
 
-        bool IsEmpty() const  noexcept { return Value < 0.00001; }
+        bool IsEmpty() const  noexcept { return BaseType::Value < 0.00001; }
 
         void Reset(Random& rnd, int maxX, int maxY, bool valueOnly = false)  noexcept
         {
-            Value = AppProperties::FoodInitialValue;// * (0.5 + rnd.NextDouble());
+			BaseType::Value = WorldProp::FoodInitialValue;// * (0.5 + rnd.NextDouble());
 
             if (!valueOnly)
             {
-                LocationX = (float)rnd.Next(maxX);
-                LocationY = (float)rnd.Next(maxY);
+                BaseType::LocationX = (float)rnd.Next(maxX);
+                BaseType::LocationY = (float)rnd.Next(maxY);
 
-                DirectionX = (float)(rnd.NextDouble() * 0.5 - 0.25);
-                DirectionY = (float)(rnd.NextDouble() * 0.5 - 0.25);
+				BaseType::OrientationX = (float)(rnd.NextDouble() * 0.5 - 0.25);
+				BaseType::OrientationY = (float)(rnd.NextDouble() * 0.5 - 0.25);
             }
         }
 
 		void SaveTo(std::ostream& stream)
 		{
-			this->LocationAndDirectionWithvalue::SaveTo(stream);
+			this->BaseType::SaveTo(stream);
 		}
 
 		void LoadFrom(std::istream& stream)
 		{
-			this->LocationAndDirectionWithvalue::LoadFrom(stream);
+			this->BaseType::LoadFrom(stream);
 		}
     };
 
+	template <typename WorldProp>
     class World
     {
+	public:
+		using TProp = WorldProp;
+	private:
         static constexpr float SQRT_2 = 1.4142135623730950488016887242097f; // unfortunately std::sqrt is not a constexpr function
 
         int _numWorkerThreads;
 
-		Population<std::shared_ptr<Cell>> _cells;
-		Population<std::shared_ptr<Cell>> _predators;
-        Population<Food> _foods;
+		Population<std::shared_ptr<Cell<WorldProp>>> _cells;
+		Population<std::shared_ptr<Cell<WorldProp>>> _predators;
+        Population<Food<WorldProp>> _foods;
 		std::vector<std::pair<int, int>> _interGenerationCloneMapCells;
 		std::vector<std::pair<int, int>> _interGenerationCloneMapPredators;
 
-        std::vector<std::vector<DirectionWithDistanceSquare>> _cellDirections;
-        std::vector<std::vector<DirectionWithDistanceSquare>> _predatorDirections;
-        std::vector<std::vector<DirectionWithDistanceSquare>> _foodDirections;
+        std::vector<std::vector<DirectionWithDistanceSquare<WorldProp>>> _cellDirections;
+        std::vector<std::vector<DirectionWithDistanceSquare<WorldProp>>> _predatorDirections;
+        std::vector<std::vector<DirectionWithDistanceSquare<WorldProp>>> _foodDirections;
 
         int _maxX;
         int _maxY;
@@ -214,24 +245,40 @@ namespace Neurolution
             , _predatorDirections(nWorkerThreads)
         {
             for (int i = 0; i < numPreys; ++i)
-                _cells[i] = std::make_shared<Cell>(_random, maxX, maxY, false);
+                _cells[i] = std::make_shared<Cell<WorldProp>>(_random, maxX, maxY, false);
 
             for (int i = 0; i < numPredators; ++i)
-                _predators[i] = std::make_shared<Cell>(_random, maxX, maxY, true);
+                _predators[i] = std::make_shared<Cell<WorldProp>>(_random, maxX, maxY, true);
 
             for (int i = 0; i < _foodsPerCycle; ++i)
             {
-                _foods.Reanimate() = Food(_random, maxX, maxY);
+                _foods.Reanimate() = Food<WorldProp>(_random, maxX, maxY);
             }
 
             for (int i = 0; i < _numWorkerThreads; ++i)
             {
                 // Some in-efficiency here, yes
-                _cellDirections[i] = std::vector<DirectionWithDistanceSquare>(numPreys);
-                _foodDirections[i] = std::vector<DirectionWithDistanceSquare>(maxFoods);
-                _predatorDirections[i] = std::vector<DirectionWithDistanceSquare>(numPredators);
+                _cellDirections[i] = std::vector<DirectionWithDistanceSquare<WorldProp>>(numPreys);
+                _foodDirections[i] = std::vector<DirectionWithDistanceSquare<WorldProp>>(maxFoods);
+                _predatorDirections[i] = std::vector<DirectionWithDistanceSquare<WorldProp>>(numPredators);
             }
         }
+
+
+		Population<Food<WorldProp>>& GetFoods() noexcept
+		{
+			return _foods;
+		}
+
+		Population<std::shared_ptr<Cell<WorldProp>>> GetCells() noexcept
+		{
+			return _cells;	
+		}
+
+		Population<std::shared_ptr<Cell<WorldProp>>> GetPredators() noexcept
+		{
+			return _predators; 
+		}
 
 		void SaveTo(std::ostream& stream)
 		{
@@ -240,9 +287,9 @@ namespace Neurolution
 			stream.write(reinterpret_cast<const char*>(&_foodsPerCycle), sizeof(_foodsPerCycle));
 			stream.write(reinterpret_cast<const char*>(&_nextFoodIdx), sizeof(_nextFoodIdx));
 
-			_cells.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
-			_predators.SaveTo(stream, [&](std::shared_ptr<Cell> & item, std::ostream & s) {item->SaveTo(s); });
-			_foods.SaveTo(stream, [&](Food& item, std::ostream & s) {item.SaveTo(s); });
+			_cells.SaveTo(stream, [&](std::shared_ptr<Cell<WorldProp>> & item, std::ostream & s) {item->SaveTo(s); });
+			_predators.SaveTo(stream, [&](std::shared_ptr<Cell<WorldProp>> & item, std::ostream & s) {item->SaveTo(s); });
+			_foods.SaveTo(stream, [&](Food<WorldProp> & item, std::ostream & s) {item.SaveTo(s); });
 		}
 
 		void LoadFrom(std::istream& stream)
@@ -252,16 +299,16 @@ namespace Neurolution
 			stream.read(reinterpret_cast<char*>(&_foodsPerCycle), sizeof(_foodsPerCycle));
 			stream.read(reinterpret_cast<char*>(&_nextFoodIdx), sizeof(_nextFoodIdx));
 
-			_cells.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
-			_predators.LoadFrom(stream, [&](std::shared_ptr<Cell> & item, std::istream & s) {item->LoadFrom(s); });
-			_foods.LoadFrom(stream, [&](Food & item, std::istream & s) {item.LoadFrom(s); });
+			_cells.LoadFrom(stream, [&](std::shared_ptr<Cell<WorldProp>> & item, std::istream & s) {item->LoadFrom(s); });
+			_predators.LoadFrom(stream, [&](std::shared_ptr<Cell<WorldProp>> & item, std::istream & s) {item->LoadFrom(s); });
+			_foods.LoadFrom(stream, [&](Food<WorldProp> & item, std::istream & s) {item.LoadFrom(s); });
 		}
 
 	private:
 
         int IterateBabyMaking(
 			long step, 
-			std::vector<std::shared_ptr<Cell>>& elements, 
+			std::vector<std::shared_ptr<Cell<WorldProp>>>& elements, 
 			std::vector<std::pair<int, int>>& cloneMap,
 			float birthEnergyConsumption, 
 			float initialEnergy
@@ -269,19 +316,19 @@ namespace Neurolution
         {
 			int nextCloneMapIdx = 0;
 
-			if (step == 0 || step % AppProperties::StepsPerBirthCheck != 0)
+			if (step == 0 || step % WorldProp::StepsPerBirthCheck != 0)
 				return  0;
 
             if (std::any_of(
                     std::begin(elements),
                     std::end(elements),
-                    [=](std::shared_ptr<Cell>& x) { return x->CurrentEnergy > birthEnergyConsumption; }
+                    [=](std::shared_ptr<Cell<WorldProp>>& x) { return x->CurrentEnergy > birthEnergyConsumption; }
                 ))
             {
                 int quant = static_cast<int>(elements.size() / 32);
 
                 std::sort(std::begin(elements), std::end(elements),
-                    [](std::shared_ptr<Cell>& x, std::shared_ptr<Cell>& y) {
+                    [](std::shared_ptr<Cell<WorldProp>>& x, std::shared_ptr<Cell<WorldProp>>& y) {
                     return x->CurrentEnergy > y->CurrentEnergy;
                 });
 
@@ -308,7 +355,7 @@ namespace Neurolution
         
                 //for (auto& cell : elements)
                 //{
-                //    if (cell->Age > AppProperties::OldSince)
+                //    if (cell->Age > WorldProp::OldSince)
                 //        CreateChild(cell, cell, cell->CurrentEnergy);
                 //}
             }
@@ -327,7 +374,7 @@ namespace Neurolution
 
 
 
-            if ((step % (AppProperties::StepsPerGeneration / _foodsPerCycle)) == 0)
+            if ((step % (WorldProp::StepsPerGeneration / _foodsPerCycle)) == 0)
             {
                 GiveOneFood();
             }
@@ -369,12 +416,19 @@ namespace Neurolution
             });
 
             // Kill any empty foods 
-            _foods.KillAll([](Food& f) { return f.Value < 0.001f; });
+            _foods.KillAll([](Food<WorldProp>& f) { return f.Value < 0.001f; });
 
-			if (step != 0 && step % AppProperties::StepsPerBirthCheck == 0)
+			if (step != 0 && step % WorldProp::StepsPerBirthCheck == 0)
 			{
-				int nmCells = IterateBabyMaking(step, _cells, _interGenerationCloneMapCells, AppProperties::BirthEnergyConsumption, AppProperties::InitialCellEnergy);
-				int nmPredators = IterateBabyMaking(step, _predators, _interGenerationCloneMapPredators, AppProperties::PredatorBirthEnergyConsumption, AppProperties::PredatorInitialValue);
+				int nmCells = IterateBabyMaking(
+					step, _cells, 
+					_interGenerationCloneMapCells, 
+					WorldProp::BirthEnergyConsumption, WorldProp::InitialCellEnergy);
+				int nmPredators = IterateBabyMaking(
+					step, _predators, 
+					_interGenerationCloneMapPredators,
+					WorldProp::PredatorBirthEnergyConsumption,
+					WorldProp::PredatorInitialValue);
 
 				_grid.GridRun(
 					[&](int idx, int n)
@@ -382,13 +436,13 @@ namespace Neurolution
 						for (int i = idx; i < nmCells; i += n)
 						{
 							auto& p = _interGenerationCloneMapCells[i];
-							CreateChild(_cells[p.first], _cells[p.second], AppProperties::InitialCellEnergy);
+							CreateChild(_cells[p.first], _cells[p.second], WorldProp::InitialCellEnergy);
 						}
 
 						for (int i = idx; i < nmPredators; i += n)
 						{
 							auto& p = _interGenerationCloneMapPredators[i];
-							CreateChild(_predators[p.first], _predators[p.second], AppProperties::PredatorInitialValue);
+							CreateChild(_predators[p.first], _predators[p.second], WorldProp::PredatorInitialValue);
 						}
 					});
 
@@ -398,13 +452,13 @@ namespace Neurolution
 						for (int cellIdx = idx; cellIdx < _cells.size(); cellIdx += n)
 						{
 							auto& cell = _cells[cellIdx];
-							if (cell->Age > AppProperties::OldSince)
+							if (cell->Age > WorldProp::OldSince)
 								CreateChild(cell, cell, cell->CurrentEnergy);
 						}
 						for (int pIdx = idx; pIdx < _predators.size(); pIdx += n)
 						{
 							auto& cell = _predators[pIdx];
-							if (cell->Age > AppProperties::OldSince)
+							if (cell->Age > WorldProp::OldSince)
 								CreateChild(cell, cell, cell->CurrentEnergy);
 						}
 					});
@@ -413,7 +467,7 @@ namespace Neurolution
 
 	private:
 
-        void IterateCellEye(int threadIdx, long step, std::shared_ptr<Cell>& cell)  noexcept
+        void IterateCellEye(int threadIdx, long step, std::shared_ptr<Cell<WorldProp>>& cell)  noexcept
         {
             if (cell->CurrentEnergy < 0.00001f)
                 return;
@@ -466,7 +520,7 @@ namespace Neurolution
             auto& eye = cell->GetEye();
 
             for (unsigned int tripodIdx = 0;
-                tripodIdx < AppProperties::EyeSizeNumTripods;
+                tripodIdx < WorldProp::EyeSizeNumTripods;
                 ++tripodIdx)
             {
 
@@ -492,7 +546,7 @@ namespace Neurolution
 
                         auto& food = foodDirections[idx];
 
-                        float modulo = viewDirectionX * food.DirectionX + viewDirectionY * food.DirectionY;
+                        float modulo = viewDirectionX * food.OrientationX + viewDirectionY * food.OrientationY;
 
                         if (modulo <= 0.0)
                             continue;
@@ -528,7 +582,7 @@ namespace Neurolution
                         if (cellItem == cell)
                             continue;
 
-                        float modulo = viewDirectionX * cellDirection.DirectionX + viewDirectionY * cellDirection.DirectionY;
+                        float modulo = viewDirectionX * cellDirection.OrientationX + viewDirectionY * cellDirection.OrientationY;
 
                         if (modulo <= 0.0)
                             continue;
@@ -540,7 +594,7 @@ namespace Neurolution
                         // float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
 
                         float signalLevel =
-                            (float)(/*cellItem->CurrentEnergy*/AppProperties::InitialCellEnergy * std::pow(cosine, greenCell.Width)
+                            (float)(/*cellItem->CurrentEnergy*/WorldProp::InitialCellEnergy * std::pow(cosine, greenCell.Width)
                                 * invSqrRoot * invSqrRoot);
 
                         value += signalLevel;
@@ -565,7 +619,7 @@ namespace Neurolution
                         if (predatorItem == cell)
                             continue;
 
-                        float modulo = viewDirectionX * predator.DirectionX + viewDirectionY * predator.DirectionY;
+                        float modulo = viewDirectionX * predator.OrientationX + viewDirectionY * predator.OrientationY;
 
                         if (modulo <= 0.0)
                             continue;
@@ -577,7 +631,7 @@ namespace Neurolution
                         // float distnaceSquare = (float)std::pow(predator.Distance, 2.0);
 
                         float signalLevel =
-                            (float)(/*predatorItem->CurrentEnergy*/AppProperties::PredatorInitialValue * std::pow(cosine, blueCell.Width)
+                            (float)(/*predatorItem->CurrentEnergy*/WorldProp::PredatorInitialValue * std::pow(cosine, blueCell.Width)
                                 * invSqrRoot * invSqrRoot);
 
                         value += signalLevel;
@@ -587,7 +641,7 @@ namespace Neurolution
             }
         }
 
-        void IterateCellThinkingAndMoving(int threadIdx, long step, std::shared_ptr<Cell>& cell) noexcept
+        void IterateCellThinkingAndMoving(int threadIdx, long step, std::shared_ptr<Cell<WorldProp>>& cell) noexcept
         {
             float forceLeft = 0.0f;
             float forceRight = 0.0f;
@@ -605,15 +659,15 @@ namespace Neurolution
             float forwardForce = ((forceLeft + forceRight) / SQRT_2);
             float rotationForce = (forceLeft - forceRight) / SQRT_2;
 
-            float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * AppProperties::MoveEnergyFactor;
+            float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * WorldProp::MoveEnergyFactor;
 
             if (cell->IsPredator)
             {
                 forwardForce *= 0.94f; // a bit slow and heavy
             }
-            else if (!cell->IsPredator && cell->CurrentEnergy < AppProperties::SedatedAtEnergyLevel)
+            else if (!cell->IsPredator && cell->CurrentEnergy < WorldProp::SedatedAtEnergyLevel)
             {
-                float slowdownFactor = cell->CurrentEnergy / AppProperties::SedatedAtEnergyLevel;
+                float slowdownFactor = cell->CurrentEnergy / WorldProp::SedatedAtEnergyLevel;
                 forwardForce *= slowdownFactor;
                 rotationForce *= slowdownFactor;
                 moveEnergyRequired *= slowdownFactor;
@@ -638,11 +692,11 @@ namespace Neurolution
 
         }
 
-        void IterateCellCollisions(int threadIdx, long step, std::shared_ptr<Cell>& cell)  noexcept
+        void IterateCellCollisions(int threadIdx, long step, std::shared_ptr<Cell<WorldProp>>& cell)  noexcept
         {
             if (!cell->IsPredator)
             {
-                if (cell->CurrentEnergy < AppProperties::MaxEnergyCapacity)
+                if (cell->CurrentEnergy < WorldProp::MaxEnergyCapacity)
                 {
                     // Analyze the outcome - did it get any food? 
                     for (int foodIdx = 0; foodIdx < _foods.AliveSize(); ++foodIdx)
@@ -661,7 +715,7 @@ namespace Neurolution
                     }
                 }
 
-                if (cell->CurrentEnergy > AppProperties::SporeEnergyLevel)
+                if (cell->CurrentEnergy > WorldProp::SporeEnergyLevel)
                 {
                     // Analyze the outcome - did it hit any predators? 
                     for (auto& predator : _predators)
@@ -695,7 +749,7 @@ namespace Neurolution
             }
             else
             {
-                if (_foods[_nextFoodIdx].Value < AppProperties::FoodInitialValue / 2.0f)
+                if (_foods[_nextFoodIdx].Value < WorldProp::FoodInitialValue / 2.0f)
                 {
                     _foods[_nextFoodIdx].Reset(_random, _maxX, _maxY);
                     _nextFoodIdx = (_nextFoodIdx + 1) % _foods.size();
@@ -708,27 +762,27 @@ namespace Neurolution
             // cleanput outputs & foods 
             for (auto& cell : _cells)
             {
-                cell->CurrentEnergy = AppProperties::InitialCellEnergy;
+                cell->CurrentEnergy = WorldProp::InitialCellEnergy;
                 cell->Network->CleanOutputs();
                 //cell.RandomizeLocation(_random, _maxX, _maxY);
             }
 
             for (auto& predator : _predators)
             {
-                predator->CurrentEnergy = AppProperties::PredatorInitialValue;
+                predator->CurrentEnergy = WorldProp::PredatorInitialValue;
                 predator->Network->CleanOutputs();
             }
 
             GiveOneFood();
         }
 
-        void CreateChild(std::shared_ptr<Cell>& source, std::shared_ptr<Cell>& destination, float initialEnergy)  noexcept
+        void CreateChild(std::shared_ptr<Cell<WorldProp>>& source, std::shared_ptr<Cell<WorldProp>>& destination, float initialEnergy)  noexcept
         {
             double rv = _random.NextDouble();
-            bool severeMutations = (rv < AppProperties::SevereMutationFactor);
+            bool severeMutations = (rv < WorldProp::SevereMutationFactor);
 
-            float severity = (float)(1.0 - std::pow(rv / AppProperties::SevereMutationFactor,
-                AppProperties::SevereMutationSlope)); // % of neurons to mutate
+            float severity = (float)(1.0 - std::pow(rv / WorldProp::SevereMutationFactor,
+                WorldProp::SevereMutationSlope)); // % of neurons to mutate
 
             destination->CloneFrom(*source, _random, _maxX, _maxY, severeMutations, severity);
             destination->ClonedFrom = -1;
@@ -742,6 +796,6 @@ namespace Neurolution
         }
 
 
-		friend class WorldView;
+		//friend class WorldView<WorldProp>;
     };
 }

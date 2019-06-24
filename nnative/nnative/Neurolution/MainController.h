@@ -17,13 +17,21 @@
 
 namespace Neurolution
 {
+	template <typename WorldProp>
     class MainController
     {
-        RuntimeConfig& config;
+	public:
+		using TProp = WorldProp;
+		using TWorld = World<WorldProp>;
+		using TWorldView = WorldView<WorldProp>;
 
-        std::shared_ptr<World> world;
+	private:
+		RuntimeConfig& config;
+
+
+        std::shared_ptr<TWorld> world;
         std::mutex worldLock;
-        std::shared_ptr<WorldView> _worldView;
+        std::shared_ptr<TWorldView> _worldView;
 
 
 		WorldViewDetails viewDetails;
@@ -51,16 +59,16 @@ namespace Neurolution
             //string documents = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             //string workingFolder = $"{documents}\\Neurolution\\{DateTime.Now:yyyy-MM-dd-HH-mm}";
 
-            world = std::make_shared<World>(
+            world = std::make_shared<TWorld>(
                 std::string(""),
                 config.GetNumWorkerThreads(),
-                AppProperties::WorldSize,
-                AppProperties::FoodCountPerIteration,
-                AppProperties::PredatorCountPerIteration,
-                AppProperties::WorldWidth,
-                AppProperties::WorldHeight);
+				WorldProp::WorldSize,
+				WorldProp::FoodCountPerIteration,
+				WorldProp::PredatorCountPerIteration,
+				WorldProp::WorldWidth,
+				WorldProp::WorldHeight);
 
-            _worldView = std::make_shared<WorldView>(world);
+            _worldView = std::make_shared<TWorldView>(world);
         }
 
         ~MainController()

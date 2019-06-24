@@ -10,18 +10,18 @@
 #include "../Random.h"
 #include "../Utils.h"
 
-#include "AppProperties.h"
 #include "NeuronNetwork.h"
 
 
 namespace Neurolution
 {
+	template <typename WorldProp>
     struct Cell
     {
-        std::shared_ptr<NeuronNetwork> Network;
+        std::shared_ptr<NeuronNetwork<WorldProp>> Network;
 
-        static constexpr float TailLength = AppProperties::CellTailLength;
-        static constexpr float EyeBase = AppProperties::CellEyeBase;
+        static constexpr float TailLength = WorldProp::CellTailLength;
+        static constexpr float EyeBase = WorldProp::CellEyeBase;
 
         float LocationX{ 0.0f };
         float LocationY{ 0.0f };
@@ -47,7 +47,7 @@ namespace Neurolution
             , LocationX(static_cast<float>(r.NextDouble()*maxX))
             , LocationY(static_cast<float>(r.NextDouble()*maxY))
             , Rotation((float)(r.NextDouble() * 2.0 * M_PI))
-            , Network(std::make_shared<NeuronNetwork>(AppProperties::NetworkSize, r))
+            , Network(std::make_shared<NeuronNetwork<WorldProp>>(WorldProp::NetworkSize))
             , IsPredator(isPredator)
         {
         }
@@ -65,14 +65,14 @@ namespace Neurolution
             Network->IterateNetwork(random);
 
             MoveForceLeft =
-                0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleLeft] +
-                1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalLeft] +
-                1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongLeft];
+                0.3f * Network->OutputVector[WorldProp::NetworkMoveForceGentleLeft] +
+                1.0f * Network->OutputVector[WorldProp::NetworkMoveForceNormalLeft] +
+                1.7f * Network->OutputVector[WorldProp::NetworkMoveForceStrongLeft];
 
 			MoveForceRight =
-                0.3f * Network->OutputVector[AppProperties::NetworkMoveForceGentleRight] +
-                1.0f * Network->OutputVector[AppProperties::NetworkMoveForceNormalRight] +
-                1.7f * Network->OutputVector[AppProperties::NetworkMoveForceStrongRight];
+                0.3f * Network->OutputVector[WorldProp::NetworkMoveForceGentleRight] +
+                1.0f * Network->OutputVector[WorldProp::NetworkMoveForceNormalRight] +
+                1.7f * Network->OutputVector[WorldProp::NetworkMoveForceStrongRight];
 
             Age++;
         }

@@ -20,7 +20,9 @@
 
 #define MAX_LOADSTRING 100
 
-std::unique_ptr<Neurolution::MainController> controller;
+using TMainController = Neurolution::MainController<Neurolution::AppProperties0>;
+
+std::unique_ptr<Neurolution::MainController<Neurolution::AppProperties0>> controller;
 
 void Init()
 {
@@ -315,11 +317,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 
     Neurolution::RuntimeConfig config;
 
-    controller = std::make_unique<Neurolution::MainController>(config);
+    controller = std::make_unique<TMainController>(config);
 
     controller->SetHWND(
         CreateOpenGLWindow(_T("Neurolution Native"), 0, 0,
-            Neurolution::AppProperties::WorldWidth / 3, Neurolution::AppProperties::WorldHeight / 3,
+			TMainController::TProp::WorldWidth / 3, TMainController::TProp::WorldHeight / 3,
             PFD_TYPE_RGBA, PFD_DOUBLEBUFFER));
 
     if (controller->GetHWND() == nullptr)

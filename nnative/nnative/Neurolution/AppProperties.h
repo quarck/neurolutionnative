@@ -7,7 +7,7 @@
 
 namespace Neurolution
 {
-    class AppProperties
+    class AppProperties0
     {
     public:
         static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg

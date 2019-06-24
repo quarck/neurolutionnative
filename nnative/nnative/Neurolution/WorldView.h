@@ -31,6 +31,7 @@ namespace Neurolution
 		}
 	};
 
+	template <typename WorldProps> 
     class WorldView
     {
 		static constexpr uint32_t LABELS_BACKGROUND = 0xff191919;
@@ -39,8 +40,8 @@ namespace Neurolution
 		static constexpr uint32_t VERDA_KOLORO = 0xff006f00u;
 		static constexpr uint32_t CFG_CLR_FOREGROUND = 0xff9f004fu;
 		
-		std::shared_ptr<World> _world;
-        std::vector<std::shared_ptr<CellView>> _cellViews;
+		std::shared_ptr<World<WorldProps>> _world;
+        std::vector<std::shared_ptr<CellView<WorldProps>>> _cellViews;
 
 		glText::Label _controlsLabel{ LABELS_BACKGROUND, CONTROLS_LABEL_FOREGROUND, "<?> - help" };
 
@@ -62,22 +63,22 @@ namespace Neurolution
 		
     public:
 
-        WorldView(std::shared_ptr<World>& world)
+        WorldView(std::shared_ptr<World<WorldProps>>& world)
             : _world(world)
-            , _cellViews(world->_cells.size() + world->_predators.size())
+            , _cellViews(world->GetCells().size() + world->GetPredators().size())
         {
             Random rnd = Random();
 
-            for (int i = 0; i < _world->_cells.size(); ++i)
+            for (int i = 0; i < _world->GetCells().size(); ++i)
             {
-                _cellViews[i] = std::make_shared<CellView>(_world->_cells[i], rnd);
+                _cellViews[i] = std::make_shared<CellView<WorldProps>>(_world->GetCells()[i], rnd);
             }
 
-			int ofs = _world->_cells.size();
+			int ofs = _world->GetCells().size();
 		
-			for (int i = 0; i < _world->_predators.size(); ++i)
+			for (int i = 0; i < _world->GetPredators().size(); ++i)
 			{
-				_cellViews[ofs + i] = std::make_shared<CellView>(_world->_predators[i], rnd);
+				_cellViews[ofs + i] = std::make_shared<CellView<WorldProps>>(_world->GetPredators()[i], rnd);
 			}
 		}
 
@@ -119,7 +120,7 @@ namespace Neurolution
 			glPopMatrix();
 		}
 
-        void UpdateFrom(std::shared_ptr<World>& world, 
+        void UpdateFrom(std::shared_ptr<World<WorldProps>>& world,
 			const WorldViewDetails& details
 		)  noexcept
         {
@@ -144,18 +145,18 @@ namespace Neurolution
 			PrintStats(details);
 
             glScalef(
-                static_cast<GLfloat>(2.0 / AppProperties::WorldWidth),
-                static_cast<GLfloat>(2.0 / AppProperties::WorldHeight),
+                static_cast<GLfloat>(2.0 / WorldProps::WorldWidth),
+                static_cast<GLfloat>(2.0 / WorldProps::WorldHeight),
                 1.0f);
 
-            glTranslatef(-AppProperties::WorldWidth / 2.0f, -AppProperties::WorldHeight / 2.0f, 0.0);
+            glTranslatef(-WorldProps::WorldWidth / 2.0f, -WorldProps::WorldHeight / 2.0f, 0.0);
 
             for (auto& cellView : _cellViews)
             {
                 cellView->Draw();
             }
 
-            for (auto& food : _world->_foods)
+            for (auto& food : _world->GetFoods())
             {
                 if (food.Value < 0.01)
                     continue;

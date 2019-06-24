@@ -7,8 +7,6 @@
 #include "../Random.h"
 #include "../Utils.h"
 
-#include "AppProperties.h"
-
 namespace Neurolution
 {
     enum class LightSensorColor
@@ -60,6 +58,7 @@ namespace Neurolution
         Recovering1
     };
 
+	template <typename WorldProp>
     struct Neuron
     {
         std::vector<float> Weights;
@@ -69,10 +68,11 @@ namespace Neurolution
         NeuronState State;
 
         Neuron()
+			: Neuron(0)
         {
         }
 
-        Neuron(int size, Random& rnd)
+        Neuron(int size)
             : Charge(0.0f)
             , State(NeuronState::Idle)
             , Weights(size)
@@ -100,14 +100,14 @@ namespace Neurolution
 
             if (!severe)
             {
-                float maxMutation = AppProperties::NetworkMaxRegularMutation;
+                float maxMutation = WorldProp::NetworkMaxRegularMutation;
 
                 for (int i = 0; i < size; ++i)
                     Weights[i] = (float)(other.Weights[i] + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
             }
             else
             {
-                float alpha = AppProperties::NetworkSevereMutationAlpha;
+                float alpha = WorldProp::NetworkSevereMutationAlpha;
 
                 for (int i = 0; i < size; ++i)
                     Weights[i] = (float)(other.Weights[i] * alpha + (2.0 * rnd.NextDouble() - 1.0) * (1.0 - alpha));
@@ -135,9 +135,10 @@ namespace Neurolution
 
     };
 
+	template <typename WorldProp>
     struct NeuronNetwork
     {
-        std::vector<Neuron> Neurons;
+        std::vector<Neuron<WorldProp>> Neurons;
 
         std::vector<LightSensor> Eye;
 
@@ -147,33 +148,33 @@ namespace Neurolution
 
         size_t GetNetworkSize() const noexcept { return Neurons.size(); }
 
-        size_t GetVectorSize() const noexcept { return GetNetworkSize() + AppProperties::EyeSize; }
+        size_t GetVectorSize() const noexcept { return GetNetworkSize() + WorldProp::EyeSize; }
 
 		NeuronNetwork()
 		{
 		}
 
-        NeuronNetwork(int networkSize, Random& rnd)
-            : Eye(AppProperties::EyeSize)
+        NeuronNetwork(int networkSize)
+            : Eye(WorldProp::EyeSize)
             , Neurons(networkSize)
             , InputVector(GetVectorSize())
             , OutputVector(GetVectorSize())
         {
-            for (int i = 0; i < AppProperties::EyeSize; ++i)
+            for (int i = 0; i < WorldProp::EyeSize; ++i)
             {
                 int tripodIdx = i / 3;
                 LightSensorColor color = (LightSensorColor)((i % 3) + 1);
 
                 Eye[i] = LightSensor(
-                    (float)(AppProperties::EyeCellDirectionStep * tripodIdx),
-                    AppProperties::EyeCellWidth,
+                    (float)(WorldProp::EyeCellDirectionStep * tripodIdx),
+					WorldProp::EyeCellWidth,
                     color
                 );
             }
 
             for (int i = 0; i < networkSize; ++i)
             {
-                Neurons[i] = Neuron(AppProperties::EyeSize + networkSize, rnd);
+                Neurons[i] = Neuron<WorldProp>(WorldProp::EyeSize + networkSize);
             }
         }
 
@@ -181,7 +182,7 @@ namespace Neurolution
         {
             for (unsigned int j = 0; j < Neurons.size(); ++j)
             {
-                int neuronPositionInInputVector = j + AppProperties::EyeSize;
+                int neuronPositionInInputVector = j + WorldProp::EyeSize;
 
                 // 1st step - calculate updated charge values
                 auto& neuron = Neurons[j];
@@ -207,8 +208,7 @@ namespace Neurolution
                 }
 
                 // add some noise 
-                weightedInput += (float)((2.0 * rnd.NextDouble() - 1.0) * AppProperties::NetworkNoiseLevel);
-                //weightedInput += (float)(0.34* AppProperties.NetworkNoiseLevel);
+                weightedInput += (float)((2.0 * rnd.NextDouble() - 1.0) * WorldProp::NetworkNoiseLevel);
 
 
                 // 2nd step - update neuron state according to current state + new input
@@ -219,12 +219,12 @@ namespace Neurolution
                 case NeuronState::Idle:
 
                     neuron.Charge = ValueCap(
-                        neuron.Charge * AppProperties::NeuronChargeDecay + weightedInput,
-                        AppProperties::NeuronMinCharge,
-                        AppProperties::NeuronMaxCharge
+                        neuron.Charge * WorldProp::NeuronChargeDecay + weightedInput,
+						WorldProp::NeuronMinCharge,
+						WorldProp::NeuronMaxCharge
                     );
 
-                    if (neuron.Charge > AppProperties::NeuronChargeThreshold)
+                    if (neuron.Charge > WorldProp::NeuronChargeThreshold)
                     {
                         neuron.State = NeuronState::Excited0;
                         outputVector[j] = 1.0f;
@@ -275,7 +275,7 @@ namespace Neurolution
             std::fill(std::begin(OutputVector), std::end(OutputVector), 0.0f);
         }
 
-        void CloneFrom(const NeuronNetwork& other, Random& rnd, bool severeMutations = false, float severity = 0.0f) noexcept
+        void CloneFrom(const NeuronNetwork<WorldProp>& other, Random& rnd, bool severeMutations = false, float severity = 0.0f) noexcept
         {
             size_t newSize = other.Neurons.size();
 

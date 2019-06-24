@@ -21,14 +21,15 @@ namespace Neurolution
 		}
 	};
 
+	template <typename WorldProp>
     class CellView
     {
-        std::shared_ptr<Cell> _cell;
+        std::shared_ptr<Cell<WorldProp>> _cell;
 
 		Color _predatorColor{ 64, 64, 255 };
 	public:
 
-        CellView(std::shared_ptr<Cell>& c, Random& rnd)
+        CellView(std::shared_ptr<Cell<WorldProp>>& c, Random& rnd)
             : _cell(c)
         {
         }
@@ -36,8 +37,8 @@ namespace Neurolution
         void DrawNonPredator()
         {
             if (_cell->CurrentEnergy >= 0.0001f &&
-                _cell->LocationX >= 0.0 && _cell->LocationX < AppProperties::WorldWidth
-                && _cell->LocationY >= 0.0 && _cell->LocationY < AppProperties::WorldHeight)
+                _cell->LocationX >= 0.0 && _cell->LocationX < WorldProp::WorldWidth
+                && _cell->LocationY >= 0.0 && _cell->LocationY < WorldProp::WorldHeight)
             {
                 glPushMatrix();
 
@@ -49,7 +50,7 @@ namespace Neurolution
                 glBegin(GL_TRIANGLES);
 
                 float energy = _cell->CurrentEnergy;
-                float factor = (energy > AppProperties::SedatedAtEnergyLevel) ? 1.0f : energy / AppProperties::SedatedAtEnergyLevel;
+                float factor = (energy > WorldProp::SedatedAtEnergyLevel) ? 1.0f : energy / WorldProp::SedatedAtEnergyLevel;
 
                 glColor3f(1.0f - factor, factor, 0.0f);
 
