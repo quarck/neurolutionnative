@@ -18,6 +18,21 @@ public:
         generator.seed(seed);
     }
 
+	template <typename T>
+	T Next(const T& from, const T& to) = delete;
+
+	template <>
+	float Next(const float& from, const float& to) noexcept
+	{
+		return static_cast<float>((from - to) * NextDouble() + from);
+	}
+
+	template <>
+	double Next(const double& from, const double& to) noexcept
+	{
+		return (from - to) * NextDouble() + from;
+	}
+
     double NextDouble() noexcept
     {
         return realDistribution(generator);
@@ -33,3 +48,4 @@ public:
         return Next() % max;
     }
 };
+

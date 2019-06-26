@@ -15,10 +15,11 @@
 
 namespace Neurolution
 {
-	template <typename WorldProp>
+	template <typename WorldProp, typename TNumericType>
     struct Cell
     {
-        std::shared_ptr<NeuronNetwork<WorldProp>> Network;
+		using TNetwork = NeuronNetwork<WorldProp, TNumericType>;
+        std::shared_ptr<TNetwork> Network;
 
         static constexpr float TailLength = WorldProp::CellTailLength;
         static constexpr float EyeBase = WorldProp::CellEyeBase;
@@ -47,7 +48,7 @@ namespace Neurolution
             , LocationX(static_cast<float>(r.NextDouble()*maxX))
             , LocationY(static_cast<float>(r.NextDouble()*maxY))
             , Rotation((float)(r.NextDouble() * 2.0 * M_PI))
-            , Network(std::make_shared<NeuronNetwork<WorldProp>>(WorldProp::NetworkSize))
+            , Network(std::make_shared<TNetwork>(WorldProp::NetworkSize))
             , IsPredator(isPredator)
         {
         }

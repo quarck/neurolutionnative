@@ -17,13 +17,14 @@
 
 namespace Neurolution
 {
-	template <typename WorldProp>
+	template <typename WorldProp, typename TNetworkNumericType>
     class MainController
     {
 	public:
 		using TProp = WorldProp;
-		using TWorld = World<WorldProp>;
-		using TWorldView = WorldView<WorldProp>;
+		using TWorld = World<WorldProp, TNetworkNumericType>;
+		using TCell = Cell<WorldProp, TNetworkNumericType>;
+		using TWorldView = WorldView<WorldProp, TWorld, TCell>;
 
 	private:
 		RuntimeConfig& config;

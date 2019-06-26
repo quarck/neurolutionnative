@@ -58,12 +58,13 @@ namespace Neurolution
         Recovering1
     };
 
-	template <typename WorldProp>
+
+	template <typename WorldProp, typename TNumericType>
     struct Neuron
     {
-        std::vector<float> Weights;
+        std::vector<TNumericType> Weights;
 
-        float Charge;
+		TNumericType Charge;
 
         NeuronState State;
 
@@ -73,12 +74,12 @@ namespace Neurolution
         }
 
         Neuron(int size)
-            : Charge(0.0f)
+            : Charge(0)
             , State(NeuronState::Idle)
             , Weights(size)
         {
             for (int i = 0; i < size; ++i)
-                Weights[i] = 0.0f;
+                Weights[i] = 0;
         }
 
         Neuron(const Neuron& other, Random& rnd, bool severe)
@@ -88,14 +89,14 @@ namespace Neurolution
 
         void CloneFrom(const Neuron& other, Random& rnd, bool severe) noexcept
         {
-            Charge = 0.0f;
+            Charge = 0;
             State = NeuronState::Idle;
 
             size_t size = other.Weights.size();
 
             if (Weights.size() != size)
             {
-                std::vector<float>(size).swap(Weights);
+                std::vector<TNumericType>(size).swap(Weights);
             }
 
             if (!severe)
@@ -103,14 +104,14 @@ namespace Neurolution
                 float maxMutation = WorldProp::NetworkMaxRegularMutation;
 
                 for (int i = 0; i < size; ++i)
-                    Weights[i] = (float)(other.Weights[i] + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
+                    Weights[i] = TNumericType((float)(other.Weights[i]) + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
             }
             else
             {
                 float alpha = WorldProp::NetworkSevereMutationAlpha;
 
                 for (int i = 0; i < size; ++i)
-                    Weights[i] = (float)(other.Weights[i] * alpha + (2.0 * rnd.NextDouble() - 1.0) * (1.0 - alpha));
+                    Weights[i] = TNumericType((float)(other.Weights[i]) * alpha + (2.0 * rnd.NextDouble() - 1.0) * (1.0 - alpha));
             }
         }
 
@@ -135,16 +136,19 @@ namespace Neurolution
 
     };
 
-	template <typename WorldProp>
+	template <typename WorldProp, typename TNumericType>
     struct NeuronNetwork
     {
-        std::vector<Neuron<WorldProp>> Neurons;
+		using TNeuron = Neuron<WorldProp, TNumericType>;
+		using ThisType = NeuronNetwork<WorldProp, TNumericType>;
+
+        std::vector<TNeuron> Neurons;
 
         std::vector<LightSensor> Eye;
 
-        std::vector<float> InputVector;
+        std::vector<TNumericType> InputVector;
 
-        std::vector<float> OutputVector;
+        std::vector<TNumericType> OutputVector;
 
         size_t GetNetworkSize() const noexcept { return Neurons.size(); }
 
@@ -174,11 +178,14 @@ namespace Neurolution
 
             for (int i = 0; i < networkSize; ++i)
             {
-                Neurons[i] = Neuron<WorldProp>(WorldProp::EyeSize + networkSize);
+                Neurons[i] = TNeuron(WorldProp::EyeSize + networkSize);
             }
         }
 
-        void IterateNetwork(Random& rnd, std::vector<float>& inputVector, std::vector<float>& outputVector) noexcept
+        void IterateNetwork(
+			Random& rnd, 
+			std::vector<TNumericType>& inputVector,
+			std::vector<TNumericType>& outputVector) noexcept
         {
             for (unsigned int j = 0; j < Neurons.size(); ++j)
             {
@@ -187,7 +194,7 @@ namespace Neurolution
                 // 1st step - calculate updated charge values
                 auto& neuron = Neurons[j];
 
-                float weightedInput = -neuron.Weights[neuronPositionInInputVector] * inputVector[neuronPositionInInputVector];
+				TNumericType weightedInput = -neuron.Weights[neuronPositionInInputVector] * inputVector[neuronPositionInInputVector];
 
                 for (unsigned int i = 0; i < neuron.Weights.size() / 8; i += 8)
                 {
@@ -207,8 +214,11 @@ namespace Neurolution
                         neuron.Weights[i + 0] * inputVector[i + 0];
                 }
 
-                // add some noise 
-                weightedInput += (float)((2.0 * rnd.NextDouble() - 1.0) * WorldProp::NetworkNoiseLevel);
+				if constexpr (WorldProp::ApplyNetworkNoise)
+				{
+					// add some noise 
+					weightedInput += rnd.Next<TNumericType>(-WorldProp::NetworkNoiseLevel, WorldProp::NetworkNoiseLevel);
+				}
 
 
                 // 2nd step - update neuron state according to current state + new input
@@ -227,7 +237,15 @@ namespace Neurolution
                     if (neuron.Charge > WorldProp::NeuronChargeThreshold)
                     {
                         neuron.State = NeuronState::Excited0;
-                        outputVector[j] = 1.0f;
+
+						if constexpr (WorldProp::ApplyNetworkSpikeNoise)
+						{
+							outputVector[j] = 1.0f + rnd.Next<TNumericType>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
+						}
+						else
+						{
+							outputVector[j] = 1.0f;
+						}
                     }
                     else
                     {
@@ -237,8 +255,16 @@ namespace Neurolution
 
                 case NeuronState::Excited0:
                     neuron.State = NeuronState::Excited1;
-                    outputVector[j] = 1.0f;
-                    break;
+
+					if constexpr (WorldProp::ApplyNetworkSpikeNoise)
+					{
+						outputVector[j] = 1.0f + rnd.Next<TNumericType>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
+					}
+					else
+					{
+						outputVector[j] = 1.0f;
+					}
+					break;
 
                 case NeuronState::Excited1:
                     neuron.State = NeuronState::Recovering0;
@@ -275,7 +301,8 @@ namespace Neurolution
             std::fill(std::begin(OutputVector), std::end(OutputVector), 0.0f);
         }
 
-        void CloneFrom(const NeuronNetwork<WorldProp>& other, Random& rnd, bool severeMutations = false, float severity = 0.0f) noexcept
+        void CloneFrom(const ThisType& other, Random& rnd, bool severeMutations = false,
+			float severity = 0.0f) noexcept
         {
             size_t newSize = other.Neurons.size();
 

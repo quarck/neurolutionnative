@@ -21,15 +21,15 @@ namespace Neurolution
 		}
 	};
 
-	template <typename WorldProp>
+	template <typename WorldProp, typename TCell>
     class CellView
     {
-        std::shared_ptr<Cell<WorldProp>> _cell;
+        std::shared_ptr<TCell> _cell;
 
 		Color _predatorColor{ 64, 64, 255 };
 	public:
 
-        CellView(std::shared_ptr<Cell<WorldProp>>& c, Random& rnd)
+        CellView(std::shared_ptr<TCell>& c, Random& rnd)
             : _cell(c)
         {
         }
