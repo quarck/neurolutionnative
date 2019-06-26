@@ -162,6 +162,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="FixedPoint.h" />
     <ClInclude Include="glText.h" />
     <ClInclude Include="Neurolution\Population.h" />
     <ClInclude Include="Neurolution\RuntimeConfig.h" />

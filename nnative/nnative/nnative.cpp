@@ -18,6 +18,8 @@
 #include "Neurolution/WorldView.h"
 #include "Neurolution/MainController.h"
 
+#include "FixedPoint.h"
+
 #define MAX_LOADSTRING 100
 
 using TMainController = Neurolution::MainController<Neurolution::AppProperties0, float>;

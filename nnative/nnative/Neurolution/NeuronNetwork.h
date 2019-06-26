@@ -104,7 +104,7 @@ namespace Neurolution
                 float maxMutation = WorldProp::NetworkMaxRegularMutation;
 
                 for (int i = 0; i < size; ++i)
-                    Weights[i] = TNumericType((float)(other.Weights[i]) + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
+                    Weights[i] = TNumericType(static_cast<float>(other.Weights[i]) + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
             }
             else
             {
@@ -229,12 +229,12 @@ namespace Neurolution
                 case NeuronState::Idle:
 
                     neuron.Charge = ValueCap(
-                        neuron.Charge * WorldProp::NeuronChargeDecay + weightedInput,
-						WorldProp::NeuronMinCharge,
-						WorldProp::NeuronMaxCharge
+                        neuron.Charge * TNumericType(WorldProp::NeuronChargeDecay) + weightedInput,
+						TNumericType(WorldProp::NeuronMinCharge),
+						TNumericType(WorldProp::NeuronMaxCharge)
                     );
 
-                    if (neuron.Charge > WorldProp::NeuronChargeThreshold)
+                    if (neuron.Charge > TNumericType(WorldProp::NeuronChargeThreshold))
                     {
                         neuron.State = NeuronState::Excited0;
 

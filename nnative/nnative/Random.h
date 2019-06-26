@@ -19,7 +19,10 @@ public:
     }
 
 	template <typename T>
-	T Next(const T& from, const T& to) = delete;
+	T Next(const T& from, const T& to)
+	{
+		return static_cast<T>(static_cast<double>(from - to) * NextDouble() + static_cast<double>(from));
+	}
 
 	template <>
 	float Next(const float& from, const float& to) noexcept
