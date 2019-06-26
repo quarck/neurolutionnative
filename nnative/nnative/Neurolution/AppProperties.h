@@ -10,6 +10,9 @@ namespace Neurolution
     class AppProperties0
     {
     public:
+
+		static constexpr bool ManualLoopUnroll = true;
+
         static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg
         static constexpr int EyeSize = EyeSizeNumTripods * 3; // total number of light-sensing cells 
 

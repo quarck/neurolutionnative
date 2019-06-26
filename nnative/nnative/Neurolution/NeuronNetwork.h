@@ -196,23 +196,34 @@ namespace Neurolution
 
 				TNumericType weightedInput = -neuron.Weights[neuronPositionInInputVector] * inputVector[neuronPositionInInputVector];
 
-                for (unsigned int i = 0; i < neuron.Weights.size() / 8; i += 8)
-                {
-                    weightedInput +=
-                        neuron.Weights[i + 0] * inputVector[i + 0] +
-                        neuron.Weights[i + 1] * inputVector[i + 1] +
-                        neuron.Weights[i + 2] * inputVector[i + 2] +
-                        neuron.Weights[i + 3] * inputVector[i + 3] +
-                        neuron.Weights[i + 4] * inputVector[i + 4] +
-                        neuron.Weights[i + 5] * inputVector[i + 5] +
-                        neuron.Weights[i + 6] * inputVector[i + 6] +
-                        neuron.Weights[i + 7] * inputVector[i + 7];
-                }
-                for (unsigned int i = 0; i < (neuron.Weights.size() & 7); ++i)
-                {
-                    weightedInput +=
-                        neuron.Weights[i + 0] * inputVector[i + 0];
-                }
+				if constexpr (WorldProp::ManualLoopUnroll)
+				{
+					for (unsigned int i = 0; i < neuron.Weights.size() / 8; i += 8)
+					{
+						weightedInput +=
+							neuron.Weights[i + 0] * inputVector[i + 0] +
+							neuron.Weights[i + 1] * inputVector[i + 1] +
+							neuron.Weights[i + 2] * inputVector[i + 2] +
+							neuron.Weights[i + 3] * inputVector[i + 3] +
+							neuron.Weights[i + 4] * inputVector[i + 4] +
+							neuron.Weights[i + 5] * inputVector[i + 5] +
+							neuron.Weights[i + 6] * inputVector[i + 6] +
+							neuron.Weights[i + 7] * inputVector[i + 7];
+					}
+					for (unsigned int i = 0; i < (neuron.Weights.size() & 7); ++i)
+					{
+						weightedInput +=
+							neuron.Weights[i + 0] * inputVector[i + 0];
+					}
+				}
+				else
+				{
+					int sz = neuron.Weights.size();
+					for (unsigned int i = 0; i < sz; ++i)
+					{
+						weightedInput += neuron.Weights[i] * inputVector[i];
+					}
+				}
 
 				if constexpr (WorldProp::ApplyNetworkNoise)
 				{
