@@ -482,10 +482,10 @@ namespace Neurolution
 
             // Calculate light sensor values 
 
-            float offsX = _maxX * 1.5f - cell->LocationX;
+            /*float offsX = _maxX * 1.5f - cell->LocationX;
             float offsY = _maxY * 1.5f - cell->LocationY;
             float halfMaxX = _maxX / 2.0f;
-            float halfMaxY = _maxY / 2.0f;
+            float halfMaxY = _maxY / 2.0f;*/
 
 
             // Calculate light sensor values 
@@ -493,30 +493,75 @@ namespace Neurolution
             {
                 auto& item = _foods[idx];
 
-                float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
-                float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				float dx = item.LocationX - cell->LocationX;
+				float dy = item.LocationY - cell->LocationY;
+
+                //float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+                //float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
 
                 foodDirections[idx].Set(dx, dy);
             }
 
-            for (int idx = 0; idx < _predators.size(); ++idx)
+            for (int idx = 0; idx < _predators.size(); idx += 4)
             {
-                auto& item = _predators[idx];
+				auto& item0 = _predators[idx + 0];
+				auto& item1 = _predators[idx + 1];
+				auto& item2 = _predators[idx + 2];
+				auto& item3 = _predators[idx + 3];
 
-                float dx = LoopValue(item->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
-                float dy = LoopValue(item->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				float dx0 = item0->LocationX - cell->LocationX;
+				float dy0 = item0->LocationY - cell->LocationY;
+				float dx1 = item1->LocationX - cell->LocationX;
+				float dy1 = item1->LocationY - cell->LocationY;
+				float dx2 = item2->LocationX - cell->LocationX;
+				float dy2 = item2->LocationY - cell->LocationY;
+				float dx3 = item3->LocationX - cell->LocationX;
+				float dy3 = item3->LocationY - cell->LocationY;
 
-                predatorDirections[idx].Set(dx, dy);
+    //            float dx0 = LoopValue(item0->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+    //            float dy0 = LoopValue(item0->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+    //            float dx1 = LoopValue(item1->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+    //            float dy1 = LoopValue(item1->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				//float dx2 = LoopValue(item2->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				//float dy2 = LoopValue(item2->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				//float dx3 = LoopValue(item3->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				//float dy3 = LoopValue(item3->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+
+                predatorDirections[idx + 0].Set(dx0, dy0);
+				predatorDirections[idx + 1].Set(dx1, dy1);
+				predatorDirections[idx + 2].Set(dx2, dy2);
+				predatorDirections[idx + 3].Set(dx3, dy3);
             }
 
-            for (int idx = 0; idx < _cells.size(); ++idx)
+            for (int idx = 0; idx < _cells.size(); idx += 4)
             {
-                auto& item = _cells[idx];
+                auto& item0 = _cells[idx + 0];
+				auto& item1 = _cells[idx + 1];
+				auto& item2 = _cells[idx + 2];
+				auto& item3 = _cells[idx + 3];
 
-                float dx = LoopValue(item->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
-                float dy = LoopValue(item->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				float dx0 = item0->LocationX - cell->LocationX;
+				float dy0 = item0->LocationY - cell->LocationY;
+				float dx1 = item1->LocationX - cell->LocationX;
+				float dy1 = item1->LocationY - cell->LocationY;
+				float dx2 = item2->LocationX - cell->LocationX;
+				float dy2 = item2->LocationY - cell->LocationY;
+				float dx3 = item3->LocationX - cell->LocationX;
+				float dy3 = item3->LocationY - cell->LocationY;
 
-                cellDirections[idx].Set(dx, dy);
+				//float dx0 = LoopValue(item0->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				//float dy0 = LoopValue(item0->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				//float dx1 = LoopValue(item1->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				//float dy1 = LoopValue(item1->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				//float dx2 = LoopValue(item2->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				//float dy2 = LoopValue(item2->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+				//float dx3 = LoopValue(item3->LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+				//float dy3 = LoopValue(item3->LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+
+                cellDirections[idx + 0].Set(dx0, dy0);
+				cellDirections[idx + 1].Set(dx1, dy1);
+				cellDirections[idx + 2].Set(dx2, dy2);
+				cellDirections[idx + 3].Set(dx3, dy3);
             }
 
             auto& eye = cell->GetEye();
@@ -547,6 +592,9 @@ namespace Neurolution
                             continue;
 
                         auto& food = foodDirections[idx];
+
+						if (food.DistanceSquare > WorldProp::MaxDistanceSquareVisibility)
+							continue;
 
                         float modulo = viewDirectionX * food.OrientationX + viewDirectionY * food.OrientationY;
 
@@ -580,6 +628,9 @@ namespace Neurolution
 
                         if (cellItem->CurrentEnergy < 0.01f)
                             continue;
+
+						if (cellDirection.DistanceSquare > WorldProp::MaxDistanceSquareVisibility)
+							continue;
 
                         if (cellItem == cell)
                             continue;
@@ -615,6 +666,9 @@ namespace Neurolution
                         auto& predator = predatorDirections[idx];
                         auto& predatorItem = _predators[idx];
 
+						if (predator.DistanceSquare > WorldProp::MaxDistanceSquareVisibility)
+							continue;
+
                         if (predatorItem->CurrentEnergy < 0.01f)
                             continue;
 
@@ -641,7 +695,12 @@ namespace Neurolution
                     cell->Network->InputVector[3 * tripodIdx + 2] = 20000 * value;
                 }
             }
-        }
+
+			cell->Network->InputVector[WorldProp::CurrentEnergyLevelSensor] = cell->CurrentEnergy;
+			cell->Network->InputVector[WorldProp::OrientationXSensor] = TNetworkNumericType(std::cos(cell->Rotation));
+			cell->Network->InputVector[WorldProp::OrientationYSensor] = TNetworkNumericType(std::sin(cell->Rotation));
+			cell->Network->InputVector[WorldProp::AbsoluteVelocitySensor] = 0.0; // Currently not calculating velocities 
+		}
 
         void IterateCellThinkingAndMoving(int threadIdx, long step, std::shared_ptr<TCell>& cell) noexcept
         {

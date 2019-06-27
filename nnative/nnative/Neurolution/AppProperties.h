@@ -16,8 +16,16 @@ namespace Neurolution
         static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg
         static constexpr int EyeSize = EyeSizeNumTripods * 3; // total number of light-sensing cells 
 
-        static constexpr float EyeCellWidth = 0.1f;
-        static constexpr float EyeCellDirectionStep = (float)(M_PI / EyeSize);
+		static constexpr float EyeCellWidth = 0.1f;
+		static constexpr float EyeCellDirectionStep = (float)(M_PI / EyeSize);
+
+		static constexpr int CurrentEnergyLevelSensor = EyeSize + 0;
+		static constexpr int OrientationXSensor = EyeSize + 1;
+		static constexpr int OrientationYSensor = EyeSize + 2;
+		static constexpr int AbsoluteVelocitySensor = EyeSize + 3;
+
+		static constexpr int SensorPackSize = AbsoluteVelocitySensor + 1;
+
 
         static constexpr int StepsPerGeneration = 1024;
         static constexpr int StepsPerBirthCheck = 1024;
@@ -28,12 +36,12 @@ namespace Neurolution
         static constexpr int FoodCountPerIteration = 24;
         static constexpr int PredatorCountPerIteration = 16;
 
-        static constexpr int NetworkMoveForceGentleLeft = EyeSize + 0;
-        static constexpr int NetworkMoveForceGentleRight = EyeSize + 1;
-        static constexpr int NetworkMoveForceNormalLeft = EyeSize + 2;
-        static constexpr int NetworkMoveForceNormalRight = EyeSize + 3;
-        static constexpr int NetworkMoveForceStrongLeft = EyeSize + 4;
-        static constexpr int NetworkMoveForceStrongRight = EyeSize + 5;
+        static constexpr int NetworkMoveForceGentleLeft = SensorPackSize + 0;
+        static constexpr int NetworkMoveForceGentleRight = SensorPackSize + 1;
+        static constexpr int NetworkMoveForceNormalLeft = SensorPackSize + 2;
+        static constexpr int NetworkMoveForceNormalRight = SensorPackSize + 3;
+        static constexpr int NetworkMoveForceStrongLeft = SensorPackSize + 4;
+        static constexpr int NetworkMoveForceStrongRight = SensorPackSize + 5;
 
 
         static constexpr float NetworkMaxRegularMutation = 0.03f;
@@ -53,6 +61,8 @@ namespace Neurolution
 
         static constexpr int WorldWidth = 1500;
         static constexpr int WorldHeight = 1500;
+
+		static constexpr int MaxDistanceSquareVisibility = (WorldWidth / 3) * (WorldWidth / 3) + (WorldHeight / 3) * (WorldHeight / 3);
 
         static constexpr float SevereMutationFactor = 0.15f;
         static constexpr float SevereMutationSlope = 0.33f;

@@ -54,18 +54,19 @@ namespace Neurolution
 
                 glColor3f(1.0f - factor, factor, 0.0f);
 
+				constexpr float scale = 1;
 
-                glIndexi(1); glVertex2f(0.0f, 15.0f);
-                glIndexi(2); glVertex2f(4.5f, 0.0f);
-                glIndexi(3); glVertex2f(-4.5f, 0.0f);
+                glIndexi(1); glVertex2f(0.0f, 15.0f * scale);
+                glIndexi(2); glVertex2f(4.5f * scale, 0.0f);
+                glIndexi(3); glVertex2f(-4.5f * scale, 0.0f);
 
                 glIndexi(4); glVertex2f(0.0f, 0.0f);
-                glIndexi(5); glVertex2f(4.5f, 0.0f);
-                glIndexi(6); glVertex2f(6.0f, -5.0f);
+                glIndexi(5); glVertex2f(4.5f * scale, 0.0f);
+                glIndexi(6); glVertex2f(6.0f * scale, -5.0f * scale);
 
                 glIndexi(7); glVertex2f(0.0f, 0.0f);
-                glIndexi(8); glVertex2f(-4.5f, 0.0f);
-                glIndexi(9); glVertex2f(-6.0f, -5.0f);
+                glIndexi(8); glVertex2f(-4.5f * scale, 0.0f);
+                glIndexi(9); glVertex2f(-6.0f * scale, -5.0f * scale);
 
                 glEnd();
 
@@ -91,23 +92,25 @@ namespace Neurolution
 
 			glBegin(GL_TRIANGLES);
 
+			constexpr float scale = 1;
+
 			int idx = 0;
-			glIndexi(++idx); glVertex3f(0.0f, 2.5f * halfdiameter, 0.0f);
-			glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
-			glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, 2.5f * halfdiameter * scale, 0.0f);
+			glIndexi(++idx); glVertex3f(halfdiameter / 4.0f * scale, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f * scale, 0.0f, 0.0f);
 
-			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter, 0.0f);
-			glIndexi(++idx); glVertex3f(halfdiameter / 4.0f, 0.0f, 0.0f);
-			glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter * scale, 0.0f);
+			glIndexi(++idx); glVertex3f(halfdiameter / 4.0f * scale, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(-halfdiameter / 4.0f * scale, 0.0f, 0.0f);
 
 
-			glIndexi(++idx); glVertex3f(halfdiameter, 0.0f, 0.0f);
-			glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
-			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(halfdiameter * scale, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f * scale, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f * scale, 0.0f);
 
-			glIndexi(++idx); glVertex3f(-halfdiameter, 0.0f, 0.0f);
-			glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f, 0.0f);
-			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(-halfdiameter * scale, 0.0f, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f * scale, 0.0f);
+			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f * scale, 0.0f);
 
 			glEnd();
 

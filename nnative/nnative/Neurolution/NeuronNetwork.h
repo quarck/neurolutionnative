@@ -152,7 +152,7 @@ namespace Neurolution
 
         size_t GetNetworkSize() const noexcept { return Neurons.size(); }
 
-        size_t GetVectorSize() const noexcept { return GetNetworkSize() + WorldProp::EyeSize; }
+        size_t GetVectorSize() const noexcept { return GetNetworkSize() + WorldProp::SensorPackSize; }
 
 		NeuronNetwork()
 		{
@@ -178,7 +178,7 @@ namespace Neurolution
 
             for (int i = 0; i < networkSize; ++i)
             {
-                Neurons[i] = TNeuron(WorldProp::EyeSize + networkSize);
+                Neurons[i] = TNeuron(WorldProp::SensorPackSize + networkSize);
             }
         }
 
@@ -189,7 +189,7 @@ namespace Neurolution
         {
             for (unsigned int j = 0; j < Neurons.size(); ++j)
             {
-                int neuronPositionInInputVector = j + WorldProp::EyeSize;
+                int neuronPositionInInputVector = j + WorldProp::SensorPackSize;
 
                 // 1st step - calculate updated charge values
                 auto& neuron = Neurons[j];
