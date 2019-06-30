@@ -27,8 +27,8 @@ namespace Neurolution
 		static constexpr int SensorPackSize = AbsoluteVelocitySensor + 1;
 
 
-        static constexpr int StepsPerGeneration = 1024;
-        static constexpr int StepsPerBirthCheck = 1024;
+        static constexpr int StepsPerGeneration = 2048;
+        static constexpr int StepsPerBirthCheck = 2048;
 
         static constexpr int NetworkSize = 512;
 
