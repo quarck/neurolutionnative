@@ -33,7 +33,7 @@ namespace Neurolution
         static constexpr int NetworkSize = 512;
 
         static constexpr int WorldSize = 128;
-        static constexpr int FoodCountPerIteration = 24;
+        static constexpr int FoodCountPerIteration = 48;
         static constexpr int PredatorCountPerIteration = 16;
 
         static constexpr int NetworkMoveForceGentleLeft = SensorPackSize + 0;
@@ -74,6 +74,8 @@ namespace Neurolution
 
         static constexpr float MaxEnergyCapacity = 144.0f;
         static constexpr float SedatedAtEnergyLevel = 2.0f;
+
+		static constexpr float PredatorsOvereatEnergy = 100.0f;
 
         static constexpr float BirthEnergyConsumption = 2.0f;
         static constexpr float PredatorBirthEnergyConsumption = 8.0f;

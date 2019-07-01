@@ -489,18 +489,24 @@ namespace Neurolution
 
 
             // Calculate light sensor values 
-            for (int idx = 0; idx < _foods.AliveSize(); ++idx)
-            {
-                auto& item = _foods[idx];
 
-				float dx = item.LocationX - cell->LocationX;
-				float dy = item.LocationY - cell->LocationY;
+			// a bit of evolution force -- don't let predators see prey's food, so they don't 
+			// cheat by waiting at the food points 
+			if (!cell->IsPredator)
+			{
+				for (int idx = 0; idx < _foods.AliveSize(); ++idx)
+				{
+					auto& item = _foods[idx];
 
-                //float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
-                //float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+					float dx = item.LocationX - cell->LocationX;
+					float dy = item.LocationY - cell->LocationY;
 
-                foodDirections[idx].Set(dx, dy);
-            }
+					//float dx = LoopValue(item.LocationX + offsX, 0.0f, (float)_maxX) - halfMaxX;
+					//float dy = LoopValue(item.LocationY + offsY, 0.0f, (float)_maxY) - halfMaxY;
+
+					foodDirections[idx].Set(dx, dy);
+				}
+			}
 
             for (int idx = 0; idx < _predators.size(); idx += 4)
             {
@@ -581,7 +587,8 @@ namespace Neurolution
                 float viewDirectionY = (float)std::sin(viewDirection);
 
                 // RED 
-                {
+                if (!cell->IsPredator)  // same as above about predators seeing prey's foods 
+				{
                     float value = 0.0f;
 
                     // This cell can see foods only
@@ -725,6 +732,11 @@ namespace Neurolution
             if (cell->IsPredator)
             {
                 forwardForce *= 0.94f; // a bit slow and heavy
+
+				if (cell->CurrentEnergy > WorldProp::PredatorsOvereatEnergy)
+				{
+					forwardForce *= 0.33f;
+				}
             }
             else if (!cell->IsPredator && cell->CurrentEnergy < WorldProp::SedatedAtEnergyLevel)
             {

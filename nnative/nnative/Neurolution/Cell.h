@@ -33,7 +33,12 @@ namespace Neurolution
         float MoveForceLeft{ 0.0f };
         float MoveForceRight{ 0.0f };
 
-        int ClonedFrom = -1;
+		// a big of an ugly hack - used by the view to display the total movement since the last scene 
+		// update
+		float TotalMoveForceLeft{ 0.0f };
+		float TotalMoveForceRight{ 0.0f };
+
+		int ClonedFrom = -1;
 
         float CurrentEnergy = 0.0f;
 
@@ -74,6 +79,9 @@ namespace Neurolution
                 0.3f * Network->OutputVector[WorldProp::NetworkMoveForceGentleRight] +
                 1.0f * Network->OutputVector[WorldProp::NetworkMoveForceNormalRight] +
                 1.7f * Network->OutputVector[WorldProp::NetworkMoveForceStrongRight];
+
+			TotalMoveForceLeft += MoveForceLeft;
+			TotalMoveForceRight += MoveForceRight;
 
             Age++;
         }
