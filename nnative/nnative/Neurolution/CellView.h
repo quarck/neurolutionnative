@@ -71,12 +71,12 @@ namespace Neurolution
 				glColor3f(1.0f, 0.9f, 0.5f);
 
 				glIndexi(10); glVertex2f(-5.0f * scale, -4.0f * scale);
-				glIndexi(11); glVertex2f(-(9 + 0.1 * _cell->TotalMoveForceLeft) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceLeft) * scale);
-				glIndexi(12); glVertex2f(-5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceLeft) * scale);
+				glIndexi(11); glVertex2f((9 + 0.1 * _cell->TotalMoveForceLeft) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceLeft) * scale);
+				glIndexi(12); glVertex2f(5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceLeft) * scale);
 
 				glIndexi(13); glVertex2f(5.0f * scale, -4.0f * scale);
-				glIndexi(14); glVertex2f((9 + 0.1 * _cell->TotalMoveForceRight) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceRight) * scale);
-				glIndexi(15); glVertex2f(5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceRight) * scale);
+				glIndexi(14); glVertex2f(-(9 + 0.1 * _cell->TotalMoveForceRight) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceRight) * scale);
+				glIndexi(15); glVertex2f(-5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceRight) * scale);
 
 				_cell->TotalMoveForceLeft = 0.0f;
 				_cell->TotalMoveForceRight = 0.0f;
@@ -128,12 +128,12 @@ namespace Neurolution
 			glColor3f(1.0f, 0.9f, 0.5f);
 
 			glIndexi(++idx); glVertex2f(-6.0f * scale, -4.0f * scale);
-			glIndexi(++idx); glVertex2f(-(9 + 0.1* _cell->TotalMoveForceLeft) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceLeft) * scale);
-			glIndexi(++idx); glVertex2f(-5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceLeft) * scale);
+			glIndexi(++idx); glVertex2f((9 + 0.1* _cell->TotalMoveForceLeft) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceLeft) * scale);
+			glIndexi(++idx); glVertex2f(5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceLeft) * scale);
 
 			glIndexi(++idx); glVertex2f(6.0f * scale, -4.0f * scale);
-			glIndexi(++idx); glVertex2f((9 + 0.1 * _cell->TotalMoveForceRight) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceRight) * scale);
-			glIndexi(++idx); glVertex2f(5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceRight) * scale);
+			glIndexi(++idx); glVertex2f(-(9 + 0.1 * _cell->TotalMoveForceRight) * scale, -(5.0f + 1.0f * _cell->TotalMoveForceRight) * scale);
+			glIndexi(++idx); glVertex2f(-5 * scale, -(5.0f + 2.0f * _cell->TotalMoveForceRight) * scale);
 
 			_cell->TotalMoveForceLeft = 0.0f;
 			_cell->TotalMoveForceRight = 0.0f;
