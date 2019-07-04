@@ -20,11 +20,19 @@
 
 #include "FixedPoint.h"
 
+#include "BmpLogger.h"
+
 #define MAX_LOADSTRING 100
 
 using TMainController = Neurolution::MainController<Neurolution::AppProperties0, float>;
 
 std::unique_ptr<TMainController> controller;
+
+#if 1
+std::shared_ptr<IImageLogger> imageLogger = std::make_shared<BmpLogger>("i:\\tmp\\pix");
+#else 
+std::shared_ptr<IImageLogger> imageLogger;
+#endif
 
 void Init()
 {
@@ -34,6 +42,8 @@ void Init()
 
 void Reshape(int width, int height)
 {
+	if (imageLogger)
+		imageLogger->onViewportResize(width, height);
     glViewport(0, 0, width, height);
     //glMatrixMode(GL_PROJECTION);
     //glLoadIdentity();
@@ -86,7 +96,7 @@ LRESULT WINAPI WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
         //glViewport(0, 0, LOWORD(lParam), HIWORD(lParam));
         //PostMessage(hWnd, WM_PAINT, 0, 0);
-        Reshape(LOWORD(lParam), HIWORD(lParam));
+		Reshape(LOWORD(lParam), HIWORD(lParam));
         PostMessage(hWnd, WM_PAINT, 0, 0);
         return 0;
 
@@ -339,6 +349,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
     UpdateWindow(controller->GetHWND());
 
     Init();
+
+	controller->SetImageLogger(imageLogger);
 
     controller->Start();
 

@@ -69,12 +69,21 @@
     <ClInclude Include="FixedPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IImageLogger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BmpLogger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nnative.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BmpLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

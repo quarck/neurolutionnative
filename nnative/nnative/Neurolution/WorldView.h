@@ -51,7 +51,7 @@ namespace Neurolution
 			LABELS_BACKGROUND,
 			{
 				std::pair(RUGA_KOLORO, "<S> - Save,  <L> - Load" /*", <R> - Reset" */),
-//				std::pair(RUGA_KOLORO, "<F> - (Un)Freeze _predators, <B> - Brainwash predators"),
+				std::pair(RUGA_KOLORO, "<T> - toggle recording"),
 				//std::pair(RUGA_KOLORO, "<G> - Recover hamsters"),
 				std::pair(RUGA_KOLORO, "<?> - help ON/OFF, <SPACE> - (un)pause, <esc> - quit"),
 			}

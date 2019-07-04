@@ -68,20 +68,18 @@ namespace Neurolution
                 glIndexi(8); glVertex2f(-4.5f * scale, 0.0f);
                 glIndexi(9); glVertex2f(-6.0f * scale, -5.0f * scale);
 
-				glColor3f(1.0f, 0.9f, 0.5f);
+				glColor3f(0.5f, 0.24f, 0.24f);
 
-				auto l = _cell->TotalMoveForceLeft;
-				l = l > 30 ? 30 : l;
-				auto r = _cell->TotalMoveForceRight;
-				r = r > 30 ? 30 : r;
+				auto l = fMin(_cell->TotalMoveForceLeft, 30.0f);
+				auto r = fMin(_cell->TotalMoveForceRight, 30.0f);
 
 				glIndexi(10); glVertex2f(5.0f * scale, -6.0f * scale);
-				glIndexi(11); glVertex2f((9) * scale, -(7.0f + 1.0f * l) * scale);
-				glIndexi(12); glVertex2f(5 * scale, -(7.0f + 1.0f * l) * scale);
+				glIndexi(11); glVertex2f(8 * scale, -(7.0f + 0.5f * l) * scale);
+				glIndexi(12); glVertex2f(6 * scale, -(7.0f + 0.5f * l) * scale);
 
 				glIndexi(13); glVertex2f(-5.0f * scale, -6.0f * scale);
-				glIndexi(14); glVertex2f(-(9) * scale, -(7.0f + 1.0f * r) * scale);
-				glIndexi(15); glVertex2f(-5 * scale, -(7.0f + 1.0f * r) * scale);
+				glIndexi(14); glVertex2f(-8 * scale, -(7.0f + 0.5f * r) * scale);
+				glIndexi(15); glVertex2f(-6 * scale, -(7.0f + 0.5f * r) * scale);
 
 				_cell->TotalMoveForceLeft = 0.0f;
 				_cell->TotalMoveForceRight = 0.0f;
@@ -91,6 +89,11 @@ namespace Neurolution
                 glPopMatrix();
             }
         }
+
+		static float fMin(float a, float b)
+		{
+			return a > b ? b : a;
+		}
 
 		void DrawPredator()
 		{
@@ -130,20 +133,18 @@ namespace Neurolution
 			glIndexi(++idx); glVertex3f(0.0f, halfdiameter / 4.0f * scale, 0.0f);
 			glIndexi(++idx); glVertex3f(0.0f, -halfdiameter / 4.0f * scale, 0.0f);
 
-			glColor3f(1.0f, 0.9f, 0.5f);
+			glColor3f(0.5f, 0.24f, 0.24f);
 
-			auto l = _cell->TotalMoveForceLeft;
-			l = l > 30 ? 30 : l;
-			auto r = _cell->TotalMoveForceRight;
-			r = r > 30 ? 30 : r;
+			auto l = fMin(_cell->TotalMoveForceLeft, 30.0f);
+			auto r = fMin(_cell->TotalMoveForceRight, 30.0f);
 
 			glIndexi(++idx); glVertex2f(6.0f * scale, -4.0f * scale);
-			glIndexi(++idx); glVertex2f((9) * scale, -(7.0f + 1.0f * l) * scale);
-			glIndexi(++idx); glVertex2f(5 * scale, -(7.0f + 1.0f * l) * scale);
+			glIndexi(++idx); glVertex2f(8 * scale, -(7.0f + 0.5f * l) * scale);
+			glIndexi(++idx); glVertex2f(6 * scale, -(7.0f + 0.5f * l) * scale);
 
 			glIndexi(++idx); glVertex2f(-6.0f * scale, -4.0f * scale);
-			glIndexi(++idx); glVertex2f(-(9) * scale, -(7.0f + 1.0f * r) * scale);
-			glIndexi(++idx); glVertex2f(-5 * scale, -(7.0f + 1.0f * r) * scale);
+			glIndexi(++idx); glVertex2f(-8 * scale, -(7.0f + 0.5f * r) * scale);
+			glIndexi(++idx); glVertex2f(-6 * scale, -(7.0f + 0.5f * r) * scale);
 
 			_cell->TotalMoveForceLeft = 0.0f;
 			_cell->TotalMoveForceRight = 0.0f;

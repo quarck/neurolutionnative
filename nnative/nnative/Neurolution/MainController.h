@@ -14,6 +14,7 @@
 #include "World.h"
 #include "WorldView.h"
 #include "RuntimeConfig.h"
+#include "../IImageLogger.h"
 
 namespace Neurolution
 {
@@ -37,6 +38,8 @@ namespace Neurolution
 
 		WorldViewDetails viewDetails;
 
+		std::shared_ptr<IImageLogger> _imageLogger;
+
 		//int iterationPerSeconds{ 0 };
 		//long currentStep{ 0 };
 
@@ -46,6 +49,8 @@ namespace Neurolution
 
         std::atomic_bool uiNeedsUpdate{ false };
         std::atomic_bool appPaused{ true };
+
+		std::atomic_bool recording{ false };
 
         HDC hDC;				/* device context */
         HPALETTE hPalette{ 0 };			/* custom palette (if needed) */
@@ -71,6 +76,11 @@ namespace Neurolution
 
             _worldView = std::make_shared<TWorldView>(world);
         }
+
+		void SetImageLogger(std::shared_ptr<IImageLogger> l)
+		{
+			_imageLogger = l;
+		}
 
         ~MainController()
         {
@@ -173,6 +183,10 @@ namespace Neurolution
 			case 'g': case 'G': 
 				onRecoverHamsters();
 				break;
+
+			case 't': case 'T': 
+				recording = !recording;
+				break;
 			}
 		}
 
@@ -182,6 +196,11 @@ namespace Neurolution
 			viewDetails.paused = appPaused;
             _worldView->UpdateFrom(world, viewDetails);
             uiNeedsUpdate = false;
+
+			if (_imageLogger && recording)
+			{
+				_imageLogger->onNewFrame(viewDetails.currentIteration);
+			}
         }
 
         bool IsUINeedsUpdate() const { return uiNeedsUpdate; }
