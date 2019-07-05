@@ -34,7 +34,7 @@ namespace Neurolution
 	template <typename WorldProps, typename TWorld, typename TCell> 
     class WorldView
     {
-		static constexpr uint32_t LABELS_BACKGROUND = 0xff000000;
+		static constexpr uint32_t LABELS_BACKGROUND = 0xff191919;
 		static constexpr uint32_t CONTROLS_LABEL_FOREGROUND = 0xff0f0f7f;
 		static constexpr uint32_t RUGA_KOLORO = 0xff0f0fdf;
 		static constexpr uint32_t VERDA_KOLORO = 0xff006f00u;
