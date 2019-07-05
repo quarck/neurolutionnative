@@ -10,11 +10,14 @@
 
 #include <Commdlg.h>
 #include <Windows.h> // file dialogs 
+#include <Shlobj.h>
+#include <Shlobj_core.h>
 
 #include "World.h"
 #include "WorldView.h"
 #include "RuntimeConfig.h"
 #include "../IImageLogger.h"
+#include "../BmpLogger.h"
 
 namespace Neurolution
 {
@@ -56,6 +59,10 @@ namespace Neurolution
         HPALETTE hPalette{ 0 };			/* custom palette (if needed) */
 
         HWND hWND;
+
+		int _vpWidth{ 1 };
+		int _vpHeight{ 1 };
+
     public:
 
         MainController(RuntimeConfig& cfg)
@@ -76,11 +83,6 @@ namespace Neurolution
 
             _worldView = std::make_shared<TWorldView>(world);
         }
-
-		void SetImageLogger(std::shared_ptr<IImageLogger> l)
-		{
-			_imageLogger = l;
-		}
 
         ~MainController()
         {
@@ -122,7 +124,8 @@ namespace Neurolution
                 auto now = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> sinceLastUpdate = std::chrono::duration_cast<std::chrono::duration<double>>(now - lastUIUpdate);
 
-                if (viewDetails.currentIteration % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0)
+                if (recording || // draw on each iteration if recording
+					(viewDetails.currentIteration % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0))
                 {
 					viewDetails.iterationsPerSecond = static_cast<long>((viewDetails.currentIteration - lastUpdateAt) / sinceLastUpdate.count());
 
@@ -143,6 +146,45 @@ namespace Neurolution
                 world->Iterate(viewDetails.currentIteration);
             }
         }
+
+		void onViewportResize(int width, int height)
+		{
+			_vpWidth = width;
+			_vpHeight = height;
+			if (_imageLogger)
+				_imageLogger->onViewportResize(width, height);
+		}
+
+		void onToggleScreenRecording()
+		{
+			if (!recording && !_imageLogger)
+			{
+				WCHAR file[MAX_PATH];
+
+				BROWSEINFO bi;
+				ZeroMemory(&bi, sizeof(bi));
+				bi.hwndOwner = hWND;
+				bi.lpszTitle = &file[0];
+				bi.ulFlags = 0; // check it 
+
+
+				LPITEMIDLIST lpItem = SHBrowseForFolder(&bi);
+				if (lpItem != NULL)
+				{
+					SHGetPathFromIDList(lpItem, file);
+
+					char mbsFolder[MAX_PATH * 4];
+					size_t nc = ::wcstombs(mbsFolder, file, MAX_PATH * 4 - 1);
+					if (nc > 0 && nc < MAX_PATH * 4)
+					{
+						_imageLogger = std::make_shared<BmpLogger>(mbsFolder);
+						_imageLogger->onViewportResize(_vpWidth, _vpHeight);
+					}
+				}
+			}
+
+			recording = !recording && _imageLogger;
+		}
 
 		void OnKeyboard(WPARAM wParam)
 		{
@@ -185,7 +227,7 @@ namespace Neurolution
 				break;
 
 			case 't': case 'T': 
-				recording = !recording;
+				onToggleScreenRecording();
 				break;
 			}
 		}
@@ -194,10 +236,10 @@ namespace Neurolution
         {
             std::lock_guard<std::mutex> l(worldLock);
 			viewDetails.paused = appPaused;
-            _worldView->UpdateFrom(world, viewDetails);
+            _worldView->UpdateFrom(world, viewDetails, recording);
             uiNeedsUpdate = false;
 
-			if (_imageLogger && recording)
+			if (_imageLogger && recording && !appPaused)
 			{
 				_imageLogger->onNewFrame(viewDetails.currentIteration);
 			}

@@ -28,12 +28,6 @@ using TMainController = Neurolution::MainController<Neurolution::AppProperties0,
 
 std::unique_ptr<TMainController> controller;
 
-#if 1
-std::shared_ptr<IImageLogger> imageLogger = std::make_shared<BmpLogger>("i:\\tmp\\pix");
-#else 
-std::shared_ptr<IImageLogger> imageLogger;
-#endif
-
 void Init()
 {
     //glEnable(GL_DEPTH_TEST);
@@ -42,8 +36,8 @@ void Init()
 
 void Reshape(int width, int height)
 {
-	if (imageLogger)
-		imageLogger->onViewportResize(width, height);
+	if (controller)
+		controller->onViewportResize(width, height);
     glViewport(0, 0, width, height);
     //glMatrixMode(GL_PROJECTION);
     //glLoadIdentity();
@@ -349,8 +343,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
     UpdateWindow(controller->GetHWND());
 
     Init();
-
-	controller->SetImageLogger(imageLogger);
 
     controller->Start();
 

@@ -123,7 +123,7 @@ namespace Neurolution
 		}
 
         void UpdateFrom(std::shared_ptr<TWorld>& world,
-			const WorldViewDetails& details
+			const WorldViewDetails& details, bool hideControlsAndStats
 		)  noexcept
         {
             glPushMatrix();
@@ -143,8 +143,11 @@ namespace Neurolution
 
             glEnd();
             // BG END
-			PrintControls(details);
-			PrintStats(details);
+			if (!hideControlsAndStats)
+			{
+				PrintControls(details);
+				PrintStats(details);
+			}
 
             glScalef(
                 static_cast<GLfloat>(2.0 / WorldProps::WorldWidth),

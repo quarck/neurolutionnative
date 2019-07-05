@@ -11,6 +11,8 @@ class BmpLogger : public IImageLogger
 	int _vpWidth;
 	int _vpHeight;
 
+	uint64_t _nextSeq{ 0 };
+
 public:
 	BmpLogger(const std::string& logFolder);
 

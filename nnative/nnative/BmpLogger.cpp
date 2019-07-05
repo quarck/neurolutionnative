@@ -115,7 +115,7 @@ void BmpLogger::onNewFrame(uint64_t seq)
 
 	// todo: format the name with leading zeroes
 	std::ostringstream str;
-	str  << _logFolder << "\\" << std::setw(8) << std::setfill('0') << seq << ".bmp";
+	str  << _logFolder << "\\" << std::setw(8) << std::setfill('0') << _nextSeq++ << ".bmp";
 	std::string name = str.str();
 
 	BmpHeader hdr{ static_cast<uint32_t>(_vpWidth), static_cast<uint32_t>(_vpHeight) };

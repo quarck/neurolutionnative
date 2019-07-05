@@ -32,9 +32,9 @@ namespace Neurolution
 
         static constexpr int NetworkSize = 512;
 
-        static constexpr int WorldSize = 128;
+        static constexpr int WorldSize = 192;
         static constexpr int FoodCountPerIteration = 48;
-        static constexpr int PredatorCountPerIteration = 16;
+        static constexpr int PredatorCountPerIteration = 32;
 
         static constexpr int NetworkMoveForceGentleLeft = SensorPackSize + 0;
         static constexpr int NetworkMoveForceGentleRight = SensorPackSize + 1;
@@ -59,8 +59,8 @@ namespace Neurolution
         static constexpr float CellTailLength = 4.0f;
         static constexpr float CellEyeBase = 3.0f;
 
-        static constexpr int WorldWidth = 1500;
-        static constexpr int WorldHeight = 1500;
+        static constexpr int WorldWidth = 2048;
+        static constexpr int WorldHeight = 1536;
 
 		static constexpr int MaxDistanceSquareVisibility = (WorldWidth / 3) * (WorldWidth / 3) + (WorldHeight / 3) * (WorldHeight / 3);
 
