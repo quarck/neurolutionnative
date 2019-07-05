@@ -327,7 +327,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hCurrentInst, _In_opt_ HINSTANCE hPreviousI
 
     controller->SetHWND(
         CreateOpenGLWindow(_T("Neurolution Native"), 0, 0,
-			TMainController::TProp::WorldWidth / 3, TMainController::TProp::WorldHeight / 3,
+			TMainController::TProp::WorldWidth / 2, TMainController::TProp::WorldHeight / 2,
             PFD_TYPE_RGBA, PFD_DOUBLEBUFFER));
 
     if (controller->GetHWND() == nullptr)
