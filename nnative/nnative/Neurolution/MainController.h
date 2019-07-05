@@ -124,8 +124,7 @@ namespace Neurolution
                 auto now = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> sinceLastUpdate = std::chrono::duration_cast<std::chrono::duration<double>>(now - lastUIUpdate);
 
-                if (recording || // draw on each iteration if recording
-					(viewDetails.currentIteration % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0))
+                if ((viewDetails.currentIteration % 4 == 0 && sinceLastUpdate.count() > 1.0 / 30.0))
                 {
 					viewDetails.iterationsPerSecond = static_cast<long>((viewDetails.currentIteration - lastUpdateAt) / sinceLastUpdate.count());
 
