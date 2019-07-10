@@ -36,7 +36,7 @@ namespace Neurolution
 
         void DrawNonPredator()
         {
-            if (_cell->CurrentEnergy >= 0.0001f &&
+            if (_cell->EnergyValue >= 0.0001f &&
                 _cell->LocationX >= 0.0 && _cell->LocationX < WorldProp::WorldWidth
                 && _cell->LocationY >= 0.0 && _cell->LocationY < WorldProp::WorldHeight)
             {
@@ -49,7 +49,7 @@ namespace Neurolution
 
                 glBegin(GL_TRIANGLES);
 
-                float energy = _cell->CurrentEnergy;
+                float energy = _cell->EnergyValue;
                 float factor = (energy > WorldProp::SedatedAtEnergyLevel) ? 1.0f : energy / WorldProp::SedatedAtEnergyLevel;
 
                 glColor3f(1.0f - factor, factor, 0.0f);
@@ -97,7 +97,7 @@ namespace Neurolution
 
 		void DrawPredator()
 		{
-			if (_cell->CurrentEnergy < 0.001f)
+			if (_cell->EnergyValue < 0.001f)
 				return;
 
 			glPushMatrix();

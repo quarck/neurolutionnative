@@ -12,21 +12,18 @@
 
 #include "NeuronNetwork.h"
 
+#include "WorldUtils.h"
 
 namespace Neurolution
 {
 	template <typename WorldProp, typename TNumericType>
-    struct Cell
+    struct Cell : public MaterialPointWithEnergyValue
     {
 		using TNetwork = NeuronNetwork<WorldProp, TNumericType>;
         std::shared_ptr<TNetwork> Network;
 
         static constexpr float TailLength = WorldProp::CellTailLength;
         static constexpr float EyeBase = WorldProp::CellEyeBase;
-
-        float LocationX{ 0.0f };
-        float LocationY{ 0.0f };
-        float Rotation{ 0.0f };
 
         long Age{ 0 };
 
@@ -40,7 +37,7 @@ namespace Neurolution
 
 		int ClonedFrom = -1;
 
-        float CurrentEnergy = 0.0f;
+        //float CurrentEnergy = 0.0f;
 
         Random random;
 
@@ -50,13 +47,13 @@ namespace Neurolution
 
         Cell(Random& r, int maxX, int maxY, bool isPredator = false)
             : random(r)
-            , LocationX(static_cast<float>(r.NextDouble()*maxX))
-            , LocationY(static_cast<float>(r.NextDouble()*maxY))
-            , Rotation((float)(r.NextDouble() * 2.0 * M_PI))
             , Network(std::make_shared<TNetwork>(WorldProp::NetworkSize))
             , IsPredator(isPredator)
         {
-        }
+			LocationX = static_cast<float>(r.NextDouble() * maxX);
+			LocationY = static_cast<float>(r.NextDouble() * maxY);
+			Rotation = static_cast<float>(r.NextDouble() * 2.0 * M_PI);
+		}
 
         void PrepareIteration() noexcept
         {
@@ -101,17 +98,17 @@ namespace Neurolution
         {
             LocationX = static_cast<float>(rnd.NextDouble()*maxX);
             LocationY = static_cast<float>(rnd.NextDouble()*maxY);
-            Rotation = (float)(rnd.NextDouble() * 2.0 * M_PI);
+            Rotation = static_cast<float>(rnd.NextDouble() * 2.0 * M_PI);
         }
 
         bool PredatoryEat(float& preyEnergy) noexcept
         {
             for (;;)
             {
-                float valueCopy = InterlockedCompareExchange(&CurrentEnergy, 0.0f, 0.0f); // means just read
+                float valueCopy = InterlockedCompareExchange(&EnergyValue, 0.0f, 0.0f); // means just read
                 float newValue = valueCopy + preyEnergy;
 
-                if (InterlockedCompareExchange(&CurrentEnergy, newValue, valueCopy) == valueCopy)
+                if (InterlockedCompareExchange(&EnergyValue, newValue, valueCopy) == valueCopy)
                 {
                     break;
                 }
@@ -122,11 +119,13 @@ namespace Neurolution
 
 		void SaveTo(std::ostream& stream)
 		{
-			stream.write(reinterpret_cast<const char*>(&LocationX), sizeof(LocationX));
-			stream.write(reinterpret_cast<const char*>(&LocationY), sizeof(LocationY));
-			stream.write(reinterpret_cast<const char*>(&Rotation), sizeof(Rotation));
+			this->MaterialPointWithEnergyValue::SaveTo(stream);
+			
+			//stream.write(reinterpret_cast<const char*>(&LocationX), sizeof(LocationX));
+			//stream.write(reinterpret_cast<const char*>(&LocationY), sizeof(LocationY));
+			//stream.write(reinterpret_cast<const char*>(&Rotation), sizeof(Rotation));
 
-			stream.write(reinterpret_cast<const char*>(&CurrentEnergy), sizeof(CurrentEnergy));
+			//stream.write(reinterpret_cast<const char*>(&CurrentEnergy), sizeof(CurrentEnergy));
 			stream.write(reinterpret_cast<const char*>(&IsPredator), sizeof(IsPredator));
 
 			stream.write(reinterpret_cast<const char*>(&Age), sizeof(Age));
@@ -137,11 +136,13 @@ namespace Neurolution
 
 		void LoadFrom(std::istream& stream)
 		{
-			stream.read(reinterpret_cast<char*>(&LocationX), sizeof(LocationX));
-			stream.read(reinterpret_cast<char*>(&LocationY), sizeof(LocationY));
-			stream.read(reinterpret_cast<char*>(&Rotation), sizeof(Rotation));
+			this->MaterialPointWithEnergyValue::LoadFrom(stream);
 
-			stream.read(reinterpret_cast<char*>(&CurrentEnergy), sizeof(CurrentEnergy));
+			//stream.read(reinterpret_cast<char*>(&LocationX), sizeof(LocationX));
+			//stream.read(reinterpret_cast<char*>(&LocationY), sizeof(LocationY));
+			//stream.read(reinterpret_cast<char*>(&Rotation), sizeof(Rotation));
+
+			//stream.read(reinterpret_cast<char*>(&CurrentEnergy), sizeof(CurrentEnergy));
 			stream.read(reinterpret_cast<char*>(&IsPredator), sizeof(IsPredator));
 
 			stream.read(reinterpret_cast<char*>(&Age), sizeof(Age));

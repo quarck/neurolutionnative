@@ -163,7 +163,7 @@ namespace Neurolution
 
             for (auto& food : _world->GetFoods())
             {
-                if (food.Value < 0.01)
+                if (food.EnergyValue < 0.01)
                     continue;
 
                 glPushMatrix();
@@ -174,7 +174,7 @@ namespace Neurolution
 
                 _foodColor.GlApply();
 
-                float halfdiameter = static_cast<float>(std::sqrt(food.Value) * 5.0 / 1.5);
+                float halfdiameter = static_cast<float>(std::sqrt(food.EnergyValue) * 5.0 / 1.5);
 
                 int idx = 0;
                 glIndexi(++idx); glVertex3f(0.0f, halfdiameter, 0.0f);

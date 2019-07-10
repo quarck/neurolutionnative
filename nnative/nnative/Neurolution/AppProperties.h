@@ -11,6 +11,8 @@ namespace Neurolution
     {
     public:
 
+		static constexpr float StepTimeDelta = 1.0f; // each step is 1.0 unit of time (whatever that means :)
+
 		static constexpr bool ManualLoopUnroll = true;
 
         static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg
@@ -32,9 +34,9 @@ namespace Neurolution
 
         static constexpr int NetworkSize = 512;
 
-        static constexpr int WorldSize = 192;
+        static constexpr int WorldSize = 128;
         static constexpr int FoodCountPerIteration = 48;
-        static constexpr int PredatorCountPerIteration = 32;
+        static constexpr int PredatorCountPerIteration = 24;
 
         static constexpr int NetworkMoveForceGentleLeft = SensorPackSize + 0;
         static constexpr int NetworkMoveForceGentleRight = SensorPackSize + 1;
@@ -76,6 +78,7 @@ namespace Neurolution
         static constexpr float SedatedAtEnergyLevel = 2.0f;
 
 		static constexpr float PredatorsOvereatEnergy = 100.0f;
+		static constexpr float PredatorsOveratSlowdownFactor = 0.33f;
 
         static constexpr float BirthEnergyConsumption = 2.0f;
         static constexpr float PredatorBirthEnergyConsumption = 8.0f;
@@ -90,5 +93,8 @@ namespace Neurolution
         static constexpr float NeuronChargeThreshold = 1.0f;
 
         static constexpr long OldSince = 4096;
+
+		static constexpr float CellFoodCaptureDistance = 10.0f;
+		static constexpr float PredatorCaptureDistance = 10.0f;
     };
 }

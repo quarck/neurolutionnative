@@ -167,6 +167,7 @@
     <ClInclude Include="glText.h" />
     <ClInclude Include="Neurolution\Population.h" />
     <ClInclude Include="Neurolution\RuntimeConfig.h" />
+    <ClInclude Include="Neurolution\WorldUtils.h" />
     <ClInclude Include="ThreadGrid.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Neurolution\AppProperties.h" />
