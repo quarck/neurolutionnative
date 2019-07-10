@@ -602,12 +602,48 @@ namespace Neurolution
 				{
 					constexpr float timeDelta = WorldProp::StepTimeDelta;
 
-					float dVX = (float)(forwardForce * std::cos(cell->Rotation));
-					float dVY = (float)(forwardForce * std::sin(cell->Rotation));
+					// Forward force is applied in the direction of engine thrust
+					// Drag applied in the direction of movement
+					// Do everything in two steps: 
+					// 1. Apply drag fully 
+					// 2. Apply forward force
 
-					cell->VelocityX += dVX * timeDelta;
-					cell->VelocityY += dVY * timeDelta;
+					// AIR DRAG
+					float velocitySquare = cell->VelocityX * cell->VelocityX + cell->VelocityY * cell->VelocityY;
+					if (velocitySquare > 0.0000001f)
+					{
+						float velocity = std::sqrtf(velocitySquare);
+						float velocityCube = velocity * velocitySquare;
 
+						float airDrag =
+							WorldProp::AirDragFactorCube * velocityCube +
+							WorldProp::AirDragFactorQuadratic * velocitySquare +
+							WorldProp::AirDragFactorLinear * velocity;
+
+
+						float airDragDeltaV = airDrag / cell->Mass * timeDelta;
+
+						// Air resistance can't decelerate us more than we have 
+						airDragDeltaV = (airDragDeltaV > velocity) ? velocity : airDragDeltaV;
+
+
+						//                                      This part is cos / sin of 
+						//                                      the velocity direction vector
+						//                                               |             
+						//                                  /------------^-----------\ 
+						cell->VelocityX -= airDragDeltaV * (cell->VelocityX / velocity) * timeDelta;
+						cell->VelocityY -= airDragDeltaV * (cell->VelocityY / velocity) * timeDelta;
+					}
+
+					// THRUST 
+
+					float forwardForceDeltaV = forwardForce / cell->Mass * timeDelta;
+
+					cell->VelocityX += forwardForceDeltaV * static_cast<float>(std::cos(cell->Rotation)) * timeDelta;
+					cell->VelocityY += forwardForceDeltaV * static_cast<float>(std::sin(cell->Rotation)) * timeDelta;
+
+
+					// Finally - location update 
 					cell->LocationX += cell->VelocityX * timeDelta; 
 					cell->LocationY += cell->VelocityY * timeDelta; 
 

@@ -15,6 +15,10 @@ namespace Neurolution
 
 		static constexpr float RealPhysics = true;
 
+		static constexpr float AirDragFactorLinear = 0.15f;
+		static constexpr float AirDragFactorQuadratic = 0.015f;
+		static constexpr float AirDragFactorCube = 0.0015f;
+
 		static constexpr bool ManualLoopUnroll = true;
 
         static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg
