@@ -13,6 +13,8 @@ namespace Neurolution
 
 		static constexpr float StepTimeDelta = 1.0f; // each step is 1.0 unit of time (whatever that means :)
 
+		static constexpr float RealPhysics = true;
+
 		static constexpr bool ManualLoopUnroll = true;
 
         static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg

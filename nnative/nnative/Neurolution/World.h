@@ -598,11 +598,30 @@ namespace Neurolution
 
                 cell->Rotation = LoopValue(cell->Rotation + rotationForce, 0.0f, (float)(M_PI * 2.0f));
 
-                float dX = (float)(forwardForce*std::cos(cell->Rotation));
-                float dY = (float)(forwardForce*std::sin(cell->Rotation));
+				if constexpr (WorldProp::RealPhysics)
+				{
+					constexpr float timeDelta = WorldProp::StepTimeDelta;
 
-                cell->LocationX = LoopValue(cell->LocationX + dX, 0.0f, (float)_maxX);
-                cell->LocationY = LoopValue(cell->LocationY + dY, 0.0f, (float)_maxY);
+					float dVX = (float)(forwardForce * std::cos(cell->Rotation));
+					float dVY = (float)(forwardForce * std::sin(cell->Rotation));
+
+					cell->VelocityX += dVX * timeDelta;
+					cell->VelocityY += dVY * timeDelta;
+
+					cell->LocationX += cell->VelocityX * timeDelta; 
+					cell->LocationY += cell->VelocityY * timeDelta; 
+
+					cell->LocationX = LoopValue(cell->LocationX, 0.0f, (float)_maxX);
+					cell->LocationY = LoopValue(cell->LocationY, 0.0f, (float)_maxY);
+				}
+				else
+				{
+					float dX = (float)(forwardForce * std::cos(cell->Rotation));
+					float dY = (float)(forwardForce * std::sin(cell->Rotation));
+
+					cell->LocationX = LoopValue(cell->LocationX + dX, 0.0f, (float)_maxX);
+					cell->LocationY = LoopValue(cell->LocationY + dY, 0.0f, (float)_maxY);
+				}
             }
             else if (!cell->IsPredator)
             {
