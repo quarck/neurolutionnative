@@ -82,8 +82,8 @@ namespace Neurolution
                 LocationX = (float)rnd.Next(maxX);
                 LocationY = (float)rnd.Next(maxY);
 
-				VelocityX = (float)(rnd.NextDouble() * 0.5 - 0.25);
-				VelocityY = (float)(rnd.NextDouble() * 0.5 - 0.25);
+				VelocityX = (float)(rnd.NextDouble() * 2.5 - 1.25);
+				VelocityY = (float)(rnd.NextDouble() * 2.5 - 1.25);
             }
         }
 
