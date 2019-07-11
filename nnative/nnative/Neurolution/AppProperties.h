@@ -58,7 +58,7 @@ namespace Neurolution
 		static constexpr bool ApplyNetworkNoise = false;
 
 		static constexpr float NetworkSpikeNoiseLevel = 0.01f;
-		static constexpr bool ApplyNetworkSpikeNoise = true;
+		static constexpr bool ApplyNetworkSpikeNoise = false;
 
         static constexpr float FoodInitialValue = 14;
 
