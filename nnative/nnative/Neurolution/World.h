@@ -227,46 +227,66 @@ namespace Neurolution
 			if (step == 0 || step % WorldProp::StepsPerBirthCheck != 0)
 				return  0;
 
-            if (std::any_of(
-                    std::begin(elements),
-                    std::end(elements),
-                    [=](std::shared_ptr<TCell>& x) { return x->EnergyValue > birthEnergyConsumption; }
-                ))
-            {
-                int quant = static_cast<int>(elements.size() / 32);
+            int quant = static_cast<int>(elements.size() / 32);
 
-                std::sort(std::begin(elements), std::end(elements),
-                    [](std::shared_ptr<TCell>& x, std::shared_ptr<TCell>& y) {
-                    return x->EnergyValue > y->EnergyValue;
-                });
+            std::sort(std::begin(elements), std::end(elements),
+                [](std::shared_ptr<TCell>& x, std::shared_ptr<TCell>& y) {
+                return x->EnergyValue > y->EnergyValue;
+            });
 
-                int srcIdx = 0;
-                int dstIdx = static_cast<int>(elements.size() - 1); //quant * 4;
+            int srcIdx = 0;
+            int dstIdx = static_cast<int>(elements.size() - 1); //quant * 4;
 
-				while (srcIdx < dstIdx)
+			int numChild = 0; 
+			while (srcIdx < dstIdx)
+			{
+				auto& src = elements[srcIdx];
+
+				if (src->EnergyValue < 0.01f)
 				{
-					auto& src = elements[srcIdx];
-
-					if (src->EnergyValue < birthEnergyConsumption)
-					{
-						++srcIdx;
-						continue;
-					}
-
-					//auto& dst = elements[dstIdx];
-					src->EnergyValue -= birthEnergyConsumption;
-					auto& cm = cloneMap[nextCloneMapIdx++];
-					cm.first = srcIdx;
-					cm.second = dstIdx--;
-					//CreateChild(src, dst, initialEnergy);
+					break;
 				}
-        
-                //for (auto& cell : elements)
-                //{
-                //    if (cell->Age > WorldProp::OldSince)
-                //        CreateChild(cell, cell, cell->EnergyValue);
-                //}
-            }
+
+				if (src->EnergyValue < birthEnergyConsumption)
+				{
+					++srcIdx;
+					continue;
+				}
+
+				//auto& dst = elements[dstIdx];
+				src->EnergyValue -= birthEnergyConsumption;
+				auto& cm = cloneMap[nextCloneMapIdx++];
+				cm.first = srcIdx;
+				cm.second = dstIdx--;
+				++numChild;
+				//CreateChild(src, dst, initialEnergy);
+			}
+
+			if (numChild == 0)
+			{
+				// a very special case: everyone is dead. 
+				// Re-initialize energy levels with default values, and hope for the best 
+				for (auto& el : elements)
+				{
+					el->EnergyValue = initialEnergy;
+				}
+			}
+			else
+			{
+				// fill dead bodies with clones of the top ones 
+				for (int idx = srcIdx + 1; idx < dstIdx; ++ idx)
+				{
+					auto& src = elements[0];
+					auto& dst = elements[idx];
+					
+					if (dst->EnergyValue > 0.01f)
+						continue;
+
+					auto& cm = cloneMap[nextCloneMapIdx++];
+					cm.first = 0;
+					cm.second = idx;
+				}
+			}        
 
 			return nextCloneMapIdx;
         }
