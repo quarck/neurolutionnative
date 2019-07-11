@@ -705,7 +705,11 @@ namespace Neurolution
 						constexpr float foodCaptureDistanceSquare = WorldProp::CellFoodCaptureDistance * WorldProp::CellFoodCaptureDistance;
                         if (pdx + pdy <= foodCaptureDistanceSquare)
                         {
-                            cell->EnergyValue += food.Consume();
+							if (_random.NextDouble() <
+								WorldProp::FoodConsumptionProbability(cell->VelocityX - food.VelocityX, cell->VelocityY - food.VelocityY))
+							{
+								cell->EnergyValue += food.Consume();
+							}
                         }
                     }
                 }
@@ -725,13 +729,17 @@ namespace Neurolution
 
                         if (pdx + pdy <= captureDistanceSquare)
                         {
-                            float energy = InterlockedCompareExchange(&(cell->EnergyValue), 0.0f, cell->EnergyValue);
+							if (_random.NextDouble() <
+								WorldProp::PreyCatchingProbability(predator->VelocityX - cell->VelocityX, predator->VelocityY - cell->VelocityY))
+							{
+								float energy = InterlockedCompareExchange(&(cell->EnergyValue), 0.0f, cell->EnergyValue);
 
-                            if (!predator->PredatoryEat(energy))
-                            {
-                                // predator has failed 
-                                InterlockedCompareExchange(&(cell->EnergyValue), energy, 0.0f);
-                            }
+								if (!predator->PredatoryEat(energy))
+								{
+									// predator has failed 
+									InterlockedCompareExchange(&(cell->EnergyValue), energy, 0.0f);
+								}
+							}
                         }
                     }
                 }

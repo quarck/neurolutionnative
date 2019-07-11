@@ -15,9 +15,9 @@ namespace Neurolution
 
 		static constexpr float RealPhysics = true;
 
-		static constexpr float AirDragFactorLinear = 0.15f;
-		static constexpr float AirDragFactorQuadratic = 0.015f;
-		static constexpr float AirDragFactorCube = 0.0015f;
+		static constexpr float AirDragFactorLinear = 0.03f;
+		static constexpr float AirDragFactorQuadratic = 0.003f;
+		static constexpr float AirDragFactorCube = 0.0003f;
 
 		static constexpr bool ManualLoopUnroll = true;
 
@@ -35,8 +35,8 @@ namespace Neurolution
 		static constexpr int SensorPackSize = AbsoluteVelocitySensor + 1;
 
 
-        static constexpr int StepsPerGeneration = 2048;
-        static constexpr int StepsPerBirthCheck = 2048;
+		static constexpr int StepsPerGeneration = 1024;
+        static constexpr int StepsPerBirthCheck = 1024;
 
         static constexpr int NetworkSize = 512;
 
@@ -102,5 +102,17 @@ namespace Neurolution
 
 		static constexpr float CellFoodCaptureDistance = 10.0f;
 		static constexpr float PredatorCaptureDistance = 10.0f;
+
+		static float FoodConsumptionProbability(float relativeVelocityX, float relativeVelocityY)
+		{
+			float sq = relativeVelocityX * relativeVelocityX + relativeVelocityY * relativeVelocityY;
+			return 1.0f / (1.0f + sq * 0.4f);
+		}
+
+		static float PreyCatchingProbability(float relativeVelocityX, float relativeVelocityY)
+		{
+			float sq = relativeVelocityX * relativeVelocityX + relativeVelocityY * relativeVelocityY;
+			return 1.0f / (1.0f + sq * 0.4f);
+		}
     };
 }
