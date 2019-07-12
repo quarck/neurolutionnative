@@ -24,7 +24,7 @@
 
 #define MAX_LOADSTRING 100
 
-using TMainController = Neurolution::MainController<Neurolution::AppProperties0, float>;
+using TMainController = Neurolution::MainController<Neurolution::AppProperties0>;
 
 std::unique_ptr<TMainController> controller;
 

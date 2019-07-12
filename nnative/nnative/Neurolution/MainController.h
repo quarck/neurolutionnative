@@ -21,13 +21,13 @@
 
 namespace Neurolution
 {
-	template <typename WorldProp, typename TNetworkNumericType>
+	template <typename WorldProp>
     class MainController
     {
 	public:
 		using TProp = WorldProp;
-		using TWorld = World<WorldProp, TNetworkNumericType>;
-		using TCell = Cell<WorldProp, TNetworkNumericType>;
+		using TWorld = World<WorldProp>;
+		using TCell = Cell<WorldProp>;
 		using TWorldView = WorldView<WorldProp, TWorld, TCell>;
 
 	private:

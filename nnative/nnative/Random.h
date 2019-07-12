@@ -9,6 +9,7 @@ class Random
     std::default_random_engine generator;
 
     std::uniform_real_distribution<double> realDistribution{ 0.0, 1.0 };
+	std::uniform_real_distribution<float> floatDistribution{ 0.0f, 1.0f };
     std::uniform_int_distribution<int> intDistribution{ 0, INT_MAX };
 
 public:
@@ -27,7 +28,7 @@ public:
 	template <>
 	float Next(const float& from, const float& to) noexcept
 	{
-		return static_cast<float>((from - to) * NextDouble() + from);
+		return static_cast<float>((from - to) * NextFloat() + from);
 	}
 
 	template <>
@@ -40,6 +41,11 @@ public:
     {
         return realDistribution(generator);
     }
+
+	float NextFloat() noexcept
+	{
+		return floatDistribution(generator);
+	}
 
     int Next() noexcept
     {

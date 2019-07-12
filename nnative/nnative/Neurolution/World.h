@@ -98,12 +98,12 @@ namespace Neurolution
 		}
     };
 
-	template <typename WorldProp, typename TNetworkNumericType>
+	template <typename WorldProp>
     class World
     {
 	public:
 		using TProp = WorldProp;
-		using TCell = Cell<WorldProp, TNetworkNumericType>;
+		using TCell = Cell<WorldProp>;
 	private:
         static constexpr float SQRT_2 = 1.4142135623730950488016887242097f; // unfortunately std::sqrt is not a constexpr function
 
@@ -570,9 +570,10 @@ namespace Neurolution
             }
 
 			cell->Network->InputVector[WorldProp::CurrentEnergyLevelSensor] = cell->EnergyValue;
-			cell->Network->InputVector[WorldProp::OrientationXSensor] = TNetworkNumericType(std::cos(cell->Rotation));
-			cell->Network->InputVector[WorldProp::OrientationYSensor] = TNetworkNumericType(std::sin(cell->Rotation));
-			cell->Network->InputVector[WorldProp::AbsoluteVelocitySensor] = 0.0; // Currently not calculating velocities 
+			cell->Network->InputVector[WorldProp::OrientationXSensor] = std::cosf(cell->Rotation);
+			cell->Network->InputVector[WorldProp::OrientationYSensor] = std::sinf(cell->Rotation);
+			cell->Network->InputVector[WorldProp::AbsoluteVelocitySensor] =
+				std::sqrtf(cell->VelocityX * cell->VelocityX + cell->VelocityY * cell->VelocityY);
 		}
 
         void IterateCellThinkingAndMoving(int threadIdx, long step, std::shared_ptr<TCell>& cell) noexcept
@@ -611,6 +612,13 @@ namespace Neurolution
                 rotationForce *= slowdownFactor;
                 moveEnergyRequired *= slowdownFactor;
             }
+
+			//if ((step % 1024) > 512)
+			//{
+			//	moveEnergyRequired = 0.000001f;
+			//	forwardForce = 0.0f;
+			//	rotationForce = 0.0f;
+			//}
 
             if (moveEnergyRequired <= cell->EnergyValue)
             {

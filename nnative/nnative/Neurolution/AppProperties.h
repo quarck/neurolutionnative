@@ -15,8 +15,8 @@ namespace Neurolution
 
 		static constexpr float RealPhysics = true;
 
-		static constexpr float AirDragFactorLinear = 0.03f;
-		static constexpr float AirDragFactorQuadratic = 0.003f;
+		static constexpr float AirDragFactorLinear = 0.0005f;
+		static constexpr float AirDragFactorQuadratic = 0.0003f;
 		static constexpr float AirDragFactorCube = 0.0003f;
 
 		static constexpr bool ManualLoopUnroll = true;

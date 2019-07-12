@@ -59,12 +59,12 @@ namespace Neurolution
     };
 
 
-	template <typename WorldProp, typename TNumericType>
+	template <typename WorldProp>
     struct Neuron
     {
-        std::vector<TNumericType> Weights;
+        std::vector<float> Weights;
 
-		TNumericType Charge;
+		float Charge;
 
         NeuronState State;
 
@@ -96,7 +96,7 @@ namespace Neurolution
 
             if (Weights.size() != size)
             {
-                std::vector<TNumericType>(size).swap(Weights);
+                std::vector<float>(size).swap(Weights);
             }
 
             if (!severe)
@@ -104,14 +104,14 @@ namespace Neurolution
                 float maxMutation = WorldProp::NetworkMaxRegularMutation;
 
                 for (int i = 0; i < size; ++i)
-                    Weights[i] = TNumericType(static_cast<float>(other.Weights[i]) + (2.0 * rnd.NextDouble() - 1.0) * maxMutation);
+                    Weights[i] = other.Weights[i] + (2.0f * rnd.NextFloat() - 1.0f) * maxMutation;
             }
             else
             {
                 float alpha = WorldProp::NetworkSevereMutationAlpha;
 
                 for (int i = 0; i < size; ++i)
-                    Weights[i] = TNumericType((float)(other.Weights[i]) * alpha + (2.0 * rnd.NextDouble() - 1.0) * (1.0 - alpha));
+                    Weights[i] = other.Weights[i] * alpha + (2.0f * rnd.NextFloat() - 1.0f) * (1.0f - alpha);
             }
         }
 
@@ -136,19 +136,19 @@ namespace Neurolution
 
     };
 
-	template <typename WorldProp, typename TNumericType>
+	template <typename WorldProp>
     struct NeuronNetwork
     {
-		using TNeuron = Neuron<WorldProp, TNumericType>;
-		using ThisType = NeuronNetwork<WorldProp, TNumericType>;
+		using TNeuron = Neuron<WorldProp>;
+		using ThisType = NeuronNetwork<WorldProp>;
 
         std::vector<TNeuron> Neurons;
 
         std::vector<LightSensor> Eye;
 
-        std::vector<TNumericType> InputVector;
+        std::vector<float> InputVector;
 
-        std::vector<TNumericType> OutputVector;
+        std::vector<float> OutputVector;
 
         size_t GetNetworkSize() const noexcept { return Neurons.size(); }
 
@@ -184,8 +184,8 @@ namespace Neurolution
 
         void IterateNetwork(
 			Random& rnd, 
-			std::vector<TNumericType>& inputVector,
-			std::vector<TNumericType>& outputVector) noexcept
+			std::vector<float>& inputVector,
+			std::vector<float>& outputVector) noexcept
         {
             for (unsigned int j = 0; j < Neurons.size(); ++j)
             {
@@ -194,7 +194,7 @@ namespace Neurolution
                 // 1st step - calculate updated charge values
                 auto& neuron = Neurons[j];
 
-				TNumericType weightedInput = -neuron.Weights[neuronPositionInInputVector] * inputVector[neuronPositionInInputVector];
+				float weightedInput = -neuron.Weights[neuronPositionInInputVector] * inputVector[neuronPositionInInputVector];
 
 				if constexpr (WorldProp::ManualLoopUnroll)
 				{
@@ -228,7 +228,7 @@ namespace Neurolution
 				if constexpr (WorldProp::ApplyNetworkNoise)
 				{
 					// add some noise 
-					weightedInput += rnd.Next<TNumericType>(-WorldProp::NetworkNoiseLevel, WorldProp::NetworkNoiseLevel);
+					weightedInput += rnd.Next<float>(-WorldProp::NetworkNoiseLevel, WorldProp::NetworkNoiseLevel);
 				}
 
 
@@ -240,18 +240,18 @@ namespace Neurolution
                 case NeuronState::Idle:
 
                     neuron.Charge = ValueCap(
-                        neuron.Charge * TNumericType(WorldProp::NeuronChargeDecay) + weightedInput,
-						TNumericType(WorldProp::NeuronMinCharge),
-						TNumericType(WorldProp::NeuronMaxCharge)
+                        neuron.Charge * WorldProp::NeuronChargeDecay + weightedInput,
+						WorldProp::NeuronMinCharge,
+						WorldProp::NeuronMaxCharge
                     );
 
-                    if (neuron.Charge > TNumericType(WorldProp::NeuronChargeThreshold))
+                    if (neuron.Charge > WorldProp::NeuronChargeThreshold)
                     {
                         neuron.State = NeuronState::Excited0;
 
 						if constexpr (WorldProp::ApplyNetworkSpikeNoise)
 						{
-							outputVector[j] = 1.0f + rnd.Next<TNumericType>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
+							outputVector[j] = 1.0f + rnd.Next<float>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
 						}
 						else
 						{
@@ -269,7 +269,7 @@ namespace Neurolution
 
 					if constexpr (WorldProp::ApplyNetworkSpikeNoise)
 					{
-						outputVector[j] = 1.0f + rnd.Next<TNumericType>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
+						outputVector[j] = 1.0f + rnd.Next<float>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
 					}
 					else
 					{

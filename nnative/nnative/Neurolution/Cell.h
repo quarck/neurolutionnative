@@ -16,10 +16,10 @@
 
 namespace Neurolution
 {
-	template <typename WorldProp, typename TNumericType>
+	template <typename WorldProp>
     struct Cell : public MaterialPointWithEnergyValue
     {
-		using TNetwork = NeuronNetwork<WorldProp, TNumericType>;
+		using TNetwork = NeuronNetwork<WorldProp>;
         std::shared_ptr<TNetwork> Network;
 
         static constexpr float TailLength = WorldProp::CellTailLength;
