@@ -4,6 +4,8 @@
 #include <istream>
 #include <vector>
 
+#include <immintrin.h>
+
 #include "../Random.h"
 #include "../Utils.h"
 
@@ -198,22 +200,31 @@ namespace Neurolution
 
 				if constexpr (WorldProp::ManualLoopUnroll)
 				{
-					for (unsigned int i = 0; i < neuron.Weights.size() / 8; i += 8)
+                    __m256 acc = _mm256_setzero_ps();
+
+                    const float* nwptr = &neuron.Weights[0];
+                    const float* iwptr = &inputVector[0];
+                    unsigned int num_iters = neuron.Weights.size() / 8;
+
+					for (unsigned int i = 0; i < num_iters; ++ i)
 					{
-						weightedInput +=
-							neuron.Weights[i + 0] * inputVector[i + 0] +
-							neuron.Weights[i + 1] * inputVector[i + 1] +
-							neuron.Weights[i + 2] * inputVector[i + 2] +
-							neuron.Weights[i + 3] * inputVector[i + 3] +
-							neuron.Weights[i + 4] * inputVector[i + 4] +
-							neuron.Weights[i + 5] * inputVector[i + 5] +
-							neuron.Weights[i + 6] * inputVector[i + 6] +
-							neuron.Weights[i + 7] * inputVector[i + 7];
-					}
+                        //_mm_prefetch((const char*)(nwptr + 8), 1);
+                        //_mm_prefetch((const char*)(iwptr + 8), 1);
+
+                        acc = _mm256_fmadd_ps(
+                            _mm256_load_ps(nwptr), 
+                            _mm256_load_ps(iwptr), 
+                            acc
+                        );
+                        nwptr += 8;
+                        iwptr += 8;
+                    }
+
+                    weightedInput += acc.m256_f32[0] + acc.m256_f32[1] + acc.m256_f32[2] + acc.m256_f32[3] + acc.m256_f32[4] + acc.m256_f32[5] + acc.m256_f32[6] + acc.m256_f32[7];
+
 					for (unsigned int i = 0; i < (neuron.Weights.size() & 7); ++i)
 					{
-						weightedInput +=
-							neuron.Weights[i + 0] * inputVector[i + 0];
+						weightedInput += neuron.Weights[i] * inputVector[i];
 					}
 				}
 				else
@@ -221,7 +232,10 @@ namespace Neurolution
 					int sz = neuron.Weights.size();
 					for (unsigned int i = 0; i < sz; ++i)
 					{
-						weightedInput += neuron.Weights[i] * inputVector[i];
+                        _mm_prefetch((char*)&neuron.Weights[i + 1], 1);
+                        _mm_prefetch((char*)&inputVector[i + 1], 1);
+
+                        weightedInput += neuron.Weights[i] * inputVector[i];
 					}
 				}
 

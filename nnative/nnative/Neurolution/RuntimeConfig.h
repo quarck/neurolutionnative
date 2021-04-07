@@ -15,7 +15,7 @@ namespace Neurolution
 #else 
             SYSTEM_INFO sysinfo;
             ::GetSystemInfo(&sysinfo);
-			numWorkerThreads = sysinfo.dwNumberOfProcessors;
+			numWorkerThreads = sysinfo.dwNumberOfProcessors/2;
 #endif
         }
 
