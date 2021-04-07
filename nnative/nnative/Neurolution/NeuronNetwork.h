@@ -222,9 +222,10 @@ namespace Neurolution
 
                     weightedInput += acc.m256_f32[0] + acc.m256_f32[1] + acc.m256_f32[2] + acc.m256_f32[3] + acc.m256_f32[4] + acc.m256_f32[5] + acc.m256_f32[6] + acc.m256_f32[7];
 
+                    unsigned int offset = neuron.Weights.size() & (~7);
 					for (unsigned int i = 0; i < (neuron.Weights.size() & 7); ++i)
 					{
-						weightedInput += neuron.Weights[i] * inputVector[i];
+						weightedInput += neuron.Weights[i + offset] * inputVector[i + offset];
 					}
 				}
 				else
