@@ -21,7 +21,7 @@ namespace Neurolution
 
 		static constexpr bool ManualLoopUnroll = true;
 
-        static constexpr int EyeSizeNumTripods = 24; // each covering ~15 deg
+        static constexpr int EyeSizeNumTripods = 32; // each covering 11.25 deg
         static constexpr int EyeSize = EyeSizeNumTripods * 3; // total number of light-sensing cells 
 
 		static constexpr float EyeCellWidth = 0.1f;
@@ -32,11 +32,13 @@ namespace Neurolution
 		static constexpr int OrientationYSensor = EyeSize + 2;
 		static constexpr int AbsoluteVelocitySensor = EyeSize + 3;
 
-		static constexpr int SensorPackSize = AbsoluteVelocitySensor + 1;
+        // values from +4 to +15 are not currently used
+
+		static constexpr int SensorPackSize = EyeSize + 16; // align by 16-entries boundary for performance
 
 
-		static constexpr int StepsPerGeneration = 512;
-        static constexpr int StepsPerBirthCheck = 512;
+		static constexpr int StepsPerGeneration = 1024;
+        static constexpr int StepsPerBirthCheck = 1024;
         static constexpr int NetworkStepsPerIteration = 8;
 
         static constexpr int NetworkSize = 256;
@@ -78,7 +80,8 @@ namespace Neurolution
 
         static constexpr float FoodMinDistanceToBorder = 5;
 
-        static constexpr float MoveEnergyFactor = 0.0001f;
+        static constexpr float MoveEnergyFactor = 0.01f;
+        static constexpr float PredatorMoveEnergyFactor = 0.024f;
         static constexpr float InitialCellEnergy = 1.0f;
 
         static constexpr float MaxEnergyCapacity = 144.0f;

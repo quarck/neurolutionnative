@@ -152,9 +152,18 @@ namespace Neurolution
 
         std::vector<float> OutputVector;
 
-        size_t GetNetworkSize() const noexcept { return Neurons.size(); }
+        size_t GetNetworkSize() const noexcept 
+        {
+            return Neurons.size();
+        }
 
-        size_t GetVectorSize() const noexcept { return GetNetworkSize() + WorldProp::SensorPackSize; }
+        size_t GetVectorSize() const noexcept 
+        { 
+            size_t ret = GetNetworkSize() + WorldProp::SensorPackSize; 
+            if (ret % 16 != 0)
+                throw std::exception("Internal error: vector size is not multiple of 16");
+            return ret;
+        }
 
 		NeuronNetwork()
 		{
@@ -262,11 +271,11 @@ namespace Neurolution
                     acc1 = _mm256_hadd_ps(acc1, _mm256_setzero_ps());                    
                     weightedInput += acc1.m256_f32[0] + acc1.m256_f32[4];
 
-                    unsigned int offset = neuron.Weights.size() & (~15);
-					for (unsigned int i = 0; i < (neuron.Weights.size() & 15); ++i)
-					{
-						weightedInput += neuron.Weights[i + offset] * inputVector[i + offset];
-					}
+     //               unsigned int offset = neuron.Weights.size() & (~15);
+					//for (unsigned int i = 0; i < (neuron.Weights.size() & 15); ++i)
+					//{
+					//	weightedInput += neuron.Weights[i + offset] * inputVector[i + offset];
+					//}
 				}
 				else
 				{

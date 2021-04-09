@@ -209,7 +209,8 @@ namespace Neurolution
 
 			_cells.LoadFrom(stream, [&](std::shared_ptr<TCell> & item, std::istream & s) {item->LoadFrom(s); });
 			_predators.LoadFrom(stream, [&](std::shared_ptr<TCell> & item, std::istream & s) {item->LoadFrom(s); });
-			_foods.LoadFrom(stream, [&](Food<WorldProp> & item, std::istream & s) {item.LoadFrom(s); });
+            //_foods.KillAll([](auto& f) { return true; });
+			//_foods.LoadFrom(stream, [&](Food<WorldProp> & item, std::istream & s) {item.LoadFrom(s); });
 		}
 
 	private:
@@ -219,7 +220,8 @@ namespace Neurolution
 			std::vector<std::shared_ptr<TCell>>& elements, 
 			std::vector<std::pair<int, int>>& cloneMap,
 			float birthEnergyConsumption, 
-			float initialEnergy
+			float initialEnergy, 
+            bool isPredator
 		)  noexcept
         {
 			int nextCloneMapIdx = 0;
@@ -247,13 +249,20 @@ namespace Neurolution
 					break;
 				}
 
+                auto& dst = elements[dstIdx];
+                if (dst->EnergyValue > birthEnergyConsumption && !isPredator)
+                {
+                    // Dsts are too feed too -- finish with baby making for now, let someone starve a bit 
+                    break; 
+                }
+
 				if (src->EnergyValue < birthEnergyConsumption)
 				{
 					++srcIdx;
 					continue;
 				}
 
-				//auto& dst = elements[dstIdx];
+				//;
 				src->EnergyValue -= birthEnergyConsumption;
 				auto& cm = cloneMap[nextCloneMapIdx++];
 				cm.first = srcIdx;
@@ -349,12 +358,14 @@ namespace Neurolution
 				int nmCells = IterateBabyMaking(
 					step, _cells, 
 					_interGenerationCloneMapCells, 
-					WorldProp::BirthEnergyConsumption, WorldProp::InitialCellEnergy);
+					WorldProp::BirthEnergyConsumption, WorldProp::InitialCellEnergy, 
+                    false);
 				int nmPredators = IterateBabyMaking(
 					step, _predators, 
 					_interGenerationCloneMapPredators,
 					WorldProp::PredatorBirthEnergyConsumption,
-					WorldProp::PredatorInitialValue);
+					WorldProp::PredatorInitialValue, 
+                    true);
 
 				_grid.GridRun(
 					[&](int idx, int n)
@@ -594,7 +605,8 @@ namespace Neurolution
             float forwardForce = ((forceLeft + forceRight) / SQRT_2);
             float rotationForce = (forceLeft - forceRight) / SQRT_2;
 
-            float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * WorldProp::MoveEnergyFactor;
+            float moveEnergyRequired = (std::abs(forceLeft) + std::abs(forceRight)) * 
+                (cell->IsPredator ? WorldProp::PredatorMoveEnergyFactor : WorldProp::MoveEnergyFactor);
 
             if (cell->IsPredator)
             {
