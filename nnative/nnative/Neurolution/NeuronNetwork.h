@@ -200,36 +200,70 @@ namespace Neurolution
 
 				if constexpr (WorldProp::ManualLoopUnroll)
 				{
-                    __m256 acc = _mm256_setzero_ps();
+                    __m256 acc1 = _mm256_setzero_ps();
+                    __m256 acc2 = _mm256_setzero_ps();
 
                     const float* nwptr = &neuron.Weights[0];
                     const float* iwptr = &inputVector[0];
-                    unsigned int num_iters = neuron.Weights.size() / 8;
+                    unsigned int num_iters = neuron.Weights.size() / 16;
 
 					for (unsigned int i = 0; i < num_iters; ++ i)
 					{
-                        //_mm_prefetch((const char*)(nwptr + 8), 1);
-                        //_mm_prefetch((const char*)(iwptr + 8), 1);
-
-                        acc = _mm256_fmadd_ps(
+                        acc1 = _mm256_fmadd_ps(
                             _mm256_load_ps(nwptr), 
                             _mm256_load_ps(iwptr), 
-                            acc
+                            acc1
                         );
-                        nwptr += 8;
-                        iwptr += 8;
+                        acc2 = _mm256_fmadd_ps(
+                            _mm256_load_ps(nwptr + 8),
+                            _mm256_load_ps(iwptr + 8),
+                            acc2
+                        );
+                        nwptr += 16;
+                        iwptr += 16;
                     }
 
-                    //for (int i = 0; i < 8; ++i)
-                    //    weightedInput += acc.m256_f32[i];
+                    /*
+                    a = _mm256_hadd_ps(a, b)
+                    a'0 := a1 + a0
+                    a'1 := a3 + a2
+                    a'2 := b1 + b0
+                    a'3 := b2 + b3
+                    a'4 := a5 + a4
+                    a'5 := a7 + a6
+                    a'6 := b5 + b4
+                    a'7 := b7 + b6
 
-                    //weightedInput += acc.m256_f32[0] + acc.m256_f32[1] + acc.m256_f32[2] + acc.m256_f32[3] + acc.m256_f32[4] + acc.m256_f32[5] + acc.m256_f32[6] + acc.m256_f32[7];
-                    acc = _mm256_hadd_ps(acc, _mm256_setzero_ps());
-                    acc = _mm256_hadd_ps(acc, _mm256_setzero_ps());
-                    weightedInput += acc.m256_f32[0] + acc.m256_f32[4];
+                    2nd: 
+                    a = _mm256_hadd_ps(a, 0)
+                    a''0 := a3 + a2 + a1 + a0
+                    a''1 := b2 + b3 + b1 + b0
+                    a''2 := 0
+                    a''3 := 0
+                    a''4 := a7 + a6 + a5 + a4
+                    a''5 := b7 + b6 + b5 + b4
+                    a''6 := 0
+                    a''7 := 0
 
-                    unsigned int offset = neuron.Weights.size() & (~7);
-					for (unsigned int i = 0; i < (neuron.Weights.size() & 7); ++i)
+                    3rd: 
+                    a = _mm256_hadd_ps(a, 0)
+                    a'''0 := b2 + b3 + b1 + b0 + a3 + a2 + a1 + a0
+                    a'''1 := 0
+                    a'''2 := 0
+                    a'''3 := 0
+                    a'''4 := b7 + b6 + b5 + b4 + a7 + a6 + a5 + a4
+                    a'''5 := 0
+                    a'''6 := 0
+                    a'''7 := 0
+                    */
+
+                    acc1 = _mm256_hadd_ps(acc1, acc2);
+                    acc1 = _mm256_hadd_ps(acc1, _mm256_setzero_ps());
+                    acc1 = _mm256_hadd_ps(acc1, _mm256_setzero_ps());                    
+                    weightedInput += acc1.m256_f32[0] + acc1.m256_f32[4];
+
+                    unsigned int offset = neuron.Weights.size() & (~15);
+					for (unsigned int i = 0; i < (neuron.Weights.size() & 15); ++i)
 					{
 						weightedInput += neuron.Weights[i + offset] * inputVector[i + offset];
 					}
