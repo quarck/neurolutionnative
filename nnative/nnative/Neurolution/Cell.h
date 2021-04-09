@@ -65,17 +65,26 @@ namespace Neurolution
         // digest Motor* params 
         void IterateNetwork(long step) noexcept
         {
-            Network->IterateNetwork(random);
+            MoveForceLeft = 0;
+            MoveForceRight = 0;
 
-            MoveForceLeft =
-                0.3f * Network->OutputVector[WorldProp::NetworkMoveForceGentleLeft] +
-                1.0f * Network->OutputVector[WorldProp::NetworkMoveForceNormalLeft] +
-                1.7f * Network->OutputVector[WorldProp::NetworkMoveForceStrongLeft];
+            for (int i = 0; i < WorldProp::NetworkStepsPerIteration; ++i)
+            {
+                Network->IterateNetwork(random);
 
-			MoveForceRight =
-                0.3f * Network->OutputVector[WorldProp::NetworkMoveForceGentleRight] +
-                1.0f * Network->OutputVector[WorldProp::NetworkMoveForceNormalRight] +
-                1.7f * Network->OutputVector[WorldProp::NetworkMoveForceStrongRight];
+                MoveForceLeft +=
+                    0.3f * Network->OutputVector[WorldProp::NetworkMoveForceGentleLeft] +
+                    1.0f * Network->OutputVector[WorldProp::NetworkMoveForceNormalLeft] +
+                    1.7f * Network->OutputVector[WorldProp::NetworkMoveForceStrongLeft];
+
+                MoveForceRight +=
+                    0.3f * Network->OutputVector[WorldProp::NetworkMoveForceGentleRight] +
+                    1.0f * Network->OutputVector[WorldProp::NetworkMoveForceNormalRight] +
+                    1.7f * Network->OutputVector[WorldProp::NetworkMoveForceStrongRight];
+            }
+
+            MoveForceLeft /= WorldProp::NetworkStepsPerIteration;
+            MoveForceRight /= WorldProp::NetworkStepsPerIteration;
 
 			TotalMoveForceLeft += MoveForceLeft;
 			TotalMoveForceRight += MoveForceRight;
@@ -94,10 +103,18 @@ namespace Neurolution
             Age = 0;
         }
 
-        void RandomizeLocation(Random& rnd, int maxX, int maxY) noexcept
+        void RandomizeLocation(Random& rnd, int parentX, int parentY, int maxX, int maxY) noexcept
         {
-            LocationX = static_cast<float>(rnd.NextDouble()*maxX);
-            LocationY = static_cast<float>(rnd.NextDouble()*maxY);
+            LocationX = parentX + static_cast<float>(rnd.NextDouble()*maxX/10 - maxX/20);
+            LocationY = parentY + static_cast<float>(rnd.NextDouble()*maxY/10 - maxY/20);
+            if (LocationX < 0)
+                LocationX = 0;
+            else if (LocationX > maxX)
+                LocationX = maxX;
+            if (LocationY < 0)
+                LocationY = 0;
+            else if (LocationY > maxY)
+                LocationY = maxY;
             Rotation = static_cast<float>(rnd.NextDouble() * 2.0 * M_PI);
         }
 

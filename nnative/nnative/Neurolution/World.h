@@ -803,7 +803,7 @@ namespace Neurolution
             destination->EnergyValue = initialEnergy;
             destination->Network->CleanOutputs();
 
-            destination->RandomizeLocation(_random, _maxX, _maxY);
+            destination->RandomizeLocation(_random, source->LocationX, source->LocationY, _maxX, _maxY);
 
             source->Age = 0; // kind of hack
         }
