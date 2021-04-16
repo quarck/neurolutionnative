@@ -8,6 +8,7 @@
 
 #include "../Random.h"
 #include "../Utils.h"
+#include "../Allocators.h"
 
 namespace Neurolution
 {
@@ -64,7 +65,8 @@ namespace Neurolution
 	template <typename WorldProp>
     struct Neuron
     {
-        std::vector<float> Weights;
+        using TWeightsVector = std::vector<float, cache_aligned<float>>;
+        TWeightsVector Weights;
 
 		float Charge;
 
@@ -98,7 +100,7 @@ namespace Neurolution
 
             if (Weights.size() != size)
             {
-                std::vector<float>(size).swap(Weights);
+                TWeightsVector(size).swap(Weights);
             }
 
             if (!severe)
@@ -144,13 +146,15 @@ namespace Neurolution
 		using TNeuron = Neuron<WorldProp>;
 		using ThisType = NeuronNetwork<WorldProp>;
 
-        std::vector<TNeuron> Neurons;
+        using TInputOutputVector = std::vector<float, cache_aligned<float>>;
 
-        std::vector<LightSensor> Eye;
+        std::vector<TNeuron, cache_aligned<TNeuron>> Neurons;
 
-        std::vector<float> InputVector;
+        std::vector<LightSensor, cache_aligned<LightSensor>> Eye;
 
-        std::vector<float> OutputVector;
+        TInputOutputVector InputVector;
+
+        TInputOutputVector OutputVector;
 
         size_t GetNetworkSize() const noexcept 
         {
@@ -193,10 +197,7 @@ namespace Neurolution
             }
         }
 
-        void IterateNetwork(
-			Random& rnd, 
-			std::vector<float>& inputVector,
-			std::vector<float>& outputVector) noexcept
+        void IterateNetwork(Random& rnd, TInputOutputVector& inputVector, TInputOutputVector& outputVector) noexcept
         {
             for (unsigned int j = 0; j < Neurons.size(); ++j)
             {
@@ -212,24 +213,36 @@ namespace Neurolution
                     __m256 acc1 = _mm256_setzero_ps();
                     __m256 acc2 = _mm256_setzero_ps();
 
-                    const float* nwptr = &neuron.Weights[0];
-                    const float* iwptr = &inputVector[0];
-                    unsigned int num_iters = neuron.Weights.size() / 16;
+                    const float* nwptr = neuron.Weights.data();
+                    const float* iwptr = inputVector.data();
 
-					for (unsigned int i = 0; i < num_iters; ++ i)
+                    unsigned int size = neuron.Weights.size();
+					for (unsigned int offs = 0; offs < size; offs += 16)
 					{
+                        //acc1 = _mm256_add_ps(
+                        //    acc1,
+                        //    _mm256_mul_ps(
+                        //        _mm256_load_ps(nwptr + offs),
+                        //        _mm256_load_ps(iwptr + offs)
+                        //    ));
+                        //acc2 = _mm256_add_ps(
+                        //    acc2,
+                        //    _mm256_mul_ps(
+                        //        _mm256_load_ps(nwptr + offs + 8),
+                        //        _mm256_load_ps(iwptr + offs + 8)
+                        //    ));
+
                         acc1 = _mm256_fmadd_ps(
-                            _mm256_load_ps(nwptr), 
-                            _mm256_load_ps(iwptr), 
+                            _mm256_load_ps(nwptr + offs),
+                            _mm256_load_ps(iwptr + offs),
                             acc1
                         );
                         acc2 = _mm256_fmadd_ps(
-                            _mm256_load_ps(nwptr + 8),
-                            _mm256_load_ps(iwptr + 8),
+                            _mm256_load_ps(nwptr + offs + 8),
+                            _mm256_load_ps(iwptr + offs + 8),
                             acc2
                         );
-                        nwptr += 16;
-                        iwptr += 16;
+
                     }
 
                     /*

@@ -41,7 +41,7 @@ namespace Neurolution
 
         Random random;
 
-        std::vector<LightSensor>& GetEye() noexcept { return Network->Eye; }
+        std::vector<LightSensor, cache_aligned<LightSensor>>& GetEye() noexcept { return Network->Eye; }
 
         bool IsPredator{ false };
 
