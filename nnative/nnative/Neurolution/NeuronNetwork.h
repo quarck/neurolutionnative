@@ -224,7 +224,6 @@ namespace Neurolution
                         unsigned int size = neuron.Weights.size();
                         for (unsigned int offs = 0; offs < size; offs += 16)
                         {
-#if defined(__AVX2__)
                             acc1 = _mm256_fmadd_ps(
                                 _mm256_load_ps(nwptr + offs),
                                 _mm256_load_ps(iwptr + offs),
@@ -235,21 +234,6 @@ namespace Neurolution
                                 _mm256_load_ps(iwptr + offs + 8),
                                 acc2
                             );
-#else 
-                            acc1 = _mm256_add_ps(
-                                acc1,
-                                _mm256_mul_ps(
-                                    _mm256_load_ps(nwptr + offs),
-                                    _mm256_load_ps(iwptr + offs)
-                                ));
-                            acc2 = _mm256_add_ps(
-                                acc2,
-                                _mm256_mul_ps(
-                                    _mm256_load_ps(nwptr + offs + 8),
-                                    _mm256_load_ps(iwptr + offs + 8)
-                                ));
-#endif 
-
                         }
 
                         /*
