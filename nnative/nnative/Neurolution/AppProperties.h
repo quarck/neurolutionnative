@@ -57,11 +57,6 @@ namespace Neurolution
 
         static constexpr float NetworkMaxRegularMutation = 0.03f;
         static constexpr float NetworkSevereMutationAlpha = 0.4f;
-        static constexpr float NetworkNoiseLevel = 0.00001f;
-		static constexpr bool ApplyNetworkNoise = false;
-
-		static constexpr float NetworkSpikeNoiseLevel = 0.01f;
-		static constexpr bool ApplyNetworkSpikeNoise = false;
 
         static constexpr float FoodInitialValue = 14;
 

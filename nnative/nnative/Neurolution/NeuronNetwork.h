@@ -208,108 +208,107 @@ namespace Neurolution
 
 				float weightedInput = -neuron.Weights[neuronPositionInInputVector] * inputVector[neuronPositionInInputVector];
 
-				if constexpr (WorldProp::ManualLoopUnroll)
-				{
-                    __m256 acc1 = _mm256_setzero_ps();
-                    __m256 acc2 = _mm256_setzero_ps();
+                if (neuron.State == NeuronState::Idle)
+                {
+                    // only calculate the weighted input if we are in the idle state, 
+                    // in other states neuron is ignoring inputs until it recovers to idle
 
-                    const float* nwptr = neuron.Weights.data();
-                    const float* iwptr = inputVector.data();
+                    if constexpr (WorldProp::ManualLoopUnroll)
+                    {
+                        __m256 acc1 = _mm256_setzero_ps();
+                        __m256 acc2 = _mm256_setzero_ps();
 
-                    unsigned int size = neuron.Weights.size();
-					for (unsigned int offs = 0; offs < size; offs += 16)
-					{
+                        const float* nwptr = neuron.Weights.data();
+                        const float* iwptr = inputVector.data();
+
+                        unsigned int size = neuron.Weights.size();
+                        for (unsigned int offs = 0; offs < size; offs += 16)
+                        {
 #if defined(__AVX2__)
-                        acc1 = _mm256_fmadd_ps(
-                            _mm256_load_ps(nwptr + offs),
-                            _mm256_load_ps(iwptr + offs),
-                            acc1
-                        );
-                        acc2 = _mm256_fmadd_ps(
-                            _mm256_load_ps(nwptr + offs + 8),
-                            _mm256_load_ps(iwptr + offs + 8),
-                            acc2
-                        );
-#else 
-                        acc1 = _mm256_add_ps(
-                            acc1,
-                            _mm256_mul_ps(
+                            acc1 = _mm256_fmadd_ps(
                                 _mm256_load_ps(nwptr + offs),
-                                _mm256_load_ps(iwptr + offs)
-                            ));
-                        acc2 = _mm256_add_ps(
-                            acc2,
-                            _mm256_mul_ps(
+                                _mm256_load_ps(iwptr + offs),
+                                acc1
+                            );
+                            acc2 = _mm256_fmadd_ps(
                                 _mm256_load_ps(nwptr + offs + 8),
-                                _mm256_load_ps(iwptr + offs + 8)
-                            ));
+                                _mm256_load_ps(iwptr + offs + 8),
+                                acc2
+                            );
+#else 
+                            acc1 = _mm256_add_ps(
+                                acc1,
+                                _mm256_mul_ps(
+                                    _mm256_load_ps(nwptr + offs),
+                                    _mm256_load_ps(iwptr + offs)
+                                ));
+                            acc2 = _mm256_add_ps(
+                                acc2,
+                                _mm256_mul_ps(
+                                    _mm256_load_ps(nwptr + offs + 8),
+                                    _mm256_load_ps(iwptr + offs + 8)
+                                ));
 #endif 
 
+                        }
+
+                        /*
+                        a = _mm256_hadd_ps(a, b)
+                        a'0 := a1 + a0
+                        a'1 := a3 + a2
+                        a'2 := b1 + b0
+                        a'3 := b2 + b3
+                        a'4 := a5 + a4
+                        a'5 := a7 + a6
+                        a'6 := b5 + b4
+                        a'7 := b7 + b6
+
+                        2nd:
+                        a = _mm256_hadd_ps(a, 0)
+                        a''0 := a3 + a2 + a1 + a0
+                        a''1 := b2 + b3 + b1 + b0
+                        a''2 := 0
+                        a''3 := 0
+                        a''4 := a7 + a6 + a5 + a4
+                        a''5 := b7 + b6 + b5 + b4
+                        a''6 := 0
+                        a''7 := 0
+
+                        3rd:
+                        a = _mm256_hadd_ps(a, 0)
+                        a'''0 := b2 + b3 + b1 + b0 + a3 + a2 + a1 + a0
+                        a'''1 := 0
+                        a'''2 := 0
+                        a'''3 := 0
+                        a'''4 := b7 + b6 + b5 + b4 + a7 + a6 + a5 + a4
+                        a'''5 := 0
+                        a'''6 := 0
+                        a'''7 := 0
+                        */
+
+                        acc1 = _mm256_hadd_ps(acc1, acc2);
+                        acc1 = _mm256_hadd_ps(acc1, _mm256_setzero_ps());
+                        acc1 = _mm256_hadd_ps(acc1, _mm256_setzero_ps());
+                        weightedInput += acc1.m256_f32[0] + acc1.m256_f32[4];
+
+                        //               unsigned int offset = neuron.Weights.size() & (~15);
+                                       //for (unsigned int i = 0; i < (neuron.Weights.size() & 15); ++i)
+                                       //{
+                                       //	weightedInput += neuron.Weights[i + offset] * inputVector[i + offset];
+                                       //}
                     }
+                    else
+                    {
+                        int sz = neuron.Weights.size();
+                        for (unsigned int i = 0; i < sz; ++i)
+                        {
+                            _mm_prefetch((char*)&neuron.Weights[i + 1], 1);
+                            _mm_prefetch((char*)&inputVector[i + 1], 1);
 
-                    /*
-                    a = _mm256_hadd_ps(a, b)
-                    a'0 := a1 + a0
-                    a'1 := a3 + a2
-                    a'2 := b1 + b0
-                    a'3 := b2 + b3
-                    a'4 := a5 + a4
-                    a'5 := a7 + a6
-                    a'6 := b5 + b4
-                    a'7 := b7 + b6
-
-                    2nd: 
-                    a = _mm256_hadd_ps(a, 0)
-                    a''0 := a3 + a2 + a1 + a0
-                    a''1 := b2 + b3 + b1 + b0
-                    a''2 := 0
-                    a''3 := 0
-                    a''4 := a7 + a6 + a5 + a4
-                    a''5 := b7 + b6 + b5 + b4
-                    a''6 := 0
-                    a''7 := 0
-
-                    3rd: 
-                    a = _mm256_hadd_ps(a, 0)
-                    a'''0 := b2 + b3 + b1 + b0 + a3 + a2 + a1 + a0
-                    a'''1 := 0
-                    a'''2 := 0
-                    a'''3 := 0
-                    a'''4 := b7 + b6 + b5 + b4 + a7 + a6 + a5 + a4
-                    a'''5 := 0
-                    a'''6 := 0
-                    a'''7 := 0
-                    */
-
-                    acc1 = _mm256_hadd_ps(acc1, acc2);
-                    acc1 = _mm256_hadd_ps(acc1, _mm256_setzero_ps());
-                    acc1 = _mm256_hadd_ps(acc1, _mm256_setzero_ps());                    
-                    weightedInput += acc1.m256_f32[0] + acc1.m256_f32[4];
-
-     //               unsigned int offset = neuron.Weights.size() & (~15);
-					//for (unsigned int i = 0; i < (neuron.Weights.size() & 15); ++i)
-					//{
-					//	weightedInput += neuron.Weights[i + offset] * inputVector[i + offset];
-					//}
-				}
-				else
-				{
-					int sz = neuron.Weights.size();
-					for (unsigned int i = 0; i < sz; ++i)
-					{
-                        _mm_prefetch((char*)&neuron.Weights[i + 1], 1);
-                        _mm_prefetch((char*)&inputVector[i + 1], 1);
-
-                        weightedInput += neuron.Weights[i] * inputVector[i];
-					}
-				}
-
-				if constexpr (WorldProp::ApplyNetworkNoise)
-				{
-					// add some noise 
-					weightedInput += rnd.Next<float>(-WorldProp::NetworkNoiseLevel, WorldProp::NetworkNoiseLevel);
-				}
-
+                            weightedInput += neuron.Weights[i] * inputVector[i];
+                        }
+                    }
+                }
 
                 // 2nd step - update neuron state according to current state + new input
                 // and update state and current output
@@ -327,15 +326,7 @@ namespace Neurolution
                     if (neuron.Charge > WorldProp::NeuronChargeThreshold)
                     {
                         neuron.State = NeuronState::Excited0;
-
-						if constexpr (WorldProp::ApplyNetworkSpikeNoise)
-						{
-							outputVector[j] = 1.0f + rnd.Next<float>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
-						}
-						else
-						{
-							outputVector[j] = 1.0f;
-						}
+						outputVector[j] = 1.0f;
                     }
                     else
                     {
@@ -345,15 +336,7 @@ namespace Neurolution
 
                 case NeuronState::Excited0:
                     neuron.State = NeuronState::Excited1;
-
-					if constexpr (WorldProp::ApplyNetworkSpikeNoise)
-					{
-						outputVector[j] = 1.0f + rnd.Next<float>(-WorldProp::NetworkSpikeNoiseLevel, WorldProp::NetworkSpikeNoiseLevel);
-					}
-					else
-					{
-						outputVector[j] = 1.0f;
-					}
+					outputVector[j] = 1.0f;
 					break;
 
                 case NeuronState::Excited1:
