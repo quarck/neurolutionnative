@@ -41,7 +41,7 @@ namespace Neurolution
         static constexpr int StepsPerBirthCheck = 1024;
         static constexpr int NetworkStepsPerIteration = 8;
 
-        static constexpr int NetworkSize = 256;
+        static constexpr int NetworkSize = 256 + 128;
 
         static constexpr int WorldSize = 128;
         static constexpr int FoodCountPerIteration = 48;

@@ -336,12 +336,12 @@ namespace Neurolution
 
                 case NeuronState::Excited0:
                     neuron.State = NeuronState::Excited1;
-					outputVector[j] = 1.0f;
+					outputVector[j] = 0.7f;
 					break;
 
                 case NeuronState::Excited1:
                     neuron.State = NeuronState::Recovering0;
-                    outputVector[j] = 0.0f;
+                    outputVector[j] = 0.2f;
                     break;
 
                 case NeuronState::Recovering0:
